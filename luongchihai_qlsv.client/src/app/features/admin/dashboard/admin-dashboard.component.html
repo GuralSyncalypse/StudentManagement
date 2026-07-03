@@ -43,6 +43,16 @@
           <div class="category-icon">🎓</div>
           <h5 class="category-name">Hồ sơ Học viên</h5>
           <p class="category-desc">Quản lý lý lịch, thông tin liên lạc, hồ sơ nhập học và tiến trình học tập chi tiết của từng sinh viên.</p>
+          <div class="stats-row">
+            <div class="stat-item">
+              <span class="stat-label">Tổng cộng</span>
+              <span class="stat-value">1,248</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Hoạt động</span>
+              <span class="stat-value">1,095</span>
+            </div>
+          </div>
         </div>
         <div class="card-actions">
           <button [routerLink]="['/admin/students']" class="category-btn">
@@ -56,6 +66,16 @@
           <div class="category-icon">📚</div>
           <h5 class="category-name">Chương trình & Khóa học</h5>
           <p class="category-desc">Cấu hình khung chương trình đào tạo, quản lý lớp học, phân công giảng dạy và sắp xếp thời khóa biểu.</p>
+          <div class="stats-row">
+            <div class="stat-item">
+              <span class="stat-label">Khóa học</span>
+              <span class="stat-value">42</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Lớp học</span>
+              <span class="stat-value">156</span>
+            </div>
+          </div>
         </div>
         <div class="card-actions">
           <button [routerLink]="['/admin/courses']" class="category-btn">
@@ -66,8 +86,19 @@
 
       <div class="category-card">
         <div class="card-main-content">
+          <div class="category-icon">📋</div>
           <h5 class="category-name">Xét duyệt Đăng ký</h5>
           <p class="category-desc">Quản lý danh sách đăng ký học phần, theo dõi trạng thái đóng học phí và phê duyệt thời gian đăng ký của sinh viên.</p>
+          <div class="stats-row">
+            <div class="stat-item">
+              <span class="stat-label">Chờ duyệt</span>
+              <span class="stat-value">18</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Đã duyệt</span>
+              <span class="stat-value">945</span>
+            </div>
+          </div>
         </div>
         <div class="card-actions">
           <button [routerLink]="['/admin/enrollments']" class="category-btn">

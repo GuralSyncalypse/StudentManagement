@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [RouterLink],
   templateUrl: './admin-dashboard.component.html',
+  styleUrls: ['./admin-dashboard.component.css'],
 })
 export class AdminDashboardComponent {
   // Ở đây chứa logic lấy dữ liệu tổng số học viên, số khóa học từ API nếu cần
