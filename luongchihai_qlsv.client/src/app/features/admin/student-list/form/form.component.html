@@ -1,0 +1,136 @@
+<div class="form-container">
+
+    <div class="form-header">
+        <h2>
+            {{ isEditMode ? 'Cập nhật sinh viên' : 'Thêm sinh viên' }}
+        </h2>
+        <p>Quản lý thông tin chi tiết sinh viên</p>
+    </div>
+
+    <form [formGroup]="studentForm" (ngSubmit)="onSubmit()">
+
+        <!-- ROW 1 -->
+        <div class="row">
+            <div class="form-group">
+                <label>Mã sinh viên *</label>
+                <input type="text" formControlName="studentID"
+                       [readonly]="isEditMode" />
+            </div>
+
+            <div class="form-group">
+                <label>Họ tên *</label>
+                <input type="text" formControlName="studentName" />
+            </div>
+        </div>
+
+        <!-- ROW 2 -->
+        <div class="row">
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" formControlName="email" />
+            </div>
+
+            <div class="form-group">
+                <label>Số điện thoại *</label>
+                <input type="text" formControlName="phoneNumber" />
+            </div>
+        </div>
+
+        <!-- ROW 3 -->
+        <div class="row">
+            <div class="form-group">
+                <label>Giới tính</label>
+                <select formControlName="gender">
+                    <option value="">-- Chọn --</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Ngày sinh</label>
+                <input type="date" formControlName="birthDate" />
+            </div>
+        </div>
+
+        <!-- ROW 4 -->
+        <div class="row">
+            <div class="form-group">
+                <label>Dân tộc</label>
+                <input type="text" formControlName="ethnicity" />
+            </div>
+
+            <div class="form-group">
+                <label>Tôn giáo</label>
+                <input type="text" formControlName="religion" />
+            </div>
+        </div>
+
+        <!-- ROW 5 -->
+        <div class="row">
+            <div class="form-group">
+                <label>Quốc tịch</label>
+                <input type="text" formControlName="nationality" />
+            </div>
+
+            <div class="form-group">
+                <label>Nơi sinh</label>
+                <input type="text" formControlName="birthPlace" />
+            </div>
+        </div>
+
+        <!-- CCCD -->
+        <div class="row">
+            <div class="form-group">
+                <label>CMND/CCCD</label>
+                <input type="text" formControlName="citizenID" />
+            </div>
+
+            <div class="form-group">
+                <label>Nơi cấp</label>
+                <input type="text" formControlName="citizenIDIssuePlace" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Ngày cấp</label>
+                <input type="date" formControlName="citizenIDIssueDate" />
+            </div>
+        </div>
+
+        <!-- ADDRESS -->
+        <div class="row">
+            <div class="form-group full">
+                <label>Địa chỉ thường trú</label>
+                <input type="text" formControlName="permanentAddress" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group full">
+                <label>Địa chỉ tạm trú</label>
+                <input type="text" formControlName="temporaryAddress" />
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+
+            <button type="submit"
+                    [disabled]="studentForm.invalid"
+                    class="btn-primary">
+
+                {{ isEditMode ? 'Cập nhật' : 'Thêm mới' }}
+            </button>
+
+            <button type="button"
+                    class="btn-secondary"
+                    (click)="resetForm()">
+                Reset
+            </button>
+
+        </div>
+
+    </form>
+</div>

@@ -1,0 +1,88 @@
+<div class="admin-container">
+  
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-brand">
+        <span class="brand-icon">🏫</span>
+        <h1 class="brand-title">EduPortal Admin</h1>
+      </div>
+      <nav class="sidebar-menu">
+
+          <a routerLink="/admin/dashboard" routerLinkActive="active">
+              <i class="fa-solid fa-house"></i>
+              Dashboard
+          </a>
+
+          <details>
+              <summary>
+                  <i class="fa-solid fa-book"></i>
+                  Đào tạo
+              </summary>
+
+              <a routerLink="/admin/semesters">Học kỳ</a>
+              <a routerLink="/admin/courses">Học phần</a>
+              <a routerLink="/admin/offerings">Lớp học phần</a>
+          </details>
+
+          <details>
+              <summary>
+                  <i class="fa-solid fa-users"></i>
+                  Người dùng
+              </summary>
+
+              <a routerLink="/admin/students">Sinh viên</a>
+              <a routerLink="/admin/teachers">Giảng viên</a>
+          </details>
+
+          <details>
+              <summary>
+                  <i class="fa-solid fa-square-poll-vertical"></i>
+                  Điểm
+              </summary>
+
+              <a routerLink="/admin/score-types">Loại điểm</a>
+              <a routerLink="/admin/components">Thành phần điểm</a>
+              <a routerLink="/admin/scores">Nhập điểm</a>
+          </details>
+
+          <a routerLink="/admin/enrollments">
+              <i class="fa-solid fa-pen-to-square"></i>
+              Đăng ký học phần
+          </a>
+
+          <a routerLink="/admin/reports">
+              <i class="fa-solid fa-chart-line"></i>
+              Báo cáo
+          </a>
+
+      </nav>
+    </div>
+    
+    <div class="sidebar-profile">
+        <div class="avatar">A</div>
+        <div class="profile-info">
+            <p class="profile-name">Quản trị viên</p>
+            <button (click)="onLogout()" class="logout-btn">Đăng xuất</button>
+        </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2 class="page-title">Bảng điều khiển</h2>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date">Thứ Ba, 30 Tháng 6, 2026</span>
+        <div class="notification-wrapper">
+          <span class="notification-badge">3</span>
+          <button class="notification-btn">🔔</button>
+        </div>
+      </div>
+    </header>
+
+    <router-outlet></router-outlet>
+    
+  </main>
+</div>

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="luongchihai_qlsv.client/luongchihai_qlsv.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="LuongChiHai_QLSV.Server/LuongChiHai_QLSV.Server.csproj" />
+</Solution>

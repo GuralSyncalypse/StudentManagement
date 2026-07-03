@@ -1,0 +1,208 @@
+/* =========================
+   PAGE
+========================= */
+
+.page {
+  padding: 24px 32px;
+  background: #f8fafc;
+  min-height: 100%;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+  .page-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .page-header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+/* =========================
+   TOOLBAR
+========================= */
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+  .toolbar input,
+  .toolbar select {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .toolbar input {
+    flex: 1;
+  }
+
+/* =========================
+   CARD
+========================= */
+
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* =========================
+   TABLE
+========================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #0f172a;
+  color: #fff;
+}
+
+  thead th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+tbody td {
+  padding: 12px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* =========================
+   BADGE
+========================= */
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.male {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.female {
+  background: #fce7f3;
+  color: #db2777;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+  .btn-icon.edit {
+    background: #e0e7ff;
+    color: #4f46e5;
+  }
+
+    .btn-icon.edit:hover {
+      background: #c7d2fe;
+    }
+
+  .btn-icon.delete {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+
+    .btn-icon.delete:hover {
+      background: #fecaca;
+    }
+
+/* =========================
+   BUTTON PRIMARY
+========================= */
+
+.btn-primary {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+  .btn-primary:hover {
+    background: #4338ca;
+  }
+
+/* =========================
+   EMPTY
+========================= */
+
+.empty {
+  text-align: center;
+  padding: 24px;
+  color: #94a3b8;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

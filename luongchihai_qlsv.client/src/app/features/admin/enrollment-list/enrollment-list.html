@@ -1,0 +1,130 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h2>Danh sách đăng ký & Nhập điểm</h2>
+      <p>Quản lý thông tin đăng ký học phần và cập nhật điểm số sinh viên</p>
+    </div>
+
+    <button class="btn btn-primary" [routerLink]="['create']">
+      + Đăng ký mới
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" placeholder="🔍 Tìm kiếm theo mã sinh viên..." />
+  </div>
+
+  <div class="layout-container">
+
+    <div class="card table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Mã đăng ký</th>
+            <th>Mã sinh viên</th>
+            <th>Mã lớp học phần</th>
+            <th>Ngày đăng ký</th>
+            <th width="180">Hành động</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (enrollment of enrollments; track enrollment.enrollmentID) {
+          <tr [class.selected]="selectedEnrollment?.enrollmentID === enrollment.enrollmentID"
+              (click)="selectEnrollment(enrollment)" class="clickable-row">
+
+            <td>{{ enrollment.enrollmentID }}</td>
+            <td><strong>{{ enrollment.studentID }}</strong></td>
+            <td>{{ enrollment.sectionID }}</td>
+            <td>{{ enrollment.enrollDate | date:'dd/MM/yyyy' }}</td>
+
+            <td>
+              <div class="actions" (click)="$event.stopPropagation()">
+                <button class="btn-icon score" (click)="selectEnrollment(enrollment)" title="Nhập điểm">
+                  💯 Chấm điểm
+                </button>
+                <button class="btn-icon edit" [routerLink]="['edit', enrollment.enrollmentID]">
+                  ✏
+                </button>
+                <button class="btn-icon delete" (click)="deleteEnrollment(enrollment.enrollmentID)">
+                  🗑
+                </button>
+              </div>
+            </td>
+
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="empty">Không có lượt đăng ký nào trong danh sách.</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (selectedEnrollment) {
+    <div class="card detail-card animate-fade-in">
+      <div class="detail-header">
+        <h3>📝 Nhập điểm cho SV: {{ selectedEnrollment.studentID }} (Mã ĐK: {{ selectedEnrollment.enrollmentID }})</h3>
+        <button class="btn-close" (click)="selectedEnrollment = null">✕</button>
+      </div>
+
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th>Loại điểm (Thành phần)</th>
+            <th width="100">Trọng số (%)</th>
+            <th width="150">Điểm số</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (score of selectedEnrollment.scores; track score.scoreID) {
+          <tr>
+            <td>
+              <select [(ngModel)]="score.scoreType" class="form-control">
+                <option value="" disabled selected>-- Chọn loại điểm --</option>
+                @for (type of scoreTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+                }
+              </select>
+            </td>
+            <td>
+              <input type="number" [(ngModel)]="score.weight" min="0" max="100" class="form-control text-center" />
+            </td>
+            <td>
+              <input type="number" [(ngModel)]="score.scoreValue" min="0" max="10" step="0.1" placeholder="0.0" class="form-control score-input" />
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="3" class="empty">Chưa cấu hình đầu điểm cho lớp này.</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="summary-score-zone">
+        <div class="score-box">
+          <span class="label">Điểm tổng kết (Hệ 10):</span>
+          <span class="value text-primary">{{ calculateTotalScore() | number:'1.1-2' }}</span>
+        </div>
+        <div class="score-box">
+          <span class="label">Kết quả đánh giá:</span>
+          @if (calculateTotalScore() >= 4) {
+          <span class="badge status-pass">🎉 ĐỖ (PASSED)</span>
+          } @else {
+          <span class="badge status-fail">❌ TRƯỢT (FAILED)</span>
+          }
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <button class="btn btn-secondary-outline" (click)="addNewScoreRow()">+ Thêm đầu điểm</button>
+        <button class="btn btn-success" (click)="saveScores()">💾 Lưu bảng điểm</button>
+      </div>
+    </div>
+    }
+
+  </div>
+</div>

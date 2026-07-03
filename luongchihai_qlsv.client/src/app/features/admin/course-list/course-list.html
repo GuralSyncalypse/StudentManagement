@@ -1,0 +1,87 @@
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div>
+      <h2>Danh sách học phần</h2>
+      <p>Quản lý thông tin học phần trong hệ thống</p>
+    </div>
+
+    <button class="btn btn-primary" [routerLink]="['create']">
+      + Thêm học phần
+    </button>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <input type="text"
+           placeholder="🔍 Tìm kiếm theo mã học phần, tên học phần..." />
+
+    <select>
+      <option>Tất cả số tín chỉ</option>
+      <option>2 tín chỉ</option>
+      <option>3 tín chỉ</option>
+      <option>4 tín chỉ</option>
+    </select>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card">
+
+    <table>
+      <thead>
+        <tr>
+          <th>Mã học phần</th>
+          <th>Tên học phần</th>
+          <th>Số tín chỉ</th>
+          <th width="120">Hành động</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (course of courses; track course.courseID) {
+        <tr>
+
+          <td class="code">
+            {{ course.courseID }}
+          </td>
+
+          <td class="name">
+            {{ course.courseName }}
+          </td>
+
+          <td>
+            <span class="badge credits">
+              {{ course.credits }} TC
+            </span>
+          </td>
+
+          <td>
+            <div class="actions">
+              <button class="btn-icon edit"
+                      [routerLink]="['edit', course.courseID]">
+                ✏
+              </button>
+
+              <button class="btn-icon delete"
+                      (click)="deleteCourse(course.courseID)">
+                🗑
+              </button>
+            </div>
+          </td>
+
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="4" class="empty">
+            Không có học phần nào trong danh sách.
+          </td>
+        </tr>
+        }
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>

@@ -1,0 +1,46 @@
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="portal-icon">🏫</div>
+            <h2>PORTAL ĐĂNG NHẬP</h2>
+            <p>Hệ Thống Quản Lý Sinh Viên & Kết Quả Học Tập</p>
+        </div>
+
+        <div *ngIf="errorMessage" class="alert-danger">
+            ⚠️ {{ errorMessage }}
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="off">
+
+            <div class="form-group">
+                <label for="username">Tên đăng nhập</label>
+                <input type="text"
+                       id="username"
+                       formControlName="username"
+                       placeholder="Nhập tên tài khoản..."
+                       [class.input-error]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched" />
+                <span class="error-text" *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+                    Tên đăng nhập không được để trống.
+                </span>
+            </div>
+
+            <div class="form-group">
+                <label for="passwordHash">Mật khẩu</label>
+                <input type="password"
+                       id="passwordHash"
+                       formControlName="password"
+                       placeholder="Nhập mật khẩu..."
+                       [class.input-error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" />
+                <span class="error-text" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                    Mật khẩu bắt buộc và phải từ 4 ký tự trở lên.
+                </span>
+            </div>
+
+            <button type="submit" [disabled]="loginForm.invalid || isLoading" class="btn-submit">
+                <span *ngIf="!isLoading">ĐĂNG NHẬP</span>
+                <span *ngIf="isLoading" class="spinner">Đang xác thực hệ thống...</span>
+            </button>
+
+        </form>
+    </div>
+</div>

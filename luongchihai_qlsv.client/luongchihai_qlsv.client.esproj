@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.5277448">
+  <PropertyGroup>
+    <StartupCommand>npm start</StartupCommand>
+    <JavaScriptTestFramework>Jasmine</JavaScriptTestFramework>
+    <!-- Allows the build (or compile) script located on package.json to run on Build -->
+    <ShouldRunBuildScript>false</ShouldRunBuildScript>
+    <!-- Folder where production build objects will be placed -->
+    <BuildOutputFolder>$(MSBuildProjectDirectory)\dist\luongchihai_qlsv.client\browser\</BuildOutputFolder>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="src\app\features\student\**" />
+    <None Remove="src\app\feature\**" />
+    <None Remove="src\app\shared\**" />
+    <TypeScriptConfiguration Remove="src\app\features\student\**" />
+    <TypeScriptConfiguration Remove="src\app\feature\**" />
+    <TypeScriptConfiguration Remove="src\app\shared\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\app\features\admin\student-list\pages\" />
+  </ItemGroup>
+</Project>

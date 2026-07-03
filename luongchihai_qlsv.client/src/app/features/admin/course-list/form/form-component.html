@@ -1,0 +1,52 @@
+<div class="form-container">
+
+  <div class="form-header">
+    <h2>
+      {{ isEditMode ? 'Cập nhật học phần' : 'Thêm học phần' }}
+    </h2>
+    <p>Quản lý thông tin chi tiết học phần</p>
+  </div>
+
+  <form [formGroup]="courseForm" (ngSubmit)="onSubmit()">
+
+    <!-- ROW 1 -->
+    <div class="row">
+      <div class="form-group">
+        <label>Mã học phần *</label>
+        <input type="text" formControlName="courseID" />
+      </div>
+
+      <div class="form-group">
+        <label>Số tín chỉ *</label>
+        <input type="number" formControlName="credits" />
+      </div>
+    </div>
+
+    <!-- ROW 2 -->
+    <div class="row">
+      <div class="form-group full">
+        <label>Tên học phần *</label>
+        <input type="text" formControlName="courseName" />
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="actions">
+
+      <button type="submit"
+              [disabled]="courseForm.invalid"
+              class="btn-primary">
+
+        {{ isEditMode ? 'Cập nhật' : 'Thêm mới' }}
+      </button>
+
+      <button type="button"
+              class="btn-secondary"
+              (click)="resetForm()">
+        Reset
+      </button>
+
+    </div>
+
+  </form>
+</div>

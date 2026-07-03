@@ -1,0 +1,81 @@
+<div class="dashboard-body">
+  
+  <section class="welcome-section">
+    <h3 class="welcome-title">Xin chào quay trở lại! 👋</h3>
+    <p class="welcome-subtitle">Dưới đây là tình hình hoạt động của hệ thống trong ngày hôm nay.</p>
+  </section>
+
+  <section class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <p class="kpi-label">Tổng số học viên</p>
+        <h4 class="kpi-value">1,248</h4>
+        <span class="trend-text trend-up">▲ +12% <span class="trend-sub">so với tháng trước</span></span>
+      </div>
+      <div class="kpi-icon-box icon-indigo">🎓</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <p class="kpi-label">Khóa học đang mở</p>
+        <h4 class="kpi-value">42</h4>
+        <span class="trend-text trend-neutral">Có 3 lớp mới khai giảng tuần này</span>
+      </div>
+      <div class="kpi-icon-box icon-amber">📚</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-data">
+        <p class="kpi-label">Yêu cầu đăng ký mới</p>
+        <h4 class="kpi-value">18</h4>
+        <span class="trend-text trend-danger">🔥 5 yêu cầu đang chờ duyệt gấp</span>
+      </div>
+      <div class="kpi-icon-box icon-rose">📝</div>
+    </div>
+  </section>
+
+  <section class="management-section">
+    <h4 class="section-title">Danh mục quản lý chính</h4>
+    
+    <div class="category-grid">
+      <div class="category-card">
+        <div class="card-main-content">
+          <div class="category-icon">🎓</div>
+          <h5 class="category-name">Hồ sơ Học viên</h5>
+          <p class="category-desc">Quản lý lý lịch, thông tin liên lạc, hồ sơ nhập học và tiến trình học tập chi tiết của từng sinh viên.</p>
+        </div>
+        <div class="card-actions">
+          <button [routerLink]="['/admin/students']" class="category-btn">
+            Truy cập danh sách <span>→</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="category-card">
+        <div class="card-main-content">
+          <div class="category-icon">📚</div>
+          <h5 class="category-name">Chương trình & Khóa học</h5>
+          <p class="category-desc">Cấu hình khung chương trình đào tạo, quản lý lớp học, phân công giảng dạy và sắp xếp thời khóa biểu.</p>
+        </div>
+        <div class="card-actions">
+          <button [routerLink]="['/admin/courses']" class="category-btn">
+            Quản lý phân hệ khóa <span>→</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="category-card">
+        <div class="card-main-content">
+          <h5 class="category-name">Xét duyệt Đăng ký</h5>
+          <p class="category-desc">Quản lý danh sách đăng ký học phần, theo dõi trạng thái đóng học phí và phê duyệt thời gian đăng ký của sinh viên.</p>
+        </div>
+        <div class="card-actions">
+          <button [routerLink]="['/admin/enrollments']" class="category-btn">
+            Xử lý yêu cầu ngay <span>→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

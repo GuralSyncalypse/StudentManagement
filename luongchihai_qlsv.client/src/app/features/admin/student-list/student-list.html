@@ -1,0 +1,87 @@
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div>
+      <h2>Danh sách sinh viên</h2>
+      <p>Quản lý thông tin sinh viên trong hệ thống</p>
+    </div>
+
+    <button class="btn btn-primary" [routerLink]="['form']">
+      + Thêm sinh viên
+    </button>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <input type="text" placeholder="🔍 Tìm kiếm theo mã, tên..." />
+
+    <select>
+      <option>Tất cả giới tính</option>
+      <option>Nam</option>
+      <option>Nữ</option>
+    </select>
+  </div>
+
+  <!-- TABLE CARD -->
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Mã SV</th>
+          <th>Họ tên</th>
+          <th>Giới tính</th>
+          <th>Dân tộc</th>
+          <th>Địa chỉ</th>
+          <th width="150">Hành động</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (student of students; track student.studentID) {
+        <tr>
+          <td class="code">{{ student.studentID }}</td>
+
+          <td class="name">
+            {{ student.studentName }}
+          </td>
+
+          <td>
+            <span class="badge" [class.male]="student.gender === 'Nam'"
+                  [class.female]="student.gender === 'Nữ'">
+              {{ student.gender }}
+            </span>
+          </td>
+
+          <td>{{ student.ethnicity }}</td>
+          <td class="address">{{ student.permanentAddress }}</td>
+
+          <td>
+            <div class="actions">
+              <button class="btn-icon view"
+                      [routerLink]="['/admin/students', student.studentID, 'report']"
+                      title="Xem báo cáo học tập">
+                📊
+              </button>
+
+              <button class="btn-icon edit" title="Sửa thông tin">✏</button>
+              <button class="btn-icon delete"
+                      (click)="deleteStudent(student.studentID)"
+                      title="Xóa sinh viên">
+                🗑
+              </button>
+            </div>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="6" class="empty">
+            Không có sinh viên nào
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+</div>

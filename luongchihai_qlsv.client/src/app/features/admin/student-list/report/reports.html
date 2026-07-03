@@ -1,0 +1,96 @@
+<div class="container-fluid px-4 py-3">
+  <h4 class="mb-4 text-dark fw-bold">Thông tin học vụ sinh viên</h4>
+
+  <div class="row mb-4">
+    <div class="alert alert-warning text-center mt-3" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+    <div class="col-md-4 col-sm-6">
+      <label for="semesterSelect" class="form-label fw-semibold text-muted">Xem báo cáo học tập theo:</label>
+      <select id="semesterSelect"
+              class="form-select border-primary-subtle shadow-sm"
+              [(ngModel)]="selectedSemester"
+              (change)="onSemesterChange()">
+        <option [ngValue]="null">-- Chọn học kỳ cần xem --</option>
+        <option *ngFor="let sem of semesters" [value]="sem.value">{{ sem.label }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="alert alert-info text-center py-4 shadow-sm border-0" *ngIf="!selectedSemester && !isLoading">
+    <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+    Vui lòng chọn một học kỳ ở trên để xem thống kê điểm số.
+  </div>
+
+  <div class="text-center py-5" *ngIf="isLoading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="reportData && !isLoading" class="fade-in">
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 bg-light text-center p-3">
+          <span class="text-muted small fw-bold text-uppercase">Số môn đã học</span>
+          <h3 class="fw-bold text-dark mt-2 mb-0">{{ reportData.tongSoMonDaHoc }}</h3>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 bg-success-subtle text-center p-3">
+          <span class="text-success small fw-bold text-uppercase">Số môn đã qua</span>
+          <h3 class="fw-bold text-success mt-2 mb-0">{{ reportData.soMonDaQua }}</h3>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 bg-danger-subtle text-center p-3">
+          <span class="text-danger small fw-bold text-uppercase">Số môn trượt</span>
+          <h3 class="fw-bold text-danger mt-2 mb-0">{{ reportData.soMonTruot }}</h3>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-2 border-primary text-center p-3 bg-white">
+          <span class="text-primary small fw-bold text-uppercase">ĐTB Học Kỳ</span>
+          <h3 class="fw-bold text-primary mt-2 mb-0">{{ reportData.diemTrungBinhHocKy | number:'1.2-2' }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3 border-bottom">
+        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Chi tiết các môn học kì {{ reportData.semester }}</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" class="ps-4">Mã Môn</th>
+              <th scope="col">Tên Môn Học</th>
+              <th scope="col" class="text-center">Số Tín Chỉ</th>
+              <th scope="col" class="text-center">Điểm Tổng Kết</th>
+              <th scope="col" class="text-center pe-4">Trạng Thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of reportData.chiTietMonHoc">
+              <td class="ps-4"><code>{{ item.courseID }}</code></td>
+              <td class="fw-semibold text-dark">{{ item.courseName }}</td>
+              <td class="text-center">{{ item.credits }}</td>
+              <td class="text-center fw-bold fs-5" [ngClass]="item.totalScore >= 4 ? 'text-dark' : 'text-danger'">
+                {{ item.totalScore | number:'1.2-2' }}
+              </td>
+              <td class="text-center pe-4">
+                <span class="badge px-3 py-2 rounded-pill"
+                      [ngClass]="item.result === 'Đỗ' ? 'bg-success' : 'bg-danger'">
+                  {{ item.result }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

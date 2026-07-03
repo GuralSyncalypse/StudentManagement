@@ -1,0 +1,397 @@
+/* =========================
+   PAGE
+========================= */
+.page {
+  padding: 24px 32px;
+  background: #f8fafc;
+  min-height: 100%;
+}
+
+/* =========================
+   HEADER
+========================= */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+  .page-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .page-header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+/* =========================
+   TOOLBAR
+========================= */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+  .toolbar input,
+  .toolbar select {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .toolbar input {
+    flex: 1;
+  }
+
+/* =========================
+   LAYOUT CONTAINER (MASTER-DETAIL)
+========================= */
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* =========================
+   CARD
+========================= */
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* DETAIL PANEL CONFIGURATION */
+.detail-card {
+  border: 2px solid #4f46e5;
+  padding: 20px;
+  background: #ffffff;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+  .detail-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #94a3b8;
+  transition: 0.2s;
+}
+
+  .btn-close:hover {
+    color: #64748b;
+  }
+
+.detail-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+/* =========================
+   TABLE & FORM CONTROL IN LINE
+========================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #0f172a;
+  color: #fff;
+}
+
+  thead th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+tbody td {
+  padding: 12px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.clickable-row {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+  .clickable-row:hover {
+    background: #f8fafc;
+  }
+
+tr.selected {
+  background: #f0fdf4 !important;
+}
+
+/* INPUTS INSIDE SCORE TABLE */
+.score-table .form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+  .score-table .form-control:focus {
+    border-color: #4f46e5;
+  }
+
+.score-table .score-input {
+  font-weight: 700;
+  color: #0f172a;
+  text-align: right;
+  background: #fdfdf2;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* =========================
+   BADGE
+========================= */
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.male {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.female {
+  background: #fce7f3;
+  color: #db2777;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+  .btn-icon.score {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+  }
+
+    .btn-icon.score:hover {
+      background: #dcfce7;
+    }
+
+  .btn-icon.edit {
+    background: #e0e7ff;
+    color: #4f46e5;
+    width: 32px; /* Reset width cụ thể cho nút icon đơn lẻ */
+  }
+
+    .btn-icon.edit:hover {
+      background: #c7d2fe;
+    }
+
+  .btn-icon.delete {
+    background: #fee2e2;
+    color: #ef4444;
+    width: 32px;
+  }
+
+    .btn-icon.delete:hover {
+      background: #fecaca;
+    }
+
+/* =========================
+   BUTTON CONTEXTS
+========================= */
+.btn-primary {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+  .btn-primary:hover {
+    background: #4338ca;
+  }
+
+.btn-secondary-outline {
+  background: none;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+  .btn-secondary-outline:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+  }
+
+.btn-success {
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+  .btn-success:hover {
+    background: #15803d;
+  }
+
+/* =========================
+   EMPTY & ANIMATION
+========================= */
+.empty {
+  text-align: center;
+  padding: 24px;
+  color: #94a3b8;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Vùng tổng kết điểm */
+.summary-score-zone {
+  display: flex;
+  justify-content: flex-end;
+  gap: 32px;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 10px;
+  margin-top: 16px;
+  border: 1px dashed #cbd5e1;
+}
+
+.score-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+  .score-box .value {
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+.text-primary {
+  color: #4f46e5;
+}
+
+/* Badge trạng thái Đỗ / Trượt */
+.badge.status-pass {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.badge.status-fail {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
