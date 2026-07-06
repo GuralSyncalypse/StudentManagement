@@ -1,69 +1,91 @@
-<div class="container-fluid px-4 py-3">
-  <h4 class="mb-4 text-dark fw-bold">Thông tin học vụ sinh viên</h4>
+<div class="academic-report-container">
 
-  <div class="row mb-4">
-    <div class="alert alert-warning text-center mt-3" *ngIf="errorMessage">
-      {{ errorMessage }}
+  <header class="report-header">
+    <div class="header-title-container">
+      <button class="btn-back" (click)="goBack()" title="Quay lại">
+        Quay lại
+      </button>
+
+      <div class="header-title">
+        <h4>Thông tin học vụ sinh viên</h4>
+        <p class="text-muted small mb-0">Theo dõi tiến trình và kết quả học tập cá nhân</p>
+      </div>
     </div>
-    <div class="col-md-4 col-sm-6">
-      <label for="semesterSelect" class="form-label fw-semibold text-muted">Xem báo cáo học tập theo:</label>
+
+    <div class="header-filter">
       <select id="semesterSelect"
-              class="form-select border-primary-subtle shadow-sm"
+              class="form-select custom-select"
               [(ngModel)]="selectedSemester"
               (change)="onSemesterChange()">
         <option [ngValue]="null">-- Chọn học kỳ cần xem --</option>
-        <option *ngFor="let sem of semesters" [value]="sem.value">{{ sem.label }}</option>
+        @for (sem of semesters; track sem.value) {
+        <option [value]="sem.value">{{ sem.label }}</option>
+        }
       </select>
     </div>
-  </div>
+  </header>
 
-  <div class="alert alert-info text-center py-4 shadow-sm border-0" *ngIf="!selectedSemester && !isLoading">
-    <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
-    Vui lòng chọn một học kỳ ở trên để xem thống kê điểm số.
+  @if (errorMessage) {
+  <div class="alert alert-danger-custom fade-in">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
   </div>
+  }
 
-  <div class="text-center py-5" *ngIf="isLoading">
+  @if (!selectedSemester && !isLoading) {
+  <div class="empty-state-card fade-in">
+    <div class="icon-wrapper">
+      <i class="bi bi-journal-bookmark-fill"></i>
+    </div>
+    <h5>Chưa chọn học kỳ</h5>
+    <p>Vui lòng chọn một học kỳ ở góc phải để xem thống kê điểm số và chi tiết môn học.</p>
+  </div>
+  }
+
+  @if (isLoading) {
+  <div class="loading-state py-5">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
+    <p class="text-muted mt-2 small">Đang tải dữ liệu học tập...</p>
   </div>
+  }
 
-  <div *ngIf="reportData && !isLoading" class="fade-in">
+  @if (reportData && !isLoading) {
+  <div class="report-content fade-in">
 
-    <div class="row g-3 mb-4">
-      <div class="col-md-3 col-6">
-        <div class="card shadow-sm border-0 bg-light text-center p-3">
-          <span class="text-muted small fw-bold text-uppercase">Số môn đã học</span>
-          <h3 class="fw-bold text-dark mt-2 mb-0">{{ reportData.tongSoMonDaHoc }}</h3>
-        </div>
+    <section class="stat-cards-grid mb-4">
+      <div class="stat-card">
+        <span class="stat-label">Số môn đã học</span>
+        <h3 class="stat-value text-dark">{{ reportData.tongSoMonDaHoc }}</h3>
       </div>
-      <div class="col-md-3 col-6">
-        <div class="card shadow-sm border-0 bg-success-subtle text-center p-3">
-          <span class="text-success small fw-bold text-uppercase">Số môn đã qua</span>
-          <h3 class="fw-bold text-success mt-2 mb-0">{{ reportData.soMonDaQua }}</h3>
-        </div>
-      </div>
-      <div class="col-md-3 col-6">
-        <div class="card shadow-sm border-0 bg-danger-subtle text-center p-3">
-          <span class="text-danger small fw-bold text-uppercase">Số môn trượt</span>
-          <h3 class="fw-bold text-danger mt-2 mb-0">{{ reportData.soMonTruot }}</h3>
-        </div>
-      </div>
-      <div class="col-md-3 col-6">
-        <div class="card shadow-sm border-2 border-primary text-center p-3 bg-white">
-          <span class="text-primary small fw-bold text-uppercase">ĐTB Học Kỳ</span>
-          <h3 class="fw-bold text-primary mt-2 mb-0">{{ reportData.diemTrungBinhHocKy | number:'1.2-2' }}</h3>
-        </div>
-      </div>
-    </div>
 
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-white py-3 border-bottom">
-        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Chi tiết các môn học kì {{ reportData.semester }}</h6>
+      <div class="stat-card status-pass">
+        <span class="stat-label">Số môn đã qua</span>
+        <h3 class="stat-value text-success">{{ reportData.soMonDaQua }}</h3>
       </div>
+
+      <div class="stat-card status-fail">
+        <span class="stat-label">Số môn trượt</span>
+        <h3 class="stat-value text-danger">{{ reportData.soMonTruot }}</h3>
+      </div>
+
+      <div class="stat-card status-gpa">
+        <span class="stat-label">ĐTB Học Kỳ</span>
+        <h3 class="stat-value text-primary">{{ reportData.diemTrungBinhHocKy | number:'1.2-2' }}</h3>
+      </div>
+    </section>
+
+    <div class="card data-table-card border-0">
+      <div class="card-header-custom">
+        <h6>
+          <i class="bi bi-collection-play-fill me-2 text-primary"></i>
+          Chi tiết các môn học kì {{ reportData.semester }}
+        </h6>
+      </div>
+
       <div class="table-responsive">
-        <table class="table table-hover table-striped align-middle mb-0">
-          <thead class="table-light">
+        <table class="table custom-table align-middle mb-0">
+          <thead>
             <tr>
               <th scope="col" class="ps-4">Mã Môn</th>
               <th scope="col">Tên Môn Học</th>
@@ -73,24 +95,31 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of reportData.chiTietMonHoc">
-              <td class="ps-4"><code>{{ item.courseID }}</code></td>
+            @for (item of reportData.chiTietMonHoc; track item.courseID) {
+            <tr>
+              <td class="ps-4"><code class="course-code">{{ item.courseID }}</code></td>
               <td class="fw-semibold text-dark">{{ item.courseName }}</td>
-              <td class="text-center">{{ item.credits }}</td>
+              <td class="text-center text-muted">{{ item.credits }}</td>
               <td class="text-center fw-bold fs-5" [ngClass]="item.totalScore >= 4 ? 'text-dark' : 'text-danger'">
                 {{ item.totalScore | number:'1.2-2' }}
               </td>
               <td class="text-center pe-4">
-                <span class="badge px-3 py-2 rounded-pill"
-                      [ngClass]="item.result === 'Đỗ' ? 'bg-success' : 'bg-danger'">
+                <span class="badge-pill-custom" [ngClass]="item.result === 'Đỗ' ? 'pass' : 'fail'">
                   {{ item.result }}
                 </span>
               </td>
             </tr>
+            } @empty {
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">Không có dữ liệu môn học cho học kỳ này.</td>
+            </tr>
+            }
           </tbody>
         </table>
       </div>
     </div>
 
   </div>
+  }
+
 </div>

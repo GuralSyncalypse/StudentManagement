@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { StudentReport } from '../../../../core/models/report.model';
@@ -28,7 +29,8 @@ export class Reports implements OnInit {
   // 2. INJECT THÊM SERVICE VÀO CONSTRUCTOR
   constructor(
     private route: ActivatedRoute,
-    private reportService: StudentReportService
+    private reportService: StudentReportService,
+    private location: Location
   ) { }
 
   ngOnInit(): void {
@@ -68,5 +70,9 @@ export class Reports implements OnInit {
         }
       }
     });
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 }

@@ -1,0 +1,337 @@
+/* ==========================================================================
+   DASHBOARD HỌC VỤ SINH VIÊN - CSS TOÀN DIỆN
+   ========================================================================== */
+
+/* --- 1. CẤU HÌNH CHUNG & HIỆU ỨNG --- */
+.academic-report-container {
+  background-color: #fafafa;
+  min-height: 85vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Hiệu ứng chuyển động xuất hiện mượt mà khi đổi trạng thái học kỳ */
+.fade-in {
+  animation: dashboardLayoutFadeIn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes dashboardLayoutFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- 2. BỐ CỤC HEADER & NÚT LÙI (BACK BUTTON) --- */
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.header-title-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-title h4 {
+  margin-bottom: 2px;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.3px;
+}
+
+/* Kiểu dáng nút lùi tối giản cao cấp */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a5568;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+  .btn-back:hover {
+    background-color: #f7fafc;
+    color: #0d6efd;
+    border-color: #cbd5e1;
+    transform: translateX(-3px); /* Nhích nhẹ sang trái tạo cảm giác điều hướng ngược */
+  }
+
+  .btn-back:active {
+    transform: translateX(-3px) scale(0.96);
+  }
+
+/* --- 3. BỘ LỌC HỌC KỲ (SELECT FILTER) --- */
+.header-filter {
+  min-width: 260px;
+}
+
+.custom-select {
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px 14px;
+  border: 1px solid #dcdcdc;
+  background-color: #ffffff;
+  font-size: 0.92rem;
+  color: #2d3748;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.15s ease;
+}
+
+  .custom-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15) !important;
+  }
+
+/* --- 4. CÁC TRẠNG THÁI MÀN HÌNH (STATES) --- */
+
+/* Trạng thái lỗi (Error State) */
+.alert-danger-custom {
+  background-color: #fff1f0;
+  border: 1px solid #ffa39e;
+  color: #cf1322;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+}
+
+/* Trạng thái chưa chọn học kỳ (Empty State) */
+.empty-state-card {
+  text-align: center;
+  background-color: #ffffff;
+  padding: 56px 24px;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+  max-width: 480px;
+  margin: 48px auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
+}
+
+  .empty-state-card .icon-wrapper {
+    font-size: 2.8rem;
+    color: #94a3b8;
+    margin-bottom: 16px;
+    line-height: 1;
+  }
+
+  .empty-state-card h5 {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 8px;
+  }
+
+  .empty-state-card p {
+    color: #64748b;
+    font-size: 0.92rem;
+    margin-bottom: 0;
+    line-height: 1.5;
+  }
+
+/* Trạng thái Loading */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- 5. LƯỚI THẺ THỐNG KÊ (STAT CARDS GRID) --- */
+.stat-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.03);
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.6px;
+    display: block;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    margin-top: 10px;
+    margin-bottom: 0;
+    letter-spacing: -0.5px;
+  }
+
+  /* Định hình màu sắc dịu mắt (Pastel) cho các phân loại kết quả */
+  .stat-card.status-pass {
+    background-color: #f6ffed;
+    border-color: #b7eb8f;
+  }
+
+  .stat-card.status-fail {
+    background-color: #fff1f0;
+    border-color: #ffa39e;
+  }
+
+  .stat-card.status-gpa {
+    background-color: #e6f7ff;
+    border-color: #91d5ff;
+    box-shadow: 0 4px 14px rgba(13, 110, 253, 0.05);
+  }
+
+/* --- 6. KHỐI BẢNG CHI TIẾT MÔN HỌC (DATA TABLE CARD) --- */
+.data-table-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0 !important;
+  overflow: hidden;
+}
+
+.card-header-custom {
+  padding: 18px 24px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+  .card-header-custom h6 {
+    margin: 0;
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+  }
+
+/* Định dạng cấu trúc bảng dữ liệu */
+.custom-table thead th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.custom-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+  .custom-table tbody tr:hover {
+    background-color: #f8fafc !important;
+  }
+
+.custom-table tbody td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+/* Định dạng nhãn Mã môn học kĩ thuật */
+.course-code {
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  background-color: #f1f5f9;
+  color: #334155;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+/* Thiết lập phẳng (Flat) cho các nhãn Đỗ/Trượt */
+.badge-pill-custom {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+  .badge-pill-custom.pass {
+    background-color: #d9f7be;
+    color: #237804;
+  }
+
+  .badge-pill-custom.fail {
+    background-color: #fff0f6;
+    color: #c41d7f;
+  }
+
+/* --- 7. TỐI ƯU HÓA TRÊN DI ĐỘNG (RESPONSIVE) --- */
+@media (max-width: 768px) {
+  .report-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .header-title-container {
+    width: 100%;
+  }
+
+  .header-filter {
+    width: 100%;
+  }
+
+  .custom-select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .stat-card {
+    padding: 16px;
+  }
+
+    .stat-card .stat-value {
+      font-size: 1.5rem;
+    }
+
+  .custom-table thead th {
+    font-size: 0.75rem;
+    padding: 12px 10px;
+  }
+
+  .custom-table tbody td {
+    padding: 12px 10px;
+    font-size: 0.88rem;
+  }
+}

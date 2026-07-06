@@ -9,6 +9,7 @@ import { CourseList } from './course-list/course-list'
 import { CourseFormComponent } from './course-list/form/form-component';
 import { EnrollmentList } from './enrollment-list/enrollment-list'
 import { Reports } from './student-list/report/reports'
+import { CourseSectionListComponent } from './course-section-list/course-section-list.component'
 
 const routes: Routes = [
   {
@@ -21,6 +22,7 @@ const routes: Routes = [
       { path: 'courses', component: CourseList },
       { path: 'courses/create', component: CourseFormComponent },
       { path: 'courses/edit/:id', component: CourseFormComponent },
+      { path: 'courseSections', component: CourseSectionListComponent },
       { path: 'enrollments', component: EnrollmentList },
       {
         path: 'students/:studentID/report',

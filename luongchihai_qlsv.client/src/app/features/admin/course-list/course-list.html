@@ -1,33 +1,45 @@
 <div class="page">
-
-  <!-- HEADER -->
-  <div class="page-header">
-    <div>
+  <div class="page-header gap-4">
+    <div class="space-y-1">
       <h2>Danh sách học phần</h2>
       <p>Quản lý thông tin học phần trong hệ thống</p>
     </div>
 
-    <button class="btn btn-primary" [routerLink]="['create']">
-      + Thêm học phần
+    <div class="flex flex-col items-end gap-3">
+      <div class="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur">
+        {{ courses.length }} / {{ allCourses.length }} học phần
+      </div>
+      <button class="btn btn-primary" [routerLink]="['create']">
+        + Thêm học phần
+      </button>
+    </div>
+  </div>
+
+  <div class="toolbar rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur">
+    <input
+      type="text"
+      [ngModel]="searchTerm"
+      (ngModelChange)="onSearch($event)"
+      placeholder="Tìm theo mã học phần, tên học phần..."
+      class="min-w-0 flex-1"
+    />
+
+    <select [ngModel]="selectedCredits" (ngModelChange)="onCreditsChange($event)">
+      <option value="All">Tất cả số tín chỉ</option>
+      @for (credit of creditOptions; track credit) {
+      <option [value]="credit">{{ credit }} tín chỉ</option>
+      }
+    </select>
+
+    <button
+      type="button"
+      class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+      (click)="clearFilters()">
+      Xóa lọc
     </button>
   </div>
 
-  <!-- TOOLBAR -->
-  <div class="toolbar">
-    <input type="text"
-           placeholder="🔍 Tìm kiếm theo mã học phần, tên học phần..." />
-
-    <select>
-      <option>Tất cả số tín chỉ</option>
-      <option>2 tín chỉ</option>
-      <option>3 tín chỉ</option>
-      <option>4 tín chỉ</option>
-    </select>
-  </div>
-
-  <!-- TABLE -->
   <div class="card">
-
     <table>
       <thead>
         <tr>
@@ -41,47 +53,28 @@
       <tbody>
         @for (course of courses; track course.courseID) {
         <tr>
-
-          <td class="code">
-            {{ course.courseID }}
-          </td>
-
-          <td class="name">
-            {{ course.courseName }}
-          </td>
-
+          <td class="code">{{ course.courseID }}</td>
+          <td class="name">{{ course.courseName }}</td>
           <td>
             <span class="badge credits">
               {{ course.credits }} TC
             </span>
           </td>
-
           <td>
             <div class="actions">
-              <button class="btn-icon edit"
-                      [routerLink]="['edit', course.courseID]">
-                ✏
-              </button>
-
-              <button class="btn-icon delete"
-                      (click)="deleteCourse(course.courseID)">
-                🗑
-              </button>
+              <button class="btn-icon edit" [routerLink]="['edit', course.courseID]">✏</button>
+              <button class="btn-icon delete" (click)="deleteCourse(course.courseID)">🗑</button>
             </div>
           </td>
-
         </tr>
         } @empty {
         <tr>
           <td colspan="4" class="empty">
-            Không có học phần nào trong danh sách.
+            Không có học phần nào phù hợp với bộ lọc hiện tại.
           </td>
         </tr>
         }
       </tbody>
-
     </table>
-
   </div>
-
 </div>
