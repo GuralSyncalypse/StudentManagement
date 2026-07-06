@@ -1,31 +1,35 @@
 using LuongChiHai_QLSV.Server.Data;
-using LuongChiHai_QLSV.Server.Entities;
+using LuongChiHai_QLSV.Server.DTOs.Students;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using LuongChiHai_QLSV.Server.Interfaces;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Student")]
 public class StudentController : ControllerBase
 {
-    private readonly SchoolContext _context;
-    public StudentController(SchoolContext context) => _context = context;
+    private readonly IStudentService _studentService;
+
+    public StudentController(IStudentService studentService)
+        => _studentService = studentService;
 
     // GET api/Student/me
     [HttpGet("me")]
-    public async Task<ActionResult<Student>> GetCurrentStudent()
+    public async Task<ActionResult<StudentResponseDto>> GetCurrentStudent()
     {
         var studentId = User.FindFirst(ClaimTypes.Name)?.Value
-                     ?? User.FindFirst("sub")?.Value; // fallback for JWT "sub"
+                     ?? User.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(studentId))
             return Unauthorized();
 
-        var student = await _context.Students.FindAsync(studentId);
-        if (student == null)
+        // Service sẽ chịu trách nhiệm tìm và map sang DTO
+        var studentDto = await _studentService.GetByIdAsync(studentId);
+        if (studentDto == null)
             return NotFound();
 
-        return Ok(student);
+        return Ok(studentDto);
     }
 }

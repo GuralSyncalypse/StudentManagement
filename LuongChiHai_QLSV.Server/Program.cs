@@ -1,5 +1,7 @@
 using LuongChiHai_QLSV.Server.Data;
+using LuongChiHai_QLSV.Server.Interfaces;
 using LuongChiHai_QLSV.Server.Services;
+using LuongChiHai_QLSV.Server.UnitOfWorks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,7 +14,10 @@ var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? "Key_Chua_Chay_Mac_Dinh_Sieu_Dai_Cho_Hai_2026_!";
 
 // 2. Đăng ký dịch vụ Authentication dùng JWT
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

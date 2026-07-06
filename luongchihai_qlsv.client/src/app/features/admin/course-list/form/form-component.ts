@@ -26,6 +26,7 @@ export class CourseFormComponent {
 
     this.courseId = this.route.snapshot.paramMap.get('id')!;
 
+    console.log(this.courseId);
     if (this.courseId) {
       this.isEditMode = true;
       this.loadCourse(this.courseId);
