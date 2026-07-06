@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EnrollmentService } from './enrollment-list.service';
 import { ScoreService } from '../../../core/services/score.service';
@@ -9,7 +9,7 @@ import { Enrollment, Score } from '../../../core/models/enrollment.model';
 @Component({
   selector: 'app-enrollment-list',
   standalone: true,
-  imports: [RouterModule, DatePipe, DecimalPipe, FormsModule],
+  imports: [CommonModule, RouterModule, DatePipe, DecimalPipe, FormsModule],
   templateUrl: './enrollment-list.html',
   styleUrl: './enrollment-list.css',
 })
@@ -18,6 +18,7 @@ export class EnrollmentList implements OnInit {
   private scoreService = inject(ScoreService);
   private cdr = inject(ChangeDetectorRef);
 
+  allEnrollments: Enrollment[] = [];
   enrollments: Enrollment[] = [];
   scoreTypes: string[] = [
     'Điểm chuyên cần',
@@ -26,6 +27,8 @@ export class EnrollmentList implements OnInit {
     'Điểm thi kết thúc học phần'
   ];
   selectedEnrollment: Enrollment | null = null;
+  searchTerm = '';
+  selectedScoreState = 'All';
 
   ngOnInit(): void {
     this.loadEnrollments();
@@ -100,13 +103,51 @@ export class EnrollmentList implements OnInit {
     this.enrollmentService.getEnrollments()
       .subscribe({
         next: (res) => {
-          this.enrollments = res;
-          this.cdr.detectChanges(); // Ép Angular cập nhật UI
+          this.allEnrollments = res;
+          this.applyFilters();
         },
         error: (err) => {
           console.error('Lỗi khi tải danh sách đăng ký:', err);
         }
       });
+  }
+
+  onSearch(value: string): void {
+    this.searchTerm = value.trim().toLowerCase();
+    this.applyFilters();
+  }
+
+  onScoreStateChange(value: string): void {
+    this.selectedScoreState = value;
+    this.applyFilters();
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.selectedScoreState = 'All';
+    this.applyFilters();
+  }
+
+  applyFilters(): void {
+    const normalizedSearch = this.searchTerm;
+
+    this.enrollments = this.allEnrollments.filter(enrollment => {
+      const hasScores = (enrollment.scores?.length ?? 0) > 0;
+      const matchSearch = !normalizedSearch || [
+        String(enrollment.enrollmentID),
+        enrollment.studentID,
+        String(enrollment.sectionID)
+      ].some(value => value?.toLowerCase().includes(normalizedSearch));
+
+      const matchScoreState =
+        this.selectedScoreState === 'All' ||
+        (this.selectedScoreState === 'HasScores' && hasScores) ||
+        (this.selectedScoreState === 'NoScores' && !hasScores);
+
+      return matchSearch && matchScoreState;
+    });
+
+    this.cdr.detectChanges();
   }
 
   // Xóa lượt đăng ký

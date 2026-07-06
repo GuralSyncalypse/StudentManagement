@@ -1,22 +1,39 @@
 <div class="page">
-
-  <div class="page-header">
-    <div>
-      <h2>Danh sách đăng ký & Nhập điểm</h2>
-      <p>Quản lý thông tin đăng ký học phần và cập nhật điểm số sinh viên</p>
+  <div class="page-header gap-4">
+    <div class="space-y-1">
+      <h2>Danh sách đăng ký & nhập điểm</h2>
+      <p>Quản lý đăng ký học phần và cập nhật điểm số sinh viên</p>
     </div>
 
-    <button class="btn btn-primary" [routerLink]="['create']">
-      + Đăng ký mới
+    <div class="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur">
+      {{ enrollments.length }} / {{ allEnrollments.length }} lượt đăng ký
+    </div>
+  </div>
+
+  <div class="toolbar rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur">
+    <input
+      type="text"
+      [ngModel]="searchTerm"
+      (ngModelChange)="onSearch($event)"
+      placeholder="Tìm theo mã đăng ký, mã SV, mã lớp..."
+      class="min-w-0 flex-1"
+    />
+
+    <select [ngModel]="selectedScoreState" (ngModelChange)="onScoreStateChange($event)">
+      <option value="All">Tất cả trạng thái điểm</option>
+      <option value="HasScores">Đã có bảng điểm</option>
+      <option value="NoScores">Chưa có bảng điểm</option>
+    </select>
+
+    <button
+      type="button"
+      class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+      (click)="clearFilters()">
+      Xóa lọc
     </button>
   </div>
 
-  <div class="toolbar">
-    <input type="text" placeholder="🔍 Tìm kiếm theo mã sinh viên..." />
-  </div>
-
   <div class="layout-container">
-
     <div class="card table-card">
       <table>
         <thead>
@@ -44,9 +61,6 @@
                 <button class="btn-icon score" (click)="selectEnrollment(enrollment)" title="Nhập điểm">
                   💯 Chấm điểm
                 </button>
-                <button class="btn-icon edit" [routerLink]="['edit', enrollment.enrollmentID]">
-                  ✏
-                </button>
                 <button class="btn-icon delete" (click)="deleteEnrollment(enrollment.enrollmentID)">
                   🗑
                 </button>
@@ -56,7 +70,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="5" class="empty">Không có lượt đăng ký nào trong danh sách.</td>
+            <td colspan="5" class="empty">Không có lượt đăng ký nào phù hợp với bộ lọc hiện tại.</td>
           </tr>
           }
         </tbody>
@@ -125,6 +139,5 @@
       </div>
     </div>
     }
-
   </div>
 </div>

@@ -15,23 +15,76 @@ public class EnrollmentsController : ControllerBase
 
     // GET: api/Enrollment
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Enrollment>>> GetEnrollment()
+    public async Task<ActionResult<IEnumerable<EnrollmentDto>>> GetEnrollments()
     {
-        return await _context.Enrollments.ToListAsync();
+        var enrollments = await _context.Enrollments
+            .Select(e => new EnrollmentDto
+            {
+                EnrollmentID = e.EnrollmentID,
+                StudentID = e.StudentID,
+                SectionID = e.SectionID,
+                EnrollDate = e.EnrollDate,
+                // Mapping danh sách Scores của từng Enrollment sang ScoreDto
+                Scores = e.Scores.Select(s => new ScoreDto
+                {
+                    ScoreID = s.ScoreID,
+                    ScoreType = s.ScoreType, // Thay bằng tên trường thực tế trong DB của bạn
+                    ScoreValue = s.ScoreValue          // Thay bằng tên trường thực tế trong DB của bạn
+                }).ToList()
+            })
+            .ToListAsync();
+
+        return enrollments;
+    }
+
+    // DTO cho bảng Score
+    public class ScoreDto
+    {
+        public int ScoreID { get; set; }
+        public string? ScoreType { get; set; } // Ví dụ: Điểm giữa kỳ, điểm cuối kỳ...
+        public decimal? ScoreValue { get; set; }     // Điểm số
+    }
+
+    // DTO cho bảng Enrollment
+    public class EnrollmentDto
+    {
+        public int EnrollmentID { get; set; }
+        public string StudentID { get; set; } = null!;
+        public int SectionID { get; set; }
+        public DateTime? EnrollDate { get; set; }
+
+        // Thay vì chứa Entity Score, ta chứa List ScoreDto
+        public List<ScoreDto> Scores { get; set; } = new List<ScoreDto>();
     }
 
     // GET: api/Enrollment/5
     [HttpGet("{enrollmentid}")]
-    public async Task<ActionResult<Enrollment>> GetEnrollment(int enrollmentid)
+    public async Task<ActionResult<EnrollmentDto>> GetEnrollment(int enrollmentid)
     {
-        var enrollment = await _context.Enrollments.FindAsync(enrollmentid);
+        var enrollmentDto = await _context.Enrollments
+            .Where(e => e.EnrollmentID == enrollmentid)
+            .Select(e => new EnrollmentDto
+            {
+                EnrollmentID = e.EnrollmentID,
+                StudentID = e.StudentID,
+                SectionID = e.SectionID,
+                EnrollDate = e.EnrollDate,
+                // Mapping danh sách Scores sang ScoreDto
+                Scores = e.Scores.Select(s => new ScoreDto
+                {
+                    ScoreID = s.ScoreID,
+                    ScoreType = s.ScoreType, // Thay bằng tên trường thực tế trong bảng Score của bạn
+                    ScoreValue = s.ScoreValue          // Thay bằng tên trường thực tế trong bảng Score của bạn
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
 
-        if (enrollment == null)
+        if (enrollmentDto == null)
         {
             return NotFound();
         }
 
-        return enrollment;
+        return enrollmentDto; // Trả về DTO thay vì Entity gốc
     }
 
     // PUT: api/Enrollment/5

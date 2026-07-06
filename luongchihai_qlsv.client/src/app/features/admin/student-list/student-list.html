@@ -1,29 +1,50 @@
 <div class="page">
-
-  <!-- HEADER -->
-  <div class="page-header">
-    <div>
+  <div class="page-header gap-4">
+    <div class="space-y-1">
       <h2>Danh sách sinh viên</h2>
       <p>Quản lý thông tin sinh viên trong hệ thống</p>
     </div>
 
-    <button class="btn btn-primary" [routerLink]="['form']">
-      + Thêm sinh viên
+    <div class="flex flex-col items-end gap-3">
+      <div class="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur">
+        {{ students.length }} / {{ allStudents.length }} sinh viên
+      </div>
+      <button class="btn btn-primary" [routerLink]="['form']">
+        + Thêm sinh viên
+      </button>
+    </div>
+  </div>
+
+  <div class="toolbar rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur">
+    <input
+      type="text"
+      [ngModel]="searchTerm"
+      (ngModelChange)="onSearch($event)"
+      placeholder="Tìm theo mã SV, tên, khoa, lớp..."
+      class="min-w-0 flex-1"
+    />
+
+    <select [ngModel]="selectedGender" (ngModelChange)="onGenderChange($event)">
+      <option value="All">Tất cả giới tính</option>
+      <option value="Nam">Nam</option>
+      <option value="Nữ">Nữ</option>
+    </select>
+
+    <select [ngModel]="selectedFaculty" (ngModelChange)="onFacultyChange($event)">
+      <option value="All">Tất cả khoa</option>
+      @for (faculty of facultyOptions; track faculty) {
+      <option [value]="faculty">{{ faculty }}</option>
+      }
+    </select>
+
+    <button
+      type="button"
+      class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+      (click)="clearFilters()">
+      Xóa lọc
     </button>
   </div>
 
-  <!-- TOOLBAR -->
-  <div class="toolbar">
-    <input type="text" placeholder="🔍 Tìm kiếm theo mã, tên..." />
-
-    <select>
-      <option>Tất cả giới tính</option>
-      <option>Nam</option>
-      <option>Nữ</option>
-    </select>
-  </div>
-
-  <!-- TABLE CARD -->
   <div class="card">
     <table>
       <thead>
@@ -76,12 +97,11 @@
         } @empty {
         <tr>
           <td colspan="6" class="empty">
-            Không có sinh viên nào
+            Không có sinh viên nào phù hợp với bộ lọc hiện tại.
           </td>
         </tr>
         }
       </tbody>
     </table>
   </div>
-
 </div>
