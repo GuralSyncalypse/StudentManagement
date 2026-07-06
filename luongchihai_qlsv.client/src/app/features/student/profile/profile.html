@@ -1,0 +1,58 @@
+@if (student) {
+<div class="profile-card">
+  <div class="profile-header">
+    <div class="avatar">
+      {{ student.studentName.charAt(0).toUpperCase() }}
+    </div>
+    <div class="header-info">
+      <h2>{{ student.studentName }}</h2>
+      <p class="student-id">ID: {{ student.studentID }}</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="profile-section">
+    <h3>Personal Information</h3>
+    <div class="profile-grid">
+      <div class="info-group">
+        <label>Gender</label>
+        <p>{{ student.gender }}</p>
+      </div>
+      <div class="info-group">
+        <label>Ethnicity</label>
+        <p>{{ student.ethnicity }}</p>
+      </div>
+      <div class="info-group full-width">
+        <label>Permanent Address</label>
+        <p>{{ student.permanentAddress }}</p>
+      </div>
+    </div>
+  </div>
+
+  @if (student.academicProfile) {
+  <hr class="divider" />
+  <div class="profile-section">
+    <h3>Academic Profile</h3>
+    <div class="profile-grid">
+      <div class="info-group">
+        <label>Faculty</label>
+        <p>{{ student.academicProfile.facultyName }}</p>
+      </div>
+      <div class="info-group">
+        <label>Major</label>
+        <p>{{ student.academicProfile.majorName }}</p>
+      </div>
+      <div class="info-group">
+        <label>Class</label>
+        <p>{{ student.academicProfile.className }}</p>
+      </div>
+    </div>
+  </div>
+  }
+</div>
+} @else {
+<div class="profile-loading">
+  <p>Đang tải thông tin sinh viên...</p>
+</div>
+}
