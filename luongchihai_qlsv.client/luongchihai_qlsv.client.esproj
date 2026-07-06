@@ -8,10 +8,8 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist\luongchihai_qlsv.client\browser\</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="src\app\features\student\**" />
     <None Remove="src\app\feature\**" />
     <None Remove="src\app\shared\**" />
-    <TypeScriptConfiguration Remove="src\app\features\student\**" />
     <TypeScriptConfiguration Remove="src\app\feature\**" />
     <TypeScriptConfiguration Remove="src\app\shared\**" />
   </ItemGroup>

@@ -3,26 +3,37 @@ using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.DTOs.Auths;
 using LuongChiHai_QLSV.Server.DTOs.Students;
 using LuongChiHai_QLSV.Server.Entities;
+using LuongChiHai_QLSV.Server.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace LuongChiHai_QLSV.Server.Services
 {
     public class StudentService : IStudentService
     {
-        private readonly SchoolContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public StudentService(SchoolContext context)
+        public StudentService(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         // CREATE + AUTO CREATE USER
         public async Task CreateStudentAccountAsync(StudentRequestDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
+                // Bước A: Tìm Role bằng FindAsync (Query trực tiếp DB thay vì lấy hết về)
+                var role = await _unitOfWork.Roles.FirstOrDefaultAsync(r => r.RoleName == "Student");
+
+                if (role == null)
+                {
+                    throw new ArgumentNullException(nameof(role), "Vai trò (Role) không tồn tại.");
+                }
+
+                // Bước B: Khởi tạo thực thể User
                 var newUser = new User
                 {
                     Username = dto.StudentID,
@@ -32,26 +43,18 @@ namespace LuongChiHai_QLSV.Server.Services
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };
-                _context.Users.Add(newUser);
-                await _context.SaveChangesAsync(); // Lưu trước để sinh ra UserID tự động
 
-                // Bước B: Tìm và gán Role cho User
-                var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Student");
-                if (role == null)
+                // Bước C: Tận dụng Navigation Property để map quan hệ mà KHÔNG cần SaveChanges trước
+                var userRole = new UserRole
                 {
-                    throw new ArgumentNullException(nameof(role), "Vai trò (Role) không được phép để null.");
-                }
-
-
-                var userRole = new UserRole { UserID = newUser.UserID, RoleID = role.RoleID };
-                _context.UserRoles.Add(userRole);
-
-                // Bước C: Xử lý tạo thực thể Sinh viên nếu quyền là Student
+                    RoleID = role.RoleID,
+                    User = newUser // EF Core tự hiểu và gán UserID sau khi insert User
+                };
 
                 var newStudent = new Student
                 {
                     StudentID = dto.StudentID!,
-                    UserID = newUser.UserID,
+                    User = newUser, // EF Core tự map UserID tự động sinh vào đây
                     StudentName = dto.StudentName!,
 
                     Gender = dto.Gender ?? "Khác",
@@ -68,15 +71,19 @@ namespace LuongChiHai_QLSV.Server.Services
                     PermanentAddress = dto.PermanentAddress,
                     TemporaryAddress = dto.TemporaryAddress
                 };
-                _context.Students.Add(newStudent);
 
-                // 🔥 CHỈ SAVE 1 LẦN
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                // Thêm vào các Repo tương ứng thông qua Unit of Work
+                _unitOfWork.Users.Add(newUser);
+                _unitOfWork.UserRoles.Add(userRole);
+                _unitOfWork.Students.Add(newStudent);
+
+                // 🔥 CHỈ SAVE CHANGES ĐÚNG 1 LẦN DUY NHẤT
+                await _unitOfWork.CompleteAsync();
+                await _unitOfWork.CommitTransactionAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
         }
@@ -84,13 +91,11 @@ namespace LuongChiHai_QLSV.Server.Services
         // GET ALL
         public async Task<List<StudentResponseDto>> GetAllAsync()
         {
-            var students = await _context.Students
-            .Include(s => s.AcademicProfile)
-            .ToListAsync();
+            // Sử dụng hàm đặc thù có Include dữ liệu AcademicProfile từ StudentRepository
+            var students = await _unitOfWork.Students.GetAllWithProfileAsync();
 
             if (students == null) return [];
 
-            // 2. Chuyển đổi (Map) thủ công từ Entity sang DTO
             var response = students.Select(s => new StudentResponseDto
             {
                 StudentID = s.StudentID,
@@ -99,7 +104,6 @@ namespace LuongChiHai_QLSV.Server.Services
                 Ethnicity = s.Ethnicity,
                 PermanentAddress = s.PermanentAddress,
 
-                // Map object lồng nhau (AcademicProfile)
                 AcademicProfile = s.AcademicProfile == null ? null : new AcademicProfileDto
                 {
                     ClassName = s.AcademicProfile.ClassName,
@@ -114,16 +118,11 @@ namespace LuongChiHai_QLSV.Server.Services
         // GET BY ID
         public async Task<StudentResponseDto?> GetByIdAsync(string id)
         {
-            var student = await _context.Students
-            .Include(s => s.AcademicProfile)
-            .FirstOrDefaultAsync(s => s.StudentID == id);
+            // Sử dụng hàm đặc thù lấy Student kèm Profile
+            var student = await _unitOfWork.Students.GetByIdWithProfileAsync(id);
 
-            if (student == null)
-            {
-                return null;
-            }
+            if (student == null) return null;
 
-            // 2. Map thủ công sang DTO
             var response = new StudentResponseDto
             {
                 StudentID = student.StudentID,
@@ -144,12 +143,11 @@ namespace LuongChiHai_QLSV.Server.Services
         }
 
         // UPDATE
-        public async Task UpdateAsync(string id, StudentRequestDto dto)
+        public async Task<bool> UpdateAsync(string id, StudentRequestDto dto)
         {
-            var student = await _context.Students.FindAsync(id);
+            var student = await _unitOfWork.Students.GetByIdAsync(id);
 
-            if (student == null)
-                throw new Exception("Không tìm thấy sinh viên");
+            if (student == null) return false;
 
             student.StudentName = dto.StudentName;
             student.Gender = dto.Gender;
@@ -164,26 +162,30 @@ namespace LuongChiHai_QLSV.Server.Services
             student.PermanentAddress = dto.PermanentAddress;
             student.TemporaryAddress = dto.TemporaryAddress;
 
-            await _context.SaveChangesAsync();
+            _unitOfWork.Students.Update(student);
+            await _unitOfWork.CompleteAsync();
+            return true;
         }
 
         // DELETE
-        public async Task DeleteAsync(string id)
+        public async Task<bool> DeleteAsync(string id)
         {
-            var student = await _context.Students.FindAsync(id);
+            var student = await _unitOfWork.Students.GetByIdAsync(id);
 
-            if (student == null)
-                throw new Exception("Không tìm thấy sinh viên");
+            if (student == null) return false;
 
-            _context.Students.Remove(student);
-
-            // (optional) xóa luôn user
-            var user = await _context.Users.FindAsync(student.UserID);
-
+            // Xóa User liên kết trước
+            var user = await _unitOfWork.Users.GetByIdAsync(student.UserID);
             if (user != null)
-                _context.Users.Remove(user);
+            {
+                _unitOfWork.Users.Delete(user);
+            }
 
-            await _context.SaveChangesAsync();
+            // Xóa Student
+            _unitOfWork.Students.Delete(student);
+
+            await _unitOfWork.CompleteAsync();
+            return true;
         }
     }
 }

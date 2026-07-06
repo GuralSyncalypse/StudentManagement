@@ -26,4 +26,13 @@ export class StudentReportService {
     // URL gọi thực tế sẽ có dạng: /api/Reports/semester-summary?studentId=SVxxx&semester=1
     return this.http.get<StudentReport>(`${this.apiUrl}/semester-summary`, { params });
   }
+
+  getMySummary(semester: number): Observable<StudentReport> {
+    // Khởi tạo HttpParams để map dữ liệu vào đoạn Query String ([FromQuery]) của .NET Controller
+    const params = new HttpParams()
+      .set('semester', semester);
+
+    // URL gọi thực tế sẽ có dạng: /api/Reports/semester-summary?studentId=SVxxx&semester=1
+    return this.http.get<StudentReport>(`${this.apiUrl}/summary`, { params });
+  }
 }

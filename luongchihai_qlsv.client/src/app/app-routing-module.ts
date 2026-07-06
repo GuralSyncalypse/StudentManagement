@@ -15,6 +15,12 @@ const routes: Routes = [
     canActivate: [authGuard],
     data: { expectedRoles: ['Admin'] },
   },
+  {
+    path: 'student',
+    loadChildren: () => import('./features/student/student-routing.module').then(m => m.StudentRoutingModule),
+    canActivate: [authGuard],
+    data: { expectedRoles: ['Student'] },
+  },
   // PHÂN HỆ ADMIN: Chỉ Admin mới được load module quản lý
   
   // {

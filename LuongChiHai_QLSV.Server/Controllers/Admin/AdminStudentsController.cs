@@ -3,7 +3,7 @@ using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.DTOs.Auths;
 using LuongChiHai_QLSV.Server.DTOs.Students;
 using LuongChiHai_QLSV.Server.Entities;
-using LuongChiHai_QLSV.Server.Services;
+using LuongChiHai_QLSV.Server.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +14,9 @@ using Microsoft.EntityFrameworkCore;
 [Authorize(Roles = "Admin")]
 public class AdminStudentsController : ControllerBase
 {
-    private readonly SchoolContext _context;
     private readonly IStudentService _studentService;
-    public AdminStudentsController(SchoolContext context, IStudentService studentService)
+    public AdminStudentsController(IStudentService studentService)
     {
-        _context = context;
         _studentService = studentService;
     }
 
@@ -52,55 +50,17 @@ public class AdminStudentsController : ControllerBase
     // PUT: api/Student/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutStudent(string? id, StudentRequestDto request)
+    public async Task<IActionResult> PutStudent(string id, StudentRequestDto request)
     {
-        // Lớp Validation của ASP.NET Core sẽ tự chạy nhờ các Attribute bạn đã đặt ở DTO
         if (id != request.StudentID)
-        {
-            return BadRequest("Mã sinh viên trong URL và Body không trùng khớp.");
-        }
+            return BadRequest("Mã cấu trúc không khớp.");
 
-        // 1. Tìm bản ghi cũ trong Database
-        var student = await _context.Students.FindAsync(id);
-        if (student == null)
-        {
+        var isUpdated = await _studentService.UpdateAsync(id, request);
+
+        if (!isUpdated)
             return NotFound($"Không tìm thấy sinh viên có mã {id}.");
-        }
 
-        // 2. Thực hiện mapping (Thay thế toàn bộ dữ liệu cũ bằng dữ liệu từ Request)
-        student.StudentName = request.StudentName;
-
-        // Các trường nullable dưới đây sẽ bị ghi đè thành null nếu request không truyền lên
-        student.Gender = request.Gender;
-        student.BirthDate = request.BirthDate;
-        student.Ethnicity = request.Ethnicity;
-        student.Religion = request.Religion;
-        student.Nationality = request.Nationality;
-        student.BirthPlace = request.BirthPlace;
-        student.CitizenID = request.CitizenID;
-        student.CitizenIDIssueDate = request.CitizenIDIssueDate;
-        student.CitizenIDIssuePlace = request.CitizenIDIssuePlace;
-        student.PermanentAddress = request.PermanentAddress;
-        student.TemporaryAddress = request.TemporaryAddress;
-
-        try
-        {
-            // EF Core tự nhận biết các trường thay đổi để cập nhật
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!StudentExists(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
-
-        return NoContent(); // Cập nhật thành công thường trả về 204
+        return NoContent();
     }
 
     // POST: api/Student
@@ -143,10 +103,5 @@ public class AdminStudentsController : ControllerBase
         await _studentService.DeleteAsync(id);
 
         return NoContent();
-    }
-
-    private bool StudentExists(string? id)
-    {
-        return _context.Students.Any(e => e.StudentID == id);
     }
 }

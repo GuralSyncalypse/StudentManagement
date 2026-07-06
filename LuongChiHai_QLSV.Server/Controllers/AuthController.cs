@@ -90,13 +90,13 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync(); // Xác nhận lưu vĩnh viễn vào DB
+                await transaction.CommitAsync();
 
                 return Ok(new { message = "Đăng ký tài khoản thành công!" });
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(); // Hủy bỏ mọi thay đổi nếu dính lỗi
+                await transaction.RollbackAsync();
                 return StatusCode(500, new { message = "Có lỗi xảy ra trong quá trình xử lý!", error = ex.Message });
             }
         }

@@ -19,3 +19,10 @@ export interface StudentReport {
   diemTrungBinhHocKy: number;
   chiTietMonHoc: CourseDetail[];
 }
+
+export interface StudentSummary {
+  studentID: string;
+  semester: number;
+  totalEnrollment: number;
+  coursesDetail: CourseDetail[];
+}

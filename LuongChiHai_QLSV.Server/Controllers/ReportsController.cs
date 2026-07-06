@@ -3,6 +3,7 @@ using LuongChiHai_QLSV.Server.DTOs.Reports;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LuongChiHai_QLSV.Server.Controllers
 {
@@ -56,6 +57,42 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 SoMonTruot = soMonTruot,
                 DiemTrungBinhHocKy = diemTrungBinhHocKy,
                 ChiTietMonHoc = chiTietMonHoc
+            };
+
+            return Ok(response);
+        }
+
+        [HttpGet("summary")]
+        public async Task<ActionResult<StudentSummaryDto>> GetMySummary([FromQuery] int semester)
+        {
+
+            var studentId = User.FindFirst(ClaimTypes.Name)?.Value
+                     ?? User.FindFirst("sub")?.Value; // fallback for JWT "sub"
+
+            if (studentId == null)
+            {
+                return Unauthorized();
+            }
+
+            // 1. Lấy toàn bộ danh sách môn học của SV đó trong học kỳ được chọn từ View
+            var chiTietMonHoc = await _context.BangDiemChiTiet
+                .Where(x => x.StudentID == studentId && x.Semester == semester)
+                .ToListAsync();
+
+            if (!chiTietMonHoc.Any())
+            {
+                return NotFound($"Không tìm thấy dữ liệu cho sinh viên {studentId}");
+            }
+
+            // 2. Thực hiện tính toán thống kê (Logic SQL được xử lý trên Memory cực nhanh sau khi filter)
+            int tongSoMonDaHoc = chiTietMonHoc.Count;
+
+            // 3. Gom tất cả vào DTO tổng hợp để trả về cho Frontend Angular
+            var response = new StudentSummaryDto
+            {
+                StudentID = studentId,
+                TotalEnrollment = tongSoMonDaHoc,
+                CoursesDetail = chiTietMonHoc
             };
 
             return Ok(response);

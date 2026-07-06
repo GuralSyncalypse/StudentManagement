@@ -24,7 +24,7 @@ public class AdminCoursesController : ControllerBase
 
     // GET: api/Course/5
     [HttpGet("{courseid}")]
-    public async Task<ActionResult<Course>> GetCourse(int courseid)
+    public async Task<ActionResult<Course>> GetCourse(string courseid)
     {
         var course = await _context.Courses.FindAsync(courseid);
 
@@ -80,7 +80,7 @@ public class AdminCoursesController : ControllerBase
 
     // DELETE: api/Course/5
     [HttpDelete("{courseid}")]
-    public async Task<IActionResult> DeleteCourse(int? courseid)
+    public async Task<IActionResult> DeleteCourse(string courseid)
     {
         var course = await _context.Courses.FindAsync(courseid);
         if (course == null)

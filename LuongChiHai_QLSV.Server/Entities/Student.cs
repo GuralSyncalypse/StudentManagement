@@ -6,8 +6,8 @@ namespace LuongChiHai_QLSV.Server.Entities
 {
     public class Student
     {
-        public string StudentID { get; set; } = null!; // Primary Key
-        public int UserID { get; set; } // Foreign Key to User
+        public string StudentID { get; set; } = null!;
+        public int UserID { get; set; }
         public string StudentName { get; set; } = null!;
         public string? Gender { get; set; }
         public DateTime? BirthDate { get; set; }

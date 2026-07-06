@@ -56,9 +56,9 @@ export class LoginComponent implements OnInit {
     const role = this.authService.getUserRole();
     console.log(role);
     if (role === 'Admin') {
-      this.router.navigate(['/admin/dashboard']); // Admin ưu tiên vào quản lý sinh viên
+      this.router.navigate(['/admin/dashboard']); // Admin
     } else if (role === 'Student') {
-      this.router.navigate(['/my-results']); // Sinh viên chỉ được xem điểm
+      this.router.navigate(['/student/dashboard']); // Sinh viên
     } else {
       this.router.navigate(['/dashboard']); // Trang chung
     }

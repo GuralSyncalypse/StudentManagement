@@ -4,12 +4,6 @@ export interface AcademicProfile {
   majorName: string;
 }
 
-export interface FamilyRelationship {
-  relativeName: string;
-  relationshipType: string;
-  phoneNumber: string;
-}
-
 export interface StudentResponse {
   studentID: string;
   studentName: string;
@@ -18,8 +12,6 @@ export interface StudentResponse {
   permanentAddress: string;
 
   academicProfile?: AcademicProfile;
-
-  familyRelationships: FamilyRelationship[];
 }
 
 export interface StudentRequest {
