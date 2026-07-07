@@ -4,14 +4,16 @@ using LuongChiHai_QLSV.Server.DTOs.Auths;
 using LuongChiHai_QLSV.Server.DTOs.Students;
 using LuongChiHai_QLSV.Server.Entities;
 using LuongChiHai_QLSV.Server.Interfaces;
+using LuongChiHai_QLSV.Server.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 
-[Route("api/admin/[controller]")]
+[Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class StudentsController : ControllerBase
 {
     private readonly IStudentService _studentService;
@@ -22,6 +24,7 @@ public class StudentsController : ControllerBase
 
     // GET: api/Student
     [HttpGet]
+    [Authorize(Policy = "student:read_all")]
     public async Task<ActionResult<IEnumerable<StudentResponseDto>>> GetStudent()
     {
         var response = await _studentService.GetAllAsync();
@@ -37,6 +40,7 @@ public class StudentsController : ControllerBase
 
     // GET: api/Student/5
     [HttpGet("{id}")]
+    [Authorize(Policy = "student:read_detail")]
     public async Task<ActionResult<StudentResponseDto>> GetStudent(string id)
     {
         var response = await _studentService.GetByIdAsync(id);
@@ -50,6 +54,7 @@ public class StudentsController : ControllerBase
     // PUT: api/Student/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
+    [Authorize(Policy = "student:update")]
     public async Task<IActionResult> PutStudent(string id, StudentRequestDto request)
     {
         if (id != request.StudentID)
@@ -66,6 +71,7 @@ public class StudentsController : ControllerBase
     // POST: api/Student
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
+    [Authorize(Policy = "student:create")]
     public async Task<ActionResult<StudentResponseDto>> PostStudent(StudentRequestDto request)
     {
         try
@@ -95,6 +101,7 @@ public class StudentsController : ControllerBase
 
     // DELETE: api/Student/5
     [HttpDelete("{id}")]
+    [Authorize(Policy = "student:delete")]
     public async Task<IActionResult> DeleteStudent(string? id)
     {
         if (id == null)
@@ -104,4 +111,23 @@ public class StudentsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("me")]
+    [HasPermission("student:view_own_profile")]
+    public async Task<ActionResult<StudentResponseDto>> GetCurrentStudent()
+    {
+        var studentId = User.FindFirst(ClaimTypes.Name)?.Value
+                     ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(studentId))
+            return Unauthorized();
+
+        // Service sẽ chịu trách nhiệm tìm và map sang DTO
+        var studentDto = await _studentService.GetByIdAsync(studentId);
+        if (studentDto == null)
+            return NotFound();
+
+        return Ok(studentDto);
+    }
+
 }

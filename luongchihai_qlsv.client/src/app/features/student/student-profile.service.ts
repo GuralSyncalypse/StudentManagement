@@ -6,7 +6,7 @@ import { StudentResponse } from '../../core/models/student.model';
 @Injectable({ providedIn: 'root' })
 export class StudentService {
   private http = inject(HttpClient);
-  private apiUrl = 'api/StudentBase';
+  private apiUrl = 'api/Students';
 
   // For the logged-in student's own dashboard
   getMyProfile(): Observable<StudentResponse> {

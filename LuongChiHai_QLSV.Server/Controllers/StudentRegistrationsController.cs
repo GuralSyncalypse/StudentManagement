@@ -1,22 +1,19 @@
 ﻿using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.DTOs;
 using LuongChiHai_QLSV.Server.Entities;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace LuongChiHai_QLSV.Server.Controllers.Student
+namespace LuongChiHai_QLSV.Server.Controllers
 {
-    [Route("api/student/course-sections")]
+    [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Student")]
-    public class CourseSectionsController : ControllerBase
+    public class StudentRegistrationsController : ControllerBase
     {
         private readonly SchoolContext _context;
-
-        public CourseSectionsController(SchoolContext context)
+        public StudentRegistrationsController(SchoolContext context)
         {
             _context = context;
         }

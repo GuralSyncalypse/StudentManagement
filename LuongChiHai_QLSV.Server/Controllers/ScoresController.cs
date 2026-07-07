@@ -4,9 +4,9 @@ using LuongChiHai_QLSV.Server.Entities;
 using LuongChiHai_QLSV.Server.Data;
 using Microsoft.AspNetCore.Authorization;
 
-[Route("api/admin/[controller]")]
+[Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles="Admin")]
+[Authorize]
 public class ScoresController : ControllerBase
 {
     private readonly SchoolContext _context;
@@ -71,6 +71,7 @@ public class ScoresController : ControllerBase
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     // 1. API Tạo lẻ 1 đầu điểm (Dùng khi giảng viên muốn thêm thủ công 1 môn)
     [HttpPost]
+    [Authorize(Policy = "grade:manage")]
     public async Task<IActionResult> SaveScores([FromBody] List<Score> scores)
     {
         // 1. Kiểm tra danh sách trống

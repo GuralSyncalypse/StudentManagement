@@ -3,6 +3,7 @@ using LuongChiHai_QLSV.Server.DTOs;
 using LuongChiHai_QLSV.Server.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using static System.Collections.Specialized.BitVector32;
 
 [Route("api/[controller]")]
@@ -117,4 +118,8 @@ public class CourseSectionsController : ControllerBase
     {
         return _context.CourseSections.Any(e => e.SectionID == sectionid);
     }
+
+
+
+    
 }

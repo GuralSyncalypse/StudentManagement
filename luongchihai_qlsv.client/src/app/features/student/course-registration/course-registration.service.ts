@@ -18,22 +18,22 @@ export interface CourseSectionDto {
   providedIn: 'root'
 })
 export class CourseRegistrationService {
-  private apiUrl = 'api/student'; // Base URL kết nối tới Student API ở Backend
+  private apiUrl = 'api/StudentRegistrations'; // Base URL kết nối tới Student API ở Backend
 
   constructor(private http: HttpClient) { }
 
   // Lấy danh sách các lớp học phần mở đăng ký
   getAvailableSections(): Observable<CourseSectionDto[]> {
-    return this.http.get<CourseSectionDto[]>(`${this.apiUrl}/course-sections`);
+    return this.http.get<CourseSectionDto[]>(`${this.apiUrl}`);
   }
 
   // Gửi yêu cầu đăng ký học phần (Chỉ truyền lên SectionID)
   registerCourse(sectionID: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/course-sections`, { sectionID });
+    return this.http.post(`${this.apiUrl}`, { sectionID });
   }
 
   // Gửi yêu cầu huy đăng ký học phần (Chỉ truyền lên SectionID)
   dropCourse(sectionID: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/course-sections/${sectionID}`);
+    return this.http.delete(`${this.apiUrl}/${sectionID}`);
   }
 }

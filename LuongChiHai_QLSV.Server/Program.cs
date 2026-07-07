@@ -1,8 +1,10 @@
 using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.Interfaces;
+using LuongChiHai_QLSV.Server.Security;
 using LuongChiHai_QLSV.Server.Services;
 using LuongChiHai_QLSV.Server.UnitOfWorks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -14,6 +16,11 @@ var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? "Key_Chua_Chay_Mac_Dinh_Sieu_Dai_Cho_Hai_2026_!";
 
 // 2. Đăng ký dịch vụ Authentication dùng JWT
+// 1.Đăng ký Dynamic Policy Provider (Dạng Singleton)
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+
+// 2. Đăng ký Authorization Handler (Phải là Scoped vì nó gọi vào DbContext)
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 
