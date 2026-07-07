@@ -10,6 +10,9 @@
         public string? Status { get; set; }
         public string? CourseName { get; set; }
         public int CurrentEnrollment { get; set; }
+
+        // Thuộc tính mới bổ sung
+        public bool IsEnrolled { get; set; }
     }
 
     public class CreateUpdateSectionDto

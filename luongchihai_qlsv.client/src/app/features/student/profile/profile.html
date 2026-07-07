@@ -1,12 +1,16 @@
 @if (student) {
 <div class="profile-card">
   <div class="profile-header">
-    <div class="avatar">
-      {{ student.studentName.charAt(0).toUpperCase() }}
-    </div>
-    <div class="header-info">
-      <h2>{{ student.studentName }}</h2>
-      <p class="student-id">ID: {{ student.studentID }}</p>
+    <div class="flex flex-col gap-2 p-8 sm:flex-row sm:items-center sm:gap-6 sm:py-4 ...">
+      <div class="avatar">
+        {{ student.studentName.charAt(0).toUpperCase() }}
+      </div>
+      <div class="space-y-2 text-center sm:text-left">
+        <div class="space-y-0.5">
+          <p class="text-lg font-semibold text-black">{{ student.studentName }}</p>
+          <p class="font-medium text-gray-500">{{ student.studentID }}</p>
+        </div>
+      </div>
     </div>
   </div>
 

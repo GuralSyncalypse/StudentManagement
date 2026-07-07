@@ -1,0 +1,66 @@
+<div class="registration-container">
+  <h2>📚 Đăng Ký Học Phần</h2>
+  <p class="subtitle">Lựa chọn các lớp học phần đang mở dưới đây để đăng ký lịch học của bạn.</p>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading-spinner">
+    <span>Đang xử lý hệ thống, vui lòng đợi...</span>
+  </div>
+
+  <div class="table-responsive" *ngIf="!isLoading && sections.length > 0">
+    <table class="registration-table">
+      <thead>
+        <tr>
+          <th>Mã Lớp</th>
+          <th>Tên Học Phần</th>
+          <th>Học Kỳ</th>
+          <th>Lớp Học Bản</th>
+          <th>Sĩ Số</th>
+          <th>Trạng Thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let section of sections" [class.row-enrolled]="section.isEnrolled">
+          <td>{{ section.sectionID }}</td>
+          <td class="course-name">{{ section.courseName }}</td>
+          <td>{{ section.semester }}</td>
+          <td>{{ section.classSection }}</td>
+          <td>
+            <span class="badge" [ngClass]="section.currentEnrollment >= section.maxCapacity ? 'badge-danger' : 'badge-info'">
+              {{ section.currentEnrollment }} / {{ section.maxCapacity }}
+            </span>
+          </td>
+          <td>
+            <div *ngIf="section.isEnrolled" class="enrolled-group">
+              <span class="text-success">✓ Đã đăng ký</span>
+              <button class="btn btn-danger btn-sm" (click)="onDrop(section)">
+                Hủy đăng ký
+              </button>
+            </div>
+
+            <button *ngIf="!section.isEnrolled && section.currentEnrollment >= section.maxCapacity" class="btn btn-full" disabled>
+              🚫 Lớp đã đầy
+            </button>
+
+            <button *ngIf="!section.isEnrolled && section.currentEnrollment < section.maxCapacity"
+                    class="btn btn-action"
+                    (click)="onRegister(section)">
+              Đăng Ký
+            </button>
+
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!isLoading && sections.length === 0" class="empty-state">
+    Hiện tại không có lớp học phần nào được mở đăng ký trong học kỳ này.
+  </div>
+</div>
