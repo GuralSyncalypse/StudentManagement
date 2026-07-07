@@ -28,5 +28,6 @@ namespace LuongChiHai_QLSV.Server.Entities
 
         // Quan hệ 1 - Nhiều với bảng trung gian UserRole
         public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public virtual ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
     }
 }

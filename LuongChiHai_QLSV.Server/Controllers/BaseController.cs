@@ -1,19 +1,21 @@
 ﻿using LuongChiHai_QLSV.Server.Data;
+using LuongChiHai_QLSV.Server.DTOs;
 using LuongChiHai_QLSV.Server.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
-namespace LuongChiHai_QLSV.Server.Controllers.Admin
+namespace LuongChiHai_QLSV.Server.Controllers
 {
-    [Route("api/admin/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles="Admin")]
-    public class AdminBaseController : ControllerBase
+    [Authorize]
+    public class BaseController : ControllerBase
     {
         private readonly SchoolContext _context;
-        public AdminBaseController(SchoolContext context)
+        public BaseController(SchoolContext context)
         {
             _context = context;
         }
@@ -32,5 +34,7 @@ namespace LuongChiHai_QLSV.Server.Controllers.Admin
                 TotalCourses = totalCourses
             });
         }
+
+        
     }
 }

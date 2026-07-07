@@ -12,7 +12,7 @@ import {
 })
 export class AdminStudentService {
   private http = inject(HttpClient)
-  private apiUrl = '/api/admin/students';
+  private apiUrl = '/api/students';
 
   // GET ALL
   getStudents(): Observable<StudentResponse[]> {
