@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using LuongChiHai_QLSV.Server.Entities;
 using LuongChiHai_QLSV.Server.Data;
+using Microsoft.AspNetCore.Authorization;
 
-[Route("api/[controller]")]
+[Route("api/admin/[controller]")]
 [ApiController]
+[Authorize(Roles="Admin")]
 public class ScoresController : ControllerBase
 {
     private readonly SchoolContext _context;

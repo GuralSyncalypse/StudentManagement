@@ -79,7 +79,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 // Bước C: Xử lý tạo thực thể Sinh viên nếu quyền là Student
                 if (request.RoleName.Equals("Student", StringComparison.OrdinalIgnoreCase))
                 {
-                    var newStudent = new Student
+                    var newStudent = new Entities.Student
                     {
                         StudentID = request.StudentID!,
                         UserID = newUser.UserID,

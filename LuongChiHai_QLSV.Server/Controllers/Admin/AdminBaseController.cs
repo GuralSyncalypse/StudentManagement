@@ -7,13 +7,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LuongChiHai_QLSV.Server.Controllers.Admin
 {
-    [Route("api/[controller]")]
+    [Route("api/admin/[controller]")]
     [ApiController]
     [Authorize(Roles="Admin")]
-    public class AdminProfileController : ControllerBase
+    public class AdminBaseController : ControllerBase
     {
         private readonly SchoolContext _context;
-        public AdminProfileController(SchoolContext context)
+        public AdminBaseController(SchoolContext context)
         {
             _context = context;
         }

@@ -9,13 +9,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 
-[Route("api/[controller]")]
+[Route("api/admin/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin")]
-public class AdminStudentsController : ControllerBase
+public class StudentsController : ControllerBase
 {
     private readonly IStudentService _studentService;
-    public AdminStudentsController(IStudentService studentService)
+    public StudentsController(IStudentService studentService)
     {
         _studentService = studentService;
     }

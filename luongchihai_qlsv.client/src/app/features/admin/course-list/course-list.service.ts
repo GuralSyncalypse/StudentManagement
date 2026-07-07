@@ -9,7 +9,7 @@ import { Course } from '../../../core/models/course.model';
 })
 export class AdminCourseService {
   private http = inject(HttpClient)
-  private apiUrl = '/api/AdminCourses';
+  private apiUrl = '/api/admin/courses';
 
   // GET ALL
   getCourses(): Observable<Course[]> {

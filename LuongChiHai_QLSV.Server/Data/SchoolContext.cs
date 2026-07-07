@@ -36,12 +36,12 @@ namespace LuongChiHai_QLSV.Server.Data
             modelBuilder.Entity<UserRole>()
                 .HasKey(ur => new { ur.UserID, ur.RoleID });
 
-            // 2. Đảm bảo luật Unique cho Username
+            // 2. Đảm bảo Unique cho Username
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
 
-            // 3. Đảm bảo luật Unique cho RoleName
+            // 3. Đảm bảo Unique cho RoleName
             modelBuilder.Entity<Role>()
                 .HasIndex(r => r.RoleName)
                 .IsUnique();
@@ -51,6 +51,7 @@ namespace LuongChiHai_QLSV.Server.Data
                 entity.HasNoKey();
                 entity.ToView("v_BangDiemChiTiet");
             });
+
             // Tự động tìm tất cả các file có kế thừa IEntityTypeConfiguration trong toàn bộ Project và nạp vào.
             // modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }

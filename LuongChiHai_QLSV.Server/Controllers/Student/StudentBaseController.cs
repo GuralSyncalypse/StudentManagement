@@ -8,11 +8,11 @@ using LuongChiHai_QLSV.Server.Interfaces;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = "Student")]
-public class StudentController : ControllerBase
+public class StudentBaseController : ControllerBase
 {
     private readonly IStudentService _studentService;
 
-    public StudentController(IStudentService studentService)
+    public StudentBaseController(IStudentService studentService)
         => _studentService = studentService;
 
     // GET api/Student/me

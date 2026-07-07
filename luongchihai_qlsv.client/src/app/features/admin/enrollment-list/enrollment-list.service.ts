@@ -9,7 +9,7 @@ import { Enrollment } from '../../../core/models/enrollment.model';
 })
 export class EnrollmentService {
   private http = inject(HttpClient)
-  private apiUrl = '/api/Enrollments';
+  private apiUrl = '/api/admin/enrollments';
 
   // GET ALL
   getEnrollments(): Observable<Enrollment[]> {

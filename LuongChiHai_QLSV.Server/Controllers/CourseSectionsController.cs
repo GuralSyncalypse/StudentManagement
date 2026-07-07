@@ -97,42 +97,6 @@ public class CourseSectionsController : ControllerBase
         return CreatedAtAction("GetCourseSection", new { sectionid = coursesection.SectionID }, coursesection);
     }
 
-    [HttpPost("admin-register")]
-    public async Task<IActionResult> AdminRegisterStudent([FromBody] AdminRegistrationDto dto)
-    {
-        // Bước 1: Kiểm tra xem lớp học phần (SectionID) có tồn tại và đang mở không
-        var section = await _context.CourseSections.FindAsync(dto.SectionID);
-        if (section == null) return NotFound(new { message = "Lớp học phần không tồn tại." });
-        if (section.Status != "Open") return BadRequest(new { message = "Lớp học phần này đã đóng." });
-
-        // Bước 2: Kiểm tra sĩ số xem đã đầy chưa
-        if (section.Enrollments.Count >= section.MaxCapacity)
-        {
-            return BadRequest(new { message = "Lớp học phần đã đủ sĩ số tối đa." });
-        }
-
-        // Bước 3: Kiểm tra Mã sinh viên (StudentID) xem có hợp lệ trong hệ thống không
-        var studentExists = await _context.Students.AnyAsync(s => s.StudentID == dto.StudentID);
-        if (!studentExists) return BadRequest(new { message = "Mã số sinh viên không tồn tại trên hệ thống." });
-
-        // Bước 4: Kiểm tra xem sinh viên này đã đăng ký lớp này chưa (tránh trùng lặp)
-        var isAlreadyRegistered = await _context.Enrollments
-            .AnyAsync(e => e.SectionID == dto.SectionID && e.StudentID == dto.StudentID);
-        if (isAlreadyRegistered) return BadRequest(new { message = "Sinh viên này đã được xếp vào lớp này rồi." });
-
-        // Bước 5: Thêm bản ghi đăng ký mới & tăng sĩ số lớp lên 1
-        var newEnrollment = new Enrollment
-        {
-            SectionID = dto.SectionID,
-            StudentID = dto.StudentID,
-            EnrollDate = DateTime.Now
-        };
-        _context.Enrollments.Add(newEnrollment);
-
-        await _context.SaveChangesAsync();
-        return Ok();
-    }
-
     // DELETE: api/CourseSection/5
     [HttpDelete("{sectionid}")]
     public async Task<IActionResult> DeleteCourseSection(int? sectionid)

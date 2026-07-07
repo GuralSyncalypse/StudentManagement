@@ -19,7 +19,7 @@ namespace LuongChiHai_QLSV.Server.Entities
         [StringLength(10)]
         public string ClassSection { get; set; } = "L01";
 
-        public int? MaxCapacity { get; set; }
+        public int MaxCapacity { get; set; }
 
         [StringLength(20)]
         public string? Status { get; set; } = "Open";

@@ -4,13 +4,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-[Route("api/[controller]")]
+[Route("api/admin/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin")]
-public class AdminCoursesController : ControllerBase
+public class CoursesController : ControllerBase
 {
     private readonly SchoolContext _context;
-    public AdminCoursesController(SchoolContext context)
+    public CoursesController(SchoolContext context)
     {
         _context = context;
     }
