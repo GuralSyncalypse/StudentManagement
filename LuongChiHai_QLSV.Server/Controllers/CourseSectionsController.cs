@@ -3,8 +3,6 @@ using LuongChiHai_QLSV.Server.DTOs;
 using LuongChiHai_QLSV.Server.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using static System.Collections.Specialized.BitVector32;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -18,9 +16,10 @@ public class CourseSectionsController : ControllerBase
 
     // GET: api/CourseSection
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CourseSection>>> GetCourseSection()
+    public async Task<ActionResult<IEnumerable<CourseSectionDto>>> GetCourseSection()
     {
         var data = await _context.CourseSections
+        .AsNoTracking()
         .Where(s => s.Status == "Open")
         .Select(s => new
         {
@@ -44,9 +43,24 @@ public class CourseSectionsController : ControllerBase
 
     // GET: api/CourseSection/5W
     [HttpGet("{sectionid}")]
-    public async Task<ActionResult<CourseSection>> GetCourseSection(int sectionid)
+    public async Task<ActionResult<CourseSectionDto>> GetCourseSection(int sectionid)
     {
-        var coursesection = await _context.CourseSections.FindAsync(sectionid);
+        var coursesection = await _context.CourseSections
+            .AsNoTracking()
+            .Where(s => s.SectionID == sectionid)
+            .Select(s => new CourseSectionDto
+            {
+                SectionID = s.SectionID,
+                CourseID = s.CourseID,
+                Semester = s.Semester,
+                ClassSection = s.ClassSection,
+                MaxCapacity = s.MaxCapacity,
+                Status = s.Status,
+                CourseName = s.Course.CourseName,
+                CurrentEnrollment = s.Enrollments.Count,
+                IsEnrolled = false
+            })
+            .FirstOrDefaultAsync();
 
         if (coursesection == null)
         {
@@ -59,14 +73,24 @@ public class CourseSectionsController : ControllerBase
     // PUT: api/CourseSection/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{sectionid}")]
-    public async Task<IActionResult> PutCourseSection(int? sectionid, CourseSection coursesection)
+    public async Task<IActionResult> PutCourseSection(int? sectionid, CreateUpdateSectionDto request)
     {
-        if (sectionid != coursesection.SectionID)
+        if (sectionid == null)
         {
             return BadRequest();
         }
 
-        _context.Entry(coursesection).State = EntityState.Modified;
+        var coursesection = await _context.CourseSections.FindAsync(sectionid);
+        if (coursesection == null)
+        {
+            return NotFound();
+        }
+
+        coursesection.CourseID = request.CourseID;
+        coursesection.Semester = request.Semester;
+        coursesection.ClassSection = request.ClassSection ?? coursesection.ClassSection;
+        coursesection.MaxCapacity = request.MaxCapacity;
+        coursesection.Status = request.Status;
 
         try
         {
@@ -90,12 +114,34 @@ public class CourseSectionsController : ControllerBase
     // POST: api/CourseSection
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<CourseSection>> PostCourseSection(CourseSection coursesection)
+    public async Task<ActionResult<CourseSectionDto>> PostCourseSection(CreateUpdateSectionDto request)
     {
+        var coursesection = new CourseSection
+        {
+            CourseID = request.CourseID,
+            Semester = request.Semester,
+            ClassSection = request.ClassSection ?? "L01",
+            MaxCapacity = request.MaxCapacity,
+            Status = request.Status
+        };
+
         _context.CourseSections.Add(coursesection);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction("GetCourseSection", new { sectionid = coursesection.SectionID }, coursesection);
+        var response = new CourseSectionDto
+        {
+            SectionID = coursesection.SectionID,
+            CourseID = coursesection.CourseID,
+            Semester = coursesection.Semester,
+            ClassSection = coursesection.ClassSection,
+            MaxCapacity = coursesection.MaxCapacity,
+            Status = coursesection.Status,
+            CourseName = null,
+            CurrentEnrollment = 0,
+            IsEnrolled = false
+        };
+
+        return CreatedAtAction(nameof(GetCourseSection), new { sectionid = coursesection.SectionID }, response);
     }
 
     // DELETE: api/CourseSection/5

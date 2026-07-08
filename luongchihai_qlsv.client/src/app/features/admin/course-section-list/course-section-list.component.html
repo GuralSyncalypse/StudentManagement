@@ -65,11 +65,21 @@
                         </span>
                     </td>
                     <td class="text-center">
-                        <button class="btn-action-primary"
-                                [disabled]="section.status !== 'Open'"
-                                (click)="onRegister(section)">
-                            Đăng ký
-                        </button>
+                        <div class="action-btn-group" style="display: flex; gap: 6px; justify-content: center;">
+
+                            <button class="btn-action-primary"
+                                    [disabled]="section.status !== 'Open' || (section.maxCapacity && (section.currentEnrollment ?? 0) >= section.maxCapacity)"
+                                    (click)="onRegister(section)">
+                                Đăng ký
+                            </button>
+
+                            <button class="btn-action-danger"
+                                    [disabled]="(section.currentEnrollment ?? 0) <= 0"
+                                    (click)="onUnregister(section)">
+                                Hủy đăng ký
+                            </button>
+
+                        </div>
                     </td>
                 </tr>
                 } @empty {
@@ -113,6 +123,41 @@
             <button class="btn-secondary" (click)="closeRegModal()">Hủy bỏ</button>
             <button class="btn-primary-submit" [disabled]="!studentIdInput.trim()" (click)="submitAdminRegistration()">
                 ⚡ Xác nhận xếp lớp
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@if (isUnregModalOpen && selectedSection) {
+<div class="modal-overlay">
+    <div class="modal-card border-danger">
+        <div class="modal-header bg-danger">
+            <h3>Hủy Xếp Lớp Cho Sinh Viên (Admin)</h3>
+            <button class="btn-close-x" (click)="closeUnregModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="course-info-summary alert-warning-summary">
+                <p>📖 <strong>Môn học:</strong> {{ selectedSection.course?.courseName }}</p>
+                <p>🏫 <strong>Lớp bố trí:</strong> {{ selectedSection.classSection }}</p>
+            </div>
+
+            <div class="form-group">
+                <label for="studentUnregId" class="text-danger"><strong>Nhập MSSV cần xóa khỏi lớp:</strong></label>
+                <input type="text"
+                       id="studentUnregId"
+                       class="form-control-input input-danger"
+                       placeholder="Ví dụ: SV123456"
+                       [(ngModel)]="studentIdUnregInput"
+                       (keyup.enter)="submitAdminUnregistration()" />
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeUnregModal()">Hủy bỏ</button>
+            <button class="btn-danger-submit" [disabled]="!studentIdUnregInput.trim()" (click)="submitAdminUnregistration()">
+                🗑️ Xác nhận xóa sinh viên
             </button>
         </div>
     </div>

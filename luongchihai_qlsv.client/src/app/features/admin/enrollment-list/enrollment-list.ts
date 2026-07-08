@@ -2,7 +2,7 @@ import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { EnrollmentService } from './enrollment-list.service';
+import { EnrollmentService } from '../../../core/services/enrollment.services';
 import { ScoreService } from '../../../core/services/score.service';
 import { Enrollment, Score } from '../../../core/models/enrollment.model';
 
@@ -34,10 +34,19 @@ export class EnrollmentList implements OnInit {
     this.loadEnrollments();
   }
 
+  getWeightPercent(score: Score): number {
+    return (score.weight ?? 0) * 100;
+  }
+
+  setWeightPercent(score: Score, value: number): void {
+    score.weight = value / 100;
+  }
+
   // Chọn một dòng để hiển thị chi tiết nhập điểm
   selectEnrollment(enrollment: Enrollment): void {
     // Deep clone để tránh thay đổi trực tiếp data trên bảng chính khi chưa ấn Lưu
     this.selectedEnrollment = JSON.parse(JSON.stringify(enrollment));
+    console.log(this.selectedEnrollment);
   }
 
   // Tự động thêm một hàng điểm trống
@@ -59,19 +68,19 @@ export class EnrollmentList implements OnInit {
     if (!this.selectedEnrollment) return;
 
     // 1. Validate tổng trọng số phải bằng 100%
-    const totalWeight = this.selectedEnrollment.scores.reduce((sum, s) => sum + (s.weight || 0), 0);
+    const totalWeight = this.selectedEnrollment.scores.reduce((sum, s) => sum + (s.weight * 100 || 0), 0);
     if (totalWeight !== 100 && this.selectedEnrollment.scores.length > 0) {
       alert(`Cảnh báo: Tổng trọng số các đầu điểm hiện tại là ${totalWeight}%, vui lòng cấu hình đủ 100%!`);
       return;
     }
 
     // 2. Gọi API thật từ Server
-    this.scoreService.saveScores(this.selectedEnrollment.scores)
+    this.scoreService.saveScores(this.selectedEnrollment.enrollmentID, this.selectedEnrollment.scores)
       .subscribe({
         next: () => {
           alert('Cập nhật bảng điểm thành công!');
-          this.loadEnrollments(); // Tải lại bảng chính để cập nhật điểm mới
-          this.selectedEnrollment = null; // Đóng panel nhập điểm
+          this.loadEnrollments();
+          this.selectedEnrollment = null;
         },
         error: (err) => {
           console.error('Lỗi khi lưu điểm:', err);
@@ -91,8 +100,8 @@ export class EnrollmentList implements OnInit {
       const value = score.scoreValue || 0;
       const weight = score.weight || 0;
 
-      // Tính tổng theo công thức (Điểm * Trọng số / 100)
-      totalScore += value * (weight / 100);
+      // Tính tổng theo công thức (Điểm * Trọng số)
+      totalScore += value * weight;
     }
 
     return totalScore;

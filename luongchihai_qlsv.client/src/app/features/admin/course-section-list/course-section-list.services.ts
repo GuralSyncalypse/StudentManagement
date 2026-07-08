@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { EnrollmentService } from '../enrollment-list/enrollment-list.service'
+import { EnrollmentService } from '../../../core/services/enrollment.services'
 import { CourseSection } from '../../../core/models/course.model';
 
 @Injectable({
@@ -36,11 +36,5 @@ export class CourseSectionService {
   // DELETE
   deleteCourseSection(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
-  adminRegisterStudent(payload: { sectionID: number; studentID: string }): Observable<any> {
-    // Gửi yêu cầu POST lên API endpoint xử lý đăng ký của Admin
-    // Đường dẫn ví dụ: api/coursesections/admin-register
-    return this.http.post<any>(`${this.apiUrl}/admin-register`, payload);
   }
 }

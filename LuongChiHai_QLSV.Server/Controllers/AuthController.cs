@@ -16,7 +16,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly SchoolContext _context; // Thay bằng DbContext của bạn
+        private readonly SchoolContext _context; 
         private readonly IConfiguration _config;
 
         public AuthController(SchoolContext context, IConfiguration config)
@@ -128,6 +128,15 @@ namespace LuongChiHai_QLSV.Server.Controllers
             foreach (var userRole in user.UserRoles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, userRole.Role.RoleName));
+            }
+
+            var student = await _context.Students
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.UserID == user.UserID);
+
+            if (student != null)
+            {
+                claims.Add(new Claim("StudentID", student.StudentID));
             }
 
             // 4. Ký và sinh chuỗi Token JWT

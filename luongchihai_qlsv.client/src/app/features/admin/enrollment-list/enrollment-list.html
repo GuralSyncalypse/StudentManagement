@@ -104,7 +104,7 @@
               </select>
             </td>
             <td>
-              <input type="number" [(ngModel)]="score.weight" min="0" max="100" class="form-control text-center" />
+              <input type="number"  [ngModel]="getWeightPercent(score)" (ngModelChange)="setWeightPercent(score, $event)" min="0" max="100" class="form-control text-center" />
             </td>
             <td>
               <input type="number" [(ngModel)]="score.scoreValue" min="0" max="10" step="0.1" placeholder="0.0" class="form-control score-input" />

@@ -46,6 +46,8 @@
             <th>Mã Môn</th>
             <th>Tên Môn Học</th>
             <th class="text-center">Điểm Số</th>
+            <th class="text-center">Xếp loại</th>
+            <th>Kết quả</th>
           </tr>
         </thead>
         <tbody>
@@ -56,6 +58,10 @@
             <td class="text-center">
               <span class="badge-grade">{{ course.totalScore }}</span>
             </td>
+            <td class="text-center">
+              <span class="badge-grade">{{ course.grade }}</span>
+            </td>
+            <td>{{ course.result }}</td>
           </tr>
           } @empty {
           <tr>

@@ -30,6 +30,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
 
             // 2. Lấy danh sách lớp và check trạng thái đăng ký của sinh viên này
             var data = await _context.CourseSections
+                .AsNoTracking()
                 .Where(s => s.Status == "Open") // Chỉ lấy các lớp đang mở đợt đăng ký
                 .Select(s => new CourseSectionDto
                 {
@@ -54,42 +55,65 @@ namespace LuongChiHai_QLSV.Server.Controllers
         public async Task<IActionResult> RegisterCourse([FromBody] StudentRegistrationDto request)
         {
             // 1. Lấy mã sinh viên tự động từ Token bảo mật
-            var studentIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
+            var studentIdClaim = User.FindFirst("StudentID")?.Value
+                ?? User.FindFirst(ClaimTypes.Name)?.Value;
             if (string.IsNullOrEmpty(studentIdClaim)) return Unauthorized();
             string studentId = studentIdClaim;
 
-            // 2. Kiểm tra xem lớp học phần (Section) này có tồn tại không
-            var sectionExists = await _context.CourseSections.AnyAsync(s => s.SectionID == request.SectionID);
-            if (!sectionExists) return BadRequest("Lớp học phần không tồn tại.");
-
-            // 3. Kiểm tra xem sinh viên đã đăng ký lớp này từ trước chưa (Tránh trùng lặp)
-            var alreadyEnrolled = await _context.Enrollments
-                .AnyAsync(e => e.StudentID == studentId && e.SectionID == request.SectionID);
-            if (alreadyEnrolled) return BadRequest("Bạn đã đăng ký học phần này rồi.");
-
-            // 4. Tiến hành lưu thông tin đăng ký
-            var newEnrollment = new Enrollment
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                StudentID = studentId,
-                SectionID = request.SectionID,
-                EnrollDate = DateTime.Now
-            };
+                // 2. Kiểm tra xem lớp học phần (Section) này có tồn tại và đang mở không
+                var section = await _context.CourseSections
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.SectionID == request.SectionID);
 
-            _context.Enrollments.Add(newEnrollment);
-            await _context.SaveChangesAsync();
+                if (section == null) return BadRequest("Lớp học phần không tồn tại.");
+                if (!string.Equals(section.Status, "Open", StringComparison.OrdinalIgnoreCase))
+                    return BadRequest("Học phần này hiện không mở đăng ký.");
 
-            return Ok(new
+                var currentEnrollment = await _context.Enrollments
+                    .CountAsync(e => e.SectionID == request.SectionID);
+
+                if (currentEnrollment >= section.MaxCapacity)
+                    return BadRequest("Lớp học phần đã đủ sĩ số.");
+
+                // 3. Kiểm tra xem sinh viên đã đăng ký lớp này từ trước chưa (Tránh trùng lặp)
+                var alreadyEnrolled = await _context.Enrollments
+                    .AnyAsync(e => e.StudentID == studentId && e.SectionID == request.SectionID);
+                if (alreadyEnrolled) return BadRequest("Bạn đã đăng ký học phần này rồi.");
+
+                // 4. Tiến hành lưu thông tin đăng ký
+                var newEnrollment = new Enrollment
+                {
+                    StudentID = studentId,
+                    SectionID = request.SectionID,
+                    EnrollDate = DateTime.UtcNow
+                };
+
+                _context.Enrollments.Add(newEnrollment);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    Message = "Đăng ký học phần thành công.",
+                    EnrollmentID = newEnrollment.EnrollmentID
+                });
+            }
+            catch (Exception ex)
             {
-                Message = "Đăng ký học phần thành công.",
-                EnrollmentID = newEnrollment.EnrollmentID
-            });
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Có lỗi xảy ra trong quá trình đăng ký.", error = ex.Message });
+            }
         }
 
         [HttpDelete("{sectionId}")]
         public async Task<IActionResult> DropCourse(int sectionId)
         {
             // 1. Lấy StudentID từ Token người dùng đăng nhập
-            var studentIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
+            var studentIdClaim = User.FindFirst("StudentID")?.Value
+                ?? User.FindFirst(ClaimTypes.Name)?.Value;
             if (string.IsNullOrEmpty(studentIdClaim)) return Unauthorized("Không xác thực được sinh viên.");
             string studentId = studentIdClaim;
 

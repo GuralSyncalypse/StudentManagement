@@ -1,6 +1,5 @@
-﻿using LuongChiHai_QLSV.Server.Data;
+using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.DTOs.Reports;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -23,31 +22,29 @@ namespace LuongChiHai_QLSV.Server.Controllers
             [FromQuery] string studentId,
             [FromQuery] int semester)
         {
+            var chiTietMonHoc = await LoadStudentGradesAsync(studentId, semester);
 
-            // 1. Lấy toàn bộ danh sách môn học của SV đó trong học kỳ được chọn từ View
-            var chiTietMonHoc = await _context.BangDiemChiTiet
-                .Where(x => x.StudentID == studentId && x.Semester == semester)
-                .ToListAsync();         
-
-            if (!chiTietMonHoc.Any())
+            if (chiTietMonHoc == null || chiTietMonHoc.Count == 0)
             {
                 return NotFound($"Không tìm thấy dữ liệu cho sinh viên {studentId} tại học kỳ {semester}");
             }
 
-            // 2. Thực hiện tính toán thống kê (Logic SQL được xử lý trên Memory cực nhanh sau khi filter)
-            int tongSoMonDaHoc = chiTietMonHoc.Count;
-            int soMonDaQua = chiTietMonHoc.Count(x => x.Result == "Đỗ");
-            int soMonTruot = chiTietMonHoc.Count(x => x.Result == "Trượt");
+            // 1. Loại bỏ hoàn toàn chuỗi cứng "Đỗ"/"Trượt", dùng trực tiếp logic từ Smart Enum
+            var tongSoMonDaHoc = chiTietMonHoc.Count;
+            var soMonDaQua = chiTietMonHoc.Count(x => x.GradeDetails.IsPassed());
+            var soMonTruot = chiTietMonHoc.Count(x => x.GradeDetails.IsFailed());
 
-            // Tính GPA theo trọng số tín chỉ: SUM(TotalScore * Credits) / SUM(Credits)
-            decimal tongTinChi = chiTietMonHoc.Sum(x => x.Credits);
-            decimal tongDiemNhanTinChi = chiTietMonHoc.Sum(x => (x.TotalScore ?? 0) * x.Credits);
+            // 2. Sửa lỗi Logic tính GPA: Chỉ tính các môn ĐÃ CÓ ĐIỂM
+            // Môn nào "Chưa có điểm" (Pending) thì không được lôi vào để tính Điểm trung bình học kỳ
+            var cacMonDaCoDiem = chiTietMonHoc.Where(x => !x.TotalScore.HasValue).ToList();
 
-            decimal diemTrungBinhHocKy = tongTinChi > 0
-                ? Math.Round(tongDiemNhanTinChi / tongTinChi, 2)
+            var tongTinChiHocKy = cacMonDaCoDiem.Sum(x => x.Credits);
+            var tongDiemNhanTinChi = cacMonDaCoDiem.Sum(x => (x.TotalScore ?? 0) * x.Credits);
+
+            var diemTrungBinhHocKy = tongTinChiHocKy > 0
+                ? Math.Round(tongDiemNhanTinChi / tongTinChiHocKy, 2)
                 : 0;
 
-            // 3. Gom tất cả vào DTO tổng hợp để trả về cho Frontend Angular
             var response = new StudentSemesterSummaryDto
             {
                 StudentID = studentId,
@@ -56,7 +53,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 SoMonDaQua = soMonDaQua,
                 SoMonTruot = soMonTruot,
                 DiemTrungBinhHocKy = diemTrungBinhHocKy,
-                ChiTietMonHoc = chiTietMonHoc
+                ChiTietMonHoc = chiTietMonHoc // Danh sách trả về vẫn đầy đủ các môn (kể cả môn pending)
             };
 
             return Ok(response);
@@ -65,37 +62,39 @@ namespace LuongChiHai_QLSV.Server.Controllers
         [HttpGet("summary")]
         public async Task<ActionResult<StudentSummaryDto>> GetMySummary([FromQuery] int semester)
         {
-
-            var studentId = User.FindFirst(ClaimTypes.Name)?.Value
-                     ?? User.FindFirst("sub")?.Value; // fallback for JWT "sub"
+            var studentId = User.FindFirst("StudentID")?.Value
+                     ?? User.FindFirst(ClaimTypes.Name)?.Value
+                     ?? User.FindFirst("sub")?.Value;
 
             if (studentId == null)
             {
                 return Unauthorized();
             }
 
-            // 1. Lấy toàn bộ danh sách môn học của SV đó trong học kỳ được chọn từ View
-            var chiTietMonHoc = await _context.BangDiemChiTiet
-                .Where(x => x.StudentID == studentId && x.Semester == semester)
-                .ToListAsync();
+            var chiTietMonHoc = await LoadStudentGradesAsync(studentId, semester);
 
-            if (!chiTietMonHoc.Any())
+            if (chiTietMonHoc.Count == 0)
             {
                 return NotFound($"Không tìm thấy dữ liệu cho sinh viên {studentId}");
             }
 
-            // 2. Thực hiện tính toán thống kê (Logic SQL được xử lý trên Memory cực nhanh sau khi filter)
-            int tongSoMonDaHoc = chiTietMonHoc.Count;
-
-            // 3. Gom tất cả vào DTO tổng hợp để trả về cho Frontend Angular
             var response = new StudentSummaryDto
             {
                 StudentID = studentId,
-                TotalEnrollment = tongSoMonDaHoc,
+                Semester = semester,
+                TotalEnrollment = chiTietMonHoc.Count,
                 CoursesDetail = chiTietMonHoc
             };
 
             return Ok(response);
+        }
+
+        private Task<List<StudentCourseGradeDto>> LoadStudentGradesAsync(string studentId, int semester)
+        {
+            return _context.BangDiemChiTiet
+                .AsNoTracking()
+                .Where(x => x.StudentID == studentId && x.Semester == semester)
+                .ToListAsync();
         }
     }
 }

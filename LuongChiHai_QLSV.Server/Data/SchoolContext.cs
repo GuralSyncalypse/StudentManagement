@@ -49,7 +49,7 @@ namespace LuongChiHai_QLSV.Server.Data
                 .HasIndex(r => r.RoleName)
                 .IsUnique();
 
-            
+            // Map view bảng điểm
             modelBuilder.Entity<StudentCourseGradeDto>(entity =>
             {
                 entity.HasNoKey();

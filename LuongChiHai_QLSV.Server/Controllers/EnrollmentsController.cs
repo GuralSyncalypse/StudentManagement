@@ -13,6 +13,7 @@ using System.Security.Claims;
 public class EnrollmentsController : ControllerBase
 {
     private readonly SchoolContext _context;
+
     public EnrollmentsController(SchoolContext context)
     {
         _context = context;
@@ -22,14 +23,13 @@ public class EnrollmentsController : ControllerBase
     [HasPermission("student:view_own_grades")]
     public async Task<ActionResult<IEnumerable<EnrollmentDto>>> GetMyEnrollments()
     {
-        // Lấy StudentID từ JWT Token đã đăng nhập
-        var studentIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
+        var studentIdClaim = User.FindFirst("StudentID")?.Value
+            ?? User.FindFirst(ClaimTypes.Name)?.Value;
         if (string.IsNullOrEmpty(studentIdClaim)) return Unauthorized("Không tìm thấy thông tin sinh viên.");
 
-        string studentId = studentIdClaim;
-
         var myEnrollments = await _context.Enrollments
-            .Where(e => e.StudentID == studentId)
+            .AsNoTracking()
+            .Where(e => e.StudentID == studentIdClaim)
             .Select(e => new EnrollmentDto
             {
                 EnrollmentID = e.EnrollmentID,
@@ -40,9 +40,11 @@ public class EnrollmentsController : ControllerBase
                 {
                     ScoreID = s.ScoreID,
                     ScoreType = s.ScoreType,
+                    Weight = s.Weight,
                     ScoreValue = s.ScoreValue
                 }).ToList()
-            }).ToListAsync();
+            })
+            .ToListAsync();
 
         return Ok(myEnrollments);
     }
@@ -51,7 +53,8 @@ public class EnrollmentsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<EnrollmentDto>>> GetEnrollments()
     {
-        return await _context.Enrollments
+        var enrollments = await _context.Enrollments
+            .AsNoTracking()
             .Select(e => new EnrollmentDto
             {
                 EnrollmentID = e.EnrollmentID,
@@ -62,10 +65,13 @@ public class EnrollmentsController : ControllerBase
                 {
                     ScoreID = s.ScoreID,
                     ScoreType = s.ScoreType,
+                    Weight = s.Weight,
                     ScoreValue = s.ScoreValue
                 }).ToList()
             })
             .ToListAsync();
+
+        return Ok(enrollments);
     }
 
     // GET: api/admin/Enrollment/5
@@ -73,6 +79,7 @@ public class EnrollmentsController : ControllerBase
     public async Task<ActionResult<EnrollmentDto>> GetEnrollment(int id)
     {
         var enrollmentDto = await _context.Enrollments
+            .AsNoTracking()
             .Where(e => e.EnrollmentID == id)
             .Select(e => new EnrollmentDto
             {
@@ -84,6 +91,7 @@ public class EnrollmentsController : ControllerBase
                 {
                     ScoreID = s.ScoreID,
                     ScoreType = s.ScoreType,
+                    Weight = s.Weight,
                     ScoreValue = s.ScoreValue
                 }).ToList()
             })
@@ -95,7 +103,6 @@ public class EnrollmentsController : ControllerBase
     }
 
     // PUT: api/Enrollment/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{enrollmentid}")]
     public async Task<IActionResult> PutEnrollment(int? enrollmentid, Enrollment enrollment)
     {
@@ -116,51 +123,68 @@ public class EnrollmentsController : ControllerBase
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
+
+            throw;
         }
 
         return NoContent();
     }
 
     // POST: api/admin/Enrollment
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
     public async Task<IActionResult> PostEnrollment([FromBody] AdminRegistrationDto dto)
     {
-        // Bước 1: Kiểm tra xem lớp học phần (SectionID) có tồn tại và đang mở không
-        var section = await _context.CourseSections.FindAsync(dto.SectionID);
-        if (section == null) return NotFound(new { message = "Lớp học phần không tồn tại." });
-        if (section.Status != "Open") return BadRequest(new { message = "Lớp học phần này đã đóng." });
+        await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        // Bước 2: Kiểm tra sĩ số xem đã đầy chưa
-        if (section.Enrollments.Count >= section.MaxCapacity)
+        try
         {
-            return BadRequest(new { message = "Lớp học phần đã đủ sĩ số tối đa." });
+            var section = await _context.CourseSections
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.SectionID == dto.SectionID);
+
+            if (section == null)
+                return NotFound(new { message = "Lớp học phần không tồn tại." });
+
+            if (!string.Equals(section.Status, "Open", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { message = "Lớp học phần này đã đóng." });
+
+            var currentEnrollment = await _context.Enrollments
+                .CountAsync(e => e.SectionID == dto.SectionID);
+
+            if (currentEnrollment >= section.MaxCapacity)
+                return BadRequest(new { message = "Lớp học phần đã đủ sĩ số tối đa." });
+
+            var studentExists = await _context.Students
+                .AsNoTracking()
+                .AnyAsync(s => s.StudentID == dto.StudentID);
+
+            if (!studentExists)
+                return BadRequest(new { message = "Mã số sinh viên không tồn tại trên hệ thống." });
+
+            var isAlreadyRegistered = await _context.Enrollments
+                .AnyAsync(e => e.SectionID == dto.SectionID && e.StudentID == dto.StudentID);
+
+            if (isAlreadyRegistered)
+                return BadRequest(new { message = "Sinh viên này đã được xếp vào lớp này rồi." });
+
+            var newEnrollment = new Enrollment
+            {
+                SectionID = dto.SectionID,
+                StudentID = dto.StudentID,
+                EnrollDate = DateTime.UtcNow
+            };
+
+            _context.Enrollments.Add(newEnrollment);
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Ok();
         }
-
-        // Bước 3: Kiểm tra Mã sinh viên (StudentID) xem có hợp lệ trong hệ thống không
-        var studentExists = await _context.Students.AnyAsync(s => s.StudentID == dto.StudentID);
-        if (!studentExists) return BadRequest(new { message = "Mã số sinh viên không tồn tại trên hệ thống." });
-
-        // Bước 4: Kiểm tra xem sinh viên này đã đăng ký lớp này chưa (tránh trùng lặp)
-        var isAlreadyRegistered = await _context.Enrollments
-            .AnyAsync(e => e.SectionID == dto.SectionID && e.StudentID == dto.StudentID);
-        if (isAlreadyRegistered) return BadRequest(new { message = "Sinh viên này đã được xếp vào lớp này rồi." });
-
-        // Bước 5: Thêm bản ghi đăng ký mới & tăng sĩ số lớp lên 1
-        var newEnrollment = new Enrollment
+        catch (Exception ex)
         {
-            SectionID = dto.SectionID,
-            StudentID = dto.StudentID,
-            EnrollDate = DateTime.Now
-        };
-        _context.Enrollments.Add(newEnrollment);
-
-        await _context.SaveChangesAsync();
-        return Ok();
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { message = "Có lỗi xảy ra trong quá trình đăng ký.", error = ex.Message });
+        }
     }
 
     // DELETE: api/Enrollment/5
@@ -175,6 +199,46 @@ public class EnrollmentsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpDelete("admin-cancel")]
+    public async Task<IActionResult> AdminCancelEnrollment([FromQuery] int sectionID, [FromQuery] string studentID)
+    {
+        // 1. Kiểm tra dữ liệu đầu vào cơ bản
+        if (sectionID <= 0 || string.IsNullOrWhiteSpace(studentID))
+        {
+            return BadRequest(new { message = "Dữ liệu đầu vào không hợp lệ." });
+        }
+
+        try
+        {
+            // 2. Tìm bản ghi Đăng ký (Enrollment) khớp cả mã lớp và mã sinh viên
+            var enrollment = await _context.Enrollments
+                .FirstOrDefaultAsync(e => e.SectionID == sectionID && e.StudentID == studentID);
+
+            // 3. Nếu không tìm thấy, trả về lỗi 404 NotFound
+            if (enrollment == null)
+            {
+                return NotFound(new { message = "Không tìm thấy thông tin xếp lớp của sinh viên này trong học phần đã chọn." });
+            }
+
+            // 4. Tiến hành xóa bản ghi khỏi Database
+            _context.Enrollments.Remove(enrollment);
+
+            // Nếu bạn có bảng Score (Điểm) liên kết và muốn xóa luôn điểm khi hủy lớp (nếu có), 
+            // EF Core sẽ tự động xóa nếu bạn cấu hình Cascade Delete.
+
+            await _context.SaveChangesAsync();
+
+            // 5. Trả về thông báo thành công (HTTP 200 OK)
+            return Ok(new { message = "Hủy xếp lớp cho sinh viên thành công!" });
+        }
+        catch (Exception ex)
+        {
+            // 6. Ghi log lỗi nếu cần và trả về lỗi hệ thống 500
+            // _logger.LogError(ex, "Lỗi khi hủy xếp lớp");
+            return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống khi hủy xếp lớp.", error = ex.Message });
+        }
+    }   
 
     private bool EnrollmentExists(int? enrollmentid)
     {

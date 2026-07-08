@@ -9,4 +9,12 @@
 
         public List<ScoreDto> Scores { get; set; } = new List<ScoreDto>();
     }
+
+    public class ScoreDto
+    {
+        public int ScoreID { get; set; }
+        public string? ScoreType { get; set; }
+        public decimal? ScoreValue { get; set; }
+        public decimal? Weight { get; set; }
+    }
 }

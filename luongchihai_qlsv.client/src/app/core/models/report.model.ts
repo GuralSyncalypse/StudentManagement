@@ -7,6 +7,7 @@ export interface CourseDetail {
   courseName: string;
   credits: number;
   totalScore: number;
+  grade: string;
   result: 'Đỗ' | 'Trượt';
 }
 

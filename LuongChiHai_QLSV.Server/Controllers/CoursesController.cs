@@ -20,7 +20,7 @@ public class CoursesController : ControllerBase
     [Authorize(Policy = "course:read_all")]
     public async Task<ActionResult<IEnumerable<Course>>> GetCourse()
     {
-        return await _context.Courses.ToListAsync();
+        return await _context.Courses.AsNoTracking().ToListAsync();
     }
 
     // GET: api/Course/5
@@ -28,7 +28,9 @@ public class CoursesController : ControllerBase
     [Authorize(Policy = "course:read_detail")]
     public async Task<ActionResult<Course>> GetCourse(string courseid)
     {
-        var course = await _context.Courses.FindAsync(courseid);
+        var course = await _context.Courses
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.CourseID == courseid);
 
         if (course == null)
         {

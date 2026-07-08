@@ -22,8 +22,11 @@ export class ScoreService {
   }
 
   // CREATE
-  saveScores(scores: Score[]): Observable<Score[]> {
-    return this.http.post<Score[]>(this.apiUrl, scores);
+  saveScores(enrollmentID: number, scores: Score[]): Observable<Score[]> {
+    return this.http.post<Score[]>(
+      `${this.apiUrl}/${enrollmentID}`,
+      scores
+    );
   }
 
   // UPDATE

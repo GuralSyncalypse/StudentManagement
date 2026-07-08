@@ -116,7 +116,8 @@ public class StudentsController : ControllerBase
     [HasPermission("student:view_own_profile")]
     public async Task<ActionResult<StudentResponseDto>> GetCurrentStudent()
     {
-        var studentId = User.FindFirst(ClaimTypes.Name)?.Value
+        var studentId = User.FindFirst("StudentID")?.Value
+                     ?? User.FindFirst(ClaimTypes.Name)?.Value
                      ?? User.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(studentId))

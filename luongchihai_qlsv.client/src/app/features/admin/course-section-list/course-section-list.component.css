@@ -530,3 +530,56 @@
       width: 100%;
     }
 }
+
+.btn-action-danger {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+  .btn-action-danger:hover {
+    background-color: #c82333;
+  }
+
+.btn-danger-submit {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+  .btn-danger-submit:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+  }
+
+/* --- 1. PHONG TỎA CHUNG CHO TẤT CẢ NÚT BỊ KHÓA --- */
+button:disabled {
+  cursor: not-allowed !important; /* Đổi con trỏ chuột thành hình biển cấm 🚫 */
+  pointer-events: none; /* Chặn hoàn toàn mọi sự kiện chuột (hover, click) */
+  box-shadow: none !important; /* Xóa đổ bóng (nếu có) */
+  transform: none !important; /* Xóa hiệu ứng nhấn xuống (nếu có) */
+}
+
+/* --- 2. BIẾN NÚT ĐĂNG KÝ THÀNH MÀU XÁM KHI KHÓA --- */
+.btn-action-primary:disabled {
+  background-color: #e9ecef !important; /* Màu nền xám nhạt */
+  color: #adb5bd !important; /* Chữ màu xám mờ */
+  border: 1px solid #ced4da !important;
+}
+
+/* --- 3. BIẾN NÚT HỦY ĐĂNG KÝ THÀNH MÀU XÁM KHI KHÓA --- */
+.btn-action-danger:disabled {
+  background-color: #e9ecef !important; /* Cùng tông xám để đồng bộ trạng thái khóa */
+  color: #adb5bd !important;
+  border: 1px solid #ced4da !important;
+}

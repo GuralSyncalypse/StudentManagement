@@ -1,8 +1,9 @@
 import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; // Hoặc @angular/core/rxjs-interop tùy phiên bản Angular 16/17+
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // BẮT BUỘC: Để sử dụng [(ngModel)] trong Modal Admin
+import { FormsModule } from '@angular/forms';
 import { CourseSectionService } from './course-section-list.services';
+import { EnrollmentService } from '../../../core/services/enrollment.services';
 import { CourseSection } from '../../../core/models/course.model';
 
 @Component({
@@ -14,6 +15,7 @@ import { CourseSection } from '../../../core/models/course.model';
 })
 export class CourseSectionListComponent implements OnInit {
   private sectionService = inject(CourseSectionService);
+  private enrollmentService = inject(EnrollmentService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
@@ -88,7 +90,27 @@ export class CourseSectionListComponent implements OnInit {
       return matchSearch && matchStatus;
     });
 
-    this.cdr.markForCheck(); // Render lại giao diện
+    this.cdr.markForCheck();
+  }
+
+  // 1. Khai báo thêm các State điều khiển Modal hủy đăng ký
+  isUnregModalOpen: boolean = false;
+  studentIdUnregInput: string = '';
+
+  // 2. Hàm mở Modal Hủy Đăng ký
+  onUnregister(section: any) {
+    this.selectedSection = section;
+    this.studentIdUnregInput = ''; // Reset input cũ
+    this.isUnregModalOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  // 3. Hàm đóng Modal Hủy Đăng ký
+  closeUnregModal() {
+    this.isUnregModalOpen = false;
+    this.selectedSection = null;
+    this.studentIdUnregInput = '';
+    this.cdr.markForCheck();
   }
 
   // Mở modal đăng ký hộ
@@ -105,6 +127,31 @@ export class CourseSectionListComponent implements OnInit {
     this.selectedSection = null;
     this.studentIdInput = '';
     this.cdr.markForCheck();
+  }
+
+  submitAdminUnregistration() {
+    const mssv = this.studentIdUnregInput.trim();
+    if (!this.studentIdUnregInput.trim() || !this.selectedSection) return;
+
+    const payload = {
+      sectionID: this.selectedSection.sectionID,
+      studentID: mssv
+    };
+
+    // Gọi Service API xử lý xóa (ví dụ mẫu)
+    this.enrollmentService.adminCancelEnrollment(payload).subscribe({
+      next: (res) => {
+        alert(`🎉 Đã đăng ký thành công sinh viên [${mssv}] vào lớp!`);
+        this.closeUnregModal();
+        this.loadOpenSections();
+      },
+      error: (err) => {
+        console.error('Lỗi xếp lớp:', err);
+        alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc trùng lịch học!'}`);
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   // Xác nhận xếp lớp gửi lên Server
@@ -124,17 +171,17 @@ export class CourseSectionListComponent implements OnInit {
       studentID: mssv
     };
 
-    this.sectionService.adminRegisterStudent(payload)
+    this.enrollmentService.adminRegisterEnrollment(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          alert(`🎉 Đã đăng ký thành công sinh viên [${mssv}] vào lớp!`);
+          alert(`🎉 Huỷ đăng ký thành công cho sinh viên [${mssv}]!`);
           this.closeRegModal();
           this.loadOpenSections();
         },
         error: (err) => {
-          console.error('Lỗi xếp lớp:', err);
-          alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc trùng lịch học!'}`);
+          console.error('Lỗi huỷ đăng ký:', err);
+          alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc không có trong lớp học!'}`);
           this.isLoading = false;
           this.cdr.markForCheck();
         }
