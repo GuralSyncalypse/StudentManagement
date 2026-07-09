@@ -25,7 +25,12 @@ namespace LuongChiHai_QLSV.Server.Data
         public DbSet<Enrollment> Enrollments { get; set; }
         public DbSet<Score> Scores { get; set; }
 
+
+        // Views
         public DbSet<StudentCourseGradeDto> BangDiemChiTiet { get; set; }
+        public DbSet<StudentCompleteProfileView> StudentCompleteProfiles { get; set; }
+        public DbSet<StudentCumulativeGpaView> StudentCumulativeGpas { get; set; }
+        public DbSet<StudentSemesterGpaView> StudentSemesterGpas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -91,6 +96,12 @@ namespace LuongChiHai_QLSV.Server.Data
 
             // Tự động tìm tất cả các file có kế thừa IEntityTypeConfiguration trong toàn bộ Project và nạp vào.
             // modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+
+            // Views
+            modelBuilder.Entity<StudentCompleteProfileView>().ToView("v_StudentCompleteProfile").HasNoKey();
+            modelBuilder.Entity<StudentCumulativeGpaView>().ToView("v_StudentCumulativeGPA").HasNoKey();
+            modelBuilder.Entity<StudentSemesterGpaView>().ToView("v_StudentSemesterGPA").HasNoKey();
         }
     }
 }
