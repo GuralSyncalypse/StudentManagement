@@ -7,39 +7,22 @@
       </div>
 
       <nav class="sidebar-menu">
-        <a routerLink="/admin/dashboard" routerLinkActive="active">
-          <i class="fa-solid fa-house"></i>
-          Dashboard
-        </a>
+          <a routerLink="/admin/dashboard" routerLinkActive="active">Dashboard</a>
 
-        <details>
-          <summary>
-            <i class="fa-solid fa-book"></i>
-            Đào tạo
-          </summary>
-          <a routerLink="/admin/courses">Học phần</a>
-          <a routerLink="/admin/courseSections">Lớp học phần</a>
-        </details>
+          <details>
+              <summary>
+                  <i class="fa-solid fa-book"></i>
+                  Đào tạo
+              </summary>
+              <a routerLink="/admin/courses">Học phần</a>
+              <a routerLink="/admin/courseSections">Lớp học phần</a>
+              <a routerLink="/admin/enrollments">Chấm điểm</a>
+          </details>
 
-        <details>
-          <summary>
-            <i class="fa-solid fa-users"></i>
-            Người dùng
-          </summary>
-
+          <a routerLink="/admin/users">Tài khoản</a>
           <a routerLink="/admin/students">Sinh viên</a>
-          <a routerLink="/admin/teachers">Giảng viên</a>
-        </details>
 
-        <a routerLink="/admin/enrollments">
-          <i class="fa-solid fa-pen-to-square"></i>
-          Chấm điểm
-        </a>
-
-        <a routerLink="/admin/reports">
-          <i class="fa-solid fa-chart-line"></i>
-          Báo cáo
-        </a>
+          <a routerLink="/admin/reports">Báo cáo</a>
       </nav>
     </div>
 

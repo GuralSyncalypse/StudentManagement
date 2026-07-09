@@ -10,6 +10,7 @@ import { CourseFormComponent } from './course-list/form/form-component';
 import { EnrollmentList } from './enrollment-list/enrollment-list'
 import { Reports } from './student-list/report/reports'
 import { CourseSectionListComponent } from './course-section-list/course-section-list.component'
+import { UserList } from './user-list/user-list'
 
 const routes: Routes = [
   {
@@ -23,6 +24,7 @@ const routes: Routes = [
       { path: 'courses/create', component: CourseFormComponent },
       { path: 'courses/edit/:id', component: CourseFormComponent },
       { path: 'courseSections', component: CourseSectionListComponent },
+      { path: 'users', component: UserList },
       { path: 'enrollments', component: EnrollmentList },
       {
         path: 'students/:studentID/report',
