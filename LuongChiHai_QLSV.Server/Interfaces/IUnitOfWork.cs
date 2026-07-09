@@ -9,6 +9,9 @@ namespace LuongChiHai_QLSV.Server.Interfaces
         IRepository<UserRole> UserRoles { get; }
         IRepository<Role> Roles { get; }
 
+        IEnrollmentRepository Enrollments { get; }
+        IRepository<CourseSection> CourseSections { get; }
+
         Task<int> CompleteAsync();
         Task BeginTransactionAsync();
         Task CommitTransactionAsync();

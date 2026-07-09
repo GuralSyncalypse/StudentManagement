@@ -141,13 +141,13 @@ export class CourseSectionListComponent implements OnInit {
     // Gọi Service API xử lý xóa (ví dụ mẫu)
     this.enrollmentService.adminCancelEnrollment(payload).subscribe({
       next: (res) => {
-        alert(`🎉 Đã đăng ký thành công sinh viên [${mssv}] vào lớp!`);
+        alert(`🎉 Đã huỷ đăng ký thành công sinh viên [${mssv}] ra khỏi lớp!`);
         this.closeUnregModal();
         this.loadOpenSections();
       },
       error: (err) => {
-        console.error('Lỗi xếp lớp:', err);
-        alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc trùng lịch học!'}`);
+        console.error('Lỗi huỷ đăng ký:', err);
+        alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc không có trong lớp học!'}`);
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -175,13 +175,13 @@ export class CourseSectionListComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          alert(`🎉 Huỷ đăng ký thành công cho sinh viên [${mssv}]!`);
+          alert(`🎉 Đăng ký thành công cho sinh viên [${mssv}] vào lớp!`);
           this.closeRegModal();
           this.loadOpenSections();
         },
         error: (err) => {
-          console.error('Lỗi huỷ đăng ký:', err);
-          alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc không có trong lớp học!'}`);
+          console.error('Lỗi xếp lớp:', err);
+          alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc trùng lịch học!'}`);
           this.isLoading = false;
           this.cdr.markForCheck();
         }

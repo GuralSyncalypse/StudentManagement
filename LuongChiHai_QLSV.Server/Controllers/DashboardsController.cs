@@ -1,8 +1,6 @@
-﻿using LuongChiHai_QLSV.Server.Data;
-using LuongChiHai_QLSV.Server.DTOs;
-using LuongChiHai_QLSV.Server.Entities;
+using LuongChiHai_QLSV.Server.Data;
+using LuongChiHai_QLSV.Server.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -15,9 +13,12 @@ namespace LuongChiHai_QLSV.Server.Controllers
     public class DashboardsController : ControllerBase
     {
         private readonly SchoolContext _context;
-        public DashboardsController(SchoolContext context)
+        private readonly IEnrollmentService _enrollmentService;
+
+        public DashboardsController(SchoolContext context, IEnrollmentService enrollmentService)
         {
             _context = context;
+            _enrollmentService = enrollmentService;
         }
 
         [HttpGet("admin")]
@@ -38,8 +39,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
         [HttpGet("student")]
         public async Task<IActionResult> GetStudentDashboard()
         {
-            // 1. Lấy StudentID (Dạng chuỗi mã SV, ví dụ: "SV001") từ Token
-            var studentId = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+            var studentId = User.FindFirst(ClaimTypes.Name)?.Value
                          ?? User.FindFirst("sub")?.Value;
 
             if (string.IsNullOrEmpty(studentId))
@@ -47,7 +47,6 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 return Unauthorized(new { message = "Không tìm thấy thông tin sinh viên!" });
             }
 
-            // 2. Truy vấn toàn bộ bản ghi từ View v_BangDiemChiTiet
             var studentPoints = await _context.BangDiemChiTiet
                 .Where(v => v.StudentID == studentId)
                 .ToListAsync();
@@ -55,31 +54,24 @@ namespace LuongChiHai_QLSV.Server.Controllers
             decimal gpa = 0;
             int totalPassedCredits = 0;
 
-            // 🔥 GIẢI PHÁP: Chỉ lọc ra những môn ĐÃ CÓ ĐIỂM để tính GPA tích lũy
             var gradedPoints = studentPoints.Where(p => p.TotalScore.HasValue).ToList();
 
             if (gradedPoints.Any())
             {
-                // Công thức chuẩn: Tính tổng điểm hệ số trên các môn ĐÃ CÓ ĐIỂM
                 decimal totalWeightScore = gradedPoints.Sum(p => (decimal)p.TotalScore!.Value * p.Credits);
                 int totalCreditsForGpa = gradedPoints.Sum(p => p.Credits);
 
                 gpa = totalCreditsForGpa > 0 ? Math.Round(totalWeightScore / totalCreditsForGpa, 2) : 0;
-
-                // Tín chỉ tích lũy (Chỉ tính các môn đã qua và có kết quả là 'Đỗ')
                 totalPassedCredits = gradedPoints.Where(p => p.GradeDetails.IsPassed()).Sum(p => p.Credits);
             }
 
-            // 4. Đếm số học phần sinh viên này đang học trong học kỳ hiện tại (Chuỗi)
             var currentSemester = await _context.CourseSections
                 .OrderByDescending(cs => cs.Semester)
                 .Select(cs => cs.Semester)
                 .FirstOrDefaultAsync();
 
-            var currentSectionsCount = await _context.Enrollments
-                .CountAsync(e => e.StudentID == studentId);
+            var currentSectionsCount = await _enrollmentService.GetCurrentEnrollmentCountAsync(studentId);
 
-            // 5. Trả về kết quả sạch sẽ cho Dashboard Angular
             return Ok(new
             {
                 GPA = gpa,

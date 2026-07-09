@@ -16,6 +16,9 @@ namespace LuongChiHai_QLSV.Server.UnitOfWorks
         public IRepository<UserRole> UserRoles { get; private set; }
         public IRepository<Role> Roles { get; private set; }
 
+        public IEnrollmentRepository Enrollments { get; private set; }
+        public IRepository<CourseSection> CourseSections { get; private set; }
+
         public UnitOfWork(SchoolContext context)
         {
             _context = context;
@@ -23,6 +26,8 @@ namespace LuongChiHai_QLSV.Server.UnitOfWorks
             Users = new Repository<User>(_context);
             UserRoles = new Repository<UserRole>(_context);
             Roles = new Repository<Role>(_context);
+            Enrollments = new EnrollmentRepository(_context);
+            CourseSections = new Repository<CourseSection>(_context);
         }
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
