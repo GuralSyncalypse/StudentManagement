@@ -36,7 +36,7 @@ export class AdminDashboardComponent implements OnInit {
     // Thao tác đồng bộ, cần mark để UI hiển thị trạng thái loading ngay lập tức nếu cần
     this.cdr.markForCheck();
 
-    this.http.get<DashboardSummary>('/api/Base').subscribe({
+    this.http.get<DashboardSummary>('/api/Dashboards/admin').subscribe({
       next: (res) => {
         this.stats = res;
         this.isLoading = false;
