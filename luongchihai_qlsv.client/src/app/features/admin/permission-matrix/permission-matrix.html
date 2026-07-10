@@ -1,0 +1,124 @@
+<div class="permission-page">
+  <section class="hero-card">
+    <div class="hero-copy">
+      <p class="eyebrow">Phân quyền theo role</p>
+      <h2>Ma trận quyền Resource | C | R | U | D</h2>
+      <p class="hero-description">
+        Chọn một role và tích quyền CRUD cho từng resource. Mỗi ô checkbox là quyền trực tiếp của role đó.
+      </p>
+    </div>
+
+    <div class="hero-metrics">
+      <div class="metric">
+        <span>Role</span>
+        <strong>{{ roles.length }}</strong>
+      </div>
+      <div class="metric success">
+        <span>Quyền chọn</span>
+        <strong>{{ assignedCount }}</strong>
+      </div>
+      <div class="metric warning">
+        <span>Resource</span>
+        <strong>{{ rows.length }}</strong>
+      </div>
+    </div>
+  </section>
+
+  @if (successMessage || errorMessage) {
+  <div class="notice" [class.success]="noticeType === 'success'" [class.error]="noticeType === 'error'">
+    <strong>{{ noticeType === 'success' ? 'Cập nhật thành công' : 'Có lỗi xảy ra' }}</strong>
+    <span>{{ successMessage || errorMessage }}</span>
+  </div>
+  }
+
+  <section class="control-card">
+    <div class="control-grid">
+      <label class="field">
+        <span>Chọn role</span>
+        <select [ngModel]="selectedRoleId" (ngModelChange)="onRoleChange($event)">
+          @for (role of roles; track role.roleID) {
+          <option [value]="role.roleID">{{ role.roleName }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field search">
+        <span>Tìm trong ma trận</span>
+        <input
+          type="text"
+          [ngModel]="searchTerm"
+          (ngModelChange)="onSearch($event)"
+          placeholder="Nhập resource, action hoặc mô tả"
+        />
+      </label>
+
+      <div class="action-group">
+        <button type="button" class="secondary-btn" (click)="reload()" [disabled]="isLoading || isSaving">Tải lại</button>
+        <button type="button" class="primary-btn" (click)="save()" [disabled]="isLoading || isSaving">
+          {{ isSaving ? 'Đang lưu...' : 'Lưu quyền role' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="chip allowed">Đã gán</span>
+      <span class="chip empty">Chưa gán</span>
+    </div>
+  </section>
+
+  <section class="matrix-card">
+    @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Đang tải ma trận phân quyền...</p>
+    </div>
+    } @else if (!hasRows) {
+    <div class="empty-state">
+      <h3>Không có quyền phù hợp</h3>
+      <p>Hãy thử đổi role hoặc bỏ bớt bộ lọc tìm kiếm.</p>
+    </div>
+    } @else {
+    <div class="matrix-scroll">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th class="resource-col">Resource</th>
+            <th>{{ getActionLabel(crudColumns[0]) }}</th>
+            <th>{{ getActionLabel(crudColumns[1]) }}</th>
+            <th>{{ getActionLabel(crudColumns[2]) }}</th>
+            <th>{{ getActionLabel(crudColumns[3]) }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of filteredRows; track row.resource) {
+          <tr>
+            <td class="resource-cell">
+              <strong>{{ row.resourceLabel }}</strong>
+              <span>{{ row.resource }}</span>
+              <small>{{ row.permissionCount }} quyền</small>
+            </td>
+
+            @for (action of crudColumns; track action) {
+            <td>
+              @if (getCell(row, action); as cell) {
+              <label class="permission-cell" [class.allowed]="cell.isAssigned" [attr.title]="cell.permissionKey">
+                <input
+                  type="checkbox"
+                  [ngModel]="cell.isAssigned"
+                  (ngModelChange)="toggleCell(cell, $event)"
+                  [attr.aria-label]="cell.permissionKey"
+                />
+              </label>
+              } @else {
+              <div class="permission-cell empty-slot" aria-hidden="true"></div>
+              }
+            </td>
+            }
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+</div>

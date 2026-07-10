@@ -17,7 +17,7 @@ public class CoursesController : ControllerBase
 
     // GET: api/Course
     [HttpGet]
-    [Authorize(Policy = "course:read_all")]
+    [Authorize(Policy = "10")]
     public async Task<ActionResult<IEnumerable<Course>>> GetCourse()
     {
         return await _context.Courses.AsNoTracking().ToListAsync();
@@ -25,7 +25,7 @@ public class CoursesController : ControllerBase
 
     // GET: api/Course/5
     [HttpGet("{courseid}")]
-    [Authorize(Policy = "course:read_detail")]
+    [Authorize(Policy = "10")]
     public async Task<ActionResult<Course>> GetCourse(string courseid)
     {
         var course = await _context.Courses
@@ -43,7 +43,7 @@ public class CoursesController : ControllerBase
     // PUT: api/Course/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{courseid}")]
-    [Authorize(Policy = "course:update")]
+    [Authorize(Policy = "11")]
     public async Task<IActionResult> PutCourse(string courseid, Course course)
     {
         if (courseid != course.CourseID)
@@ -75,7 +75,7 @@ public class CoursesController : ControllerBase
     // POST: api/Course
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    [Authorize(Policy = "course:create")]
+    [Authorize(Policy = "10")]
     public async Task<ActionResult<Course>> PostCourse(Course course)
     {
         _context.Courses.Add(course);
@@ -86,7 +86,7 @@ public class CoursesController : ControllerBase
 
     // DELETE: api/Course/5
     [HttpDelete("{courseid}")]
-    [Authorize(Policy = "course:delete")]
+    [Authorize(Policy = "12")]
     public async Task<IActionResult> DeleteCourse(string courseid)
     {
         var course = await _context.Courses.FindAsync(courseid);

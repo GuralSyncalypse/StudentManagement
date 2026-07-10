@@ -22,13 +22,10 @@ namespace LuongChiHai_QLSV.Server.Security
 
             if (!int.TryParse(userIdClaim.Value, out int userId)) return;
 
-            // 2. Kiểm tra DB xem User có Permission này không (Quét qua Role hoặc UserPermission override)
+            // 2. Kiểm tra DB xem User có Permission này không thông qua RolePermission.
             var hasPermission = await _context.UserRoles
                 .Where(ur => ur.UserID == userId)
-                .AnyAsync(ur => ur.Role.RolePermissions.Any(rp => rp.Permission.PermissionKey == requirement.Permission))
-                ||
-                await _context.UserPermissions
-                .AnyAsync(up => up.UserID == userId && up.Permission.PermissionKey == requirement.Permission && up.IsAllowed == true);
+                .AnyAsync(ur => ur.Role.RolePermissions.Any(rp => rp.Permission.PermissionID == int.Parse(requirement.Permission)));
 
             // 3. Nếu hợp lệ thì cho qua
             if (hasPermission)
