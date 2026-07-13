@@ -14,6 +14,29 @@ namespace LuongChiHai_QLSV.Server.Controllers
     {
         private static readonly string[] CrudOrder = ["create", "read", "update", "delete"];
 
+        // Định nghĩa bộ danh mục Resource dựa theo 2 ký tự đầu của PermissionID
+        private static readonly Dictionary<string, (string ResourceName, string ResourceLabel)> ResourceMapping = new()
+    {
+        { "01", ("user", "Tài khoản") },
+        { "02", ("role", "Vai trò") },
+        { "03", ("permission", "Quyền hạn") },
+        { "04", ("student", "Sinh viên") },
+        { "05", ("academic_profile", "Hồ sơ học thuật") },
+        { "06", ("course", "Khóa học") },
+        { "07", ("course_section", "Lớp học phần") },
+        { "08", ("enrollment", "Đăng ký học phần") },
+        { "09", ("score", "Điểm số") }
+    };
+
+        // Định nghĩa bộ Action tương ứng với 2 ký tự cuối của PermissionID
+        private static readonly Dictionary<string, string> ActionMapping = new()
+    {
+        { "01", "create" },
+        { "02", "read" },
+        { "03", "update" },
+        { "04", "delete" }
+    };
+
         private readonly SchoolContext _context;
 
         public RolePermissionsController(SchoolContext context)
@@ -50,31 +73,34 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 return NotFound(new { message = "Không tìm thấy role được chọn." });
             }
 
+            // Lấy danh sách PermissionID đã gán cho Role hiện tại
             var assignedPermissionIds = await _context.RolePermissions
                 .AsNoTracking()
                 .Where(rp => rp.RoleID == selectedRoleId)
                 .Select(rp => rp.PermissionID)
                 .ToListAsync();
 
+            // Lấy toàn bộ danh sách Quyền từ Database
             var permissions = await _context.Permissions
                 .AsNoTracking()
-                .OrderBy(p => p.PermissionKey)
+                .OrderBy(p => p.PermissionID)
                 .ToListAsync();
 
             var items = permissions
                 .Select(permission =>
                 {
-                    var (resource, action) = SplitPermissionKey(permission.PermissionKey);
-                    var normalizedAction = NormalizeAction(action);
-                    var inCrudGroup = CrudOrder.Contains(normalizedAction);
+                    var (resource, label, action) = ParsePermissionId(permission.PermissionID);
+                    var inCrudGroup = CrudOrder.Contains(action);
+
                     return new
                     {
                         permission.PermissionID,
-                        permission.PermissionKey,
+                        // Giữ lại sinh PermissionKey tự động (dạng "user:create") để tránh lỗi giao diện Frontend (nếu có)
+                        PermissionKey = string.IsNullOrEmpty(resource) ? permission.PermissionID : $"{resource}:{action}",
                         permission.Description,
-                        Resource = resource,
-                        ResourceLabel = ToTitleCase(resource),
-                        Action = normalizedAction,
+                        Resource = resource ?? "unknown",
+                        ResourceLabel = label ?? "Khác",
+                        Action = action,
                         IsAssigned = assignedPermissionIds.Contains(permission.PermissionID),
                         InCrudGroup = inCrudGroup
                     };
@@ -82,6 +108,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 .Where(item => item.InCrudGroup)
                 .ToList();
 
+            // Nhóm theo nhóm chức năng (Resource) để xuất ra ma trận dòng x cột
             var rows = items
                 .GroupBy(item => item.Resource, StringComparer.OrdinalIgnoreCase)
                 .Select(group => new RolePermissionMatrixRowDto
@@ -91,7 +118,6 @@ namespace LuongChiHai_QLSV.Server.Controllers
                     PermissionCount = group.Count(),
                     Cells = group
                         .OrderBy(item => Array.IndexOf(CrudOrder, item.Action))
-                        .ThenBy(item => item.Action, StringComparer.OrdinalIgnoreCase)
                         .Select(item => new RolePermissionMatrixCellDto
                         {
                             PermissionID = item.PermissionID,
@@ -126,35 +152,33 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 .AsNoTracking()
                 .ToListAsync();
 
-            var permissionByKey = permissions
-                .ToDictionary(p => p.PermissionKey, p => p, StringComparer.OrdinalIgnoreCase);
+            // Lưu ý: Đổi logic kiểm tra từ PermissionKey sang nhận diện trực tiếp bằng PermissionID (Chuỗi số 4 ký tự)
+            var desiredIds = (request.SelectedPermissionIds ?? new List<string>())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => id.Trim())
+                .Distinct()
+                .ToHashSet();
 
-            var desiredKeys = (request.SelectedPermissionKeys ?? new List<string>())
-                .Where(key => !string.IsNullOrWhiteSpace(key))
-                .Select(key => key.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var validPermissionIds = permissions.Select(p => p.PermissionID).ToHashSet();
+            var invalidIds = desiredIds.Where(id => !validPermissionIds.Contains(id)).ToList();
 
-            var invalidKeys = desiredKeys
-                .Where(key => !permissionByKey.ContainsKey(key))
-                .ToList();
-
-            if (invalidKeys.Count > 0)
+            if (invalidIds.Count > 0)
             {
                 return BadRequest(new
                 {
-                    message = "Có quyền không hợp lệ trong danh sách gửi lên.",
-                    invalidKeys
+                    message = "Có mã quyền (PermissionID) không hợp lệ trong danh sách gửi lên.",
+                    invalidIds
                 });
             }
 
+            // Lấy danh sách các PermissionID thuộc phạm vi quản lý CRUD để xử lý đồng bộ gán/gỡ gán
             var crudPermissionIds = permissions
-                .Where(permission =>
+                .Where(p =>
                 {
-                    var (_, action) = SplitPermissionKey(permission.PermissionKey);
-                    return CrudOrder.Contains(NormalizeAction(action));
+                    var (_, _, action) = ParsePermissionId(p.PermissionID);
+                    return CrudOrder.Contains(action);
                 })
-                .Select(permission => permission.PermissionID)
+                .Select(p => p.PermissionID)
                 .ToHashSet();
 
             var currentAssignments = await _context.RolePermissions
@@ -163,22 +187,22 @@ namespace LuongChiHai_QLSV.Server.Controllers
 
             var currentAssignmentMap = currentAssignments.ToDictionary(rp => rp.PermissionID);
 
-            foreach (var permission in permissions.Where(p => crudPermissionIds.Contains(p.PermissionID)))
+            foreach (var pId in crudPermissionIds)
             {
-                var shouldBeAssigned = desiredKeys.Contains(permission.PermissionKey);
-                var isCurrentlyAssigned = currentAssignmentMap.ContainsKey(permission.PermissionID);
+                var shouldBeAssigned = desiredIds.Contains(pId);
+                var isCurrentlyAssigned = currentAssignmentMap.ContainsKey(pId);
 
                 if (shouldBeAssigned && !isCurrentlyAssigned)
                 {
                     _context.RolePermissions.Add(new RolePermission
                     {
                         RoleID = roleId,
-                        PermissionID = permission.PermissionID
+                        PermissionID = pId
                     });
                 }
                 else if (!shouldBeAssigned && isCurrentlyAssigned)
                 {
-                    _context.RolePermissions.Remove(currentAssignmentMap[permission.PermissionID]);
+                    _context.RolePermissions.Remove(currentAssignmentMap[pId]);
                 }
             }
 
@@ -186,41 +210,23 @@ namespace LuongChiHai_QLSV.Server.Controllers
             return NoContent();
         }
 
-        private static (string Resource, string Action) SplitPermissionKey(string permissionKey)
+        /// <summary>
+        /// Hàm helper hỗ trợ bóc tách PermissionID (4 ký tự) thành Resource và Action chuẩn chỉ.
+        /// </summary>
+        private static (string? Resource, string? Label, string Action) ParsePermissionId(string id)
         {
-            if (string.IsNullOrWhiteSpace(permissionKey))
+            if (string.IsNullOrWhiteSpace(id) || id.Length != 4)
             {
-                return (string.Empty, string.Empty);
+                return (null, null, "unknown");
             }
 
-            var separatorIndex = permissionKey.IndexOf(':');
-            if (separatorIndex < 0)
-            {
-                return (permissionKey.Trim(), string.Empty);
-            }
+            var prefix = id.Substring(0, 2);
+            var suffix = id.Substring(2, 2);
 
-            var resource = permissionKey[..separatorIndex].Trim();
-            var action = permissionKey[(separatorIndex + 1)..].Trim();
-            return (resource, action);
-        }
+            ResourceMapping.TryGetValue(prefix, out var resourceInfo);
+            ActionMapping.TryGetValue(suffix, out var action);
 
-        private static string NormalizeAction(string action)
-        {
-            return action.Trim().ToLowerInvariant();
-        }
-
-        private static string ToTitleCase(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return "Khác";
-            }
-
-            var words = value.Replace('_', ' ')
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(word => char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant());
-
-            return string.Join(' ', words);
+            return (resourceInfo.ResourceName, resourceInfo.ResourceLabel, action ?? "unknown");
         }
     }
 }

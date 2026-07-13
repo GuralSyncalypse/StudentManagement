@@ -44,12 +44,10 @@
 
       <label class="field search">
         <span>Tìm trong ma trận</span>
-        <input
-          type="text"
-          [ngModel]="searchTerm"
-          (ngModelChange)="onSearch($event)"
-          placeholder="Nhập resource, action hoặc mô tả"
-        />
+        <input type="text"
+               [ngModel]="searchTerm"
+               (ngModelChange)="onSearch($event)"
+               placeholder="Nhập resource, action hoặc mô tả" />
       </label>
 
       <div class="action-group">
@@ -102,12 +100,10 @@
             <td>
               @if (getCell(row, action); as cell) {
               <label class="permission-cell" [class.allowed]="cell.isAssigned" [attr.title]="cell.permissionKey">
-                <input
-                  type="checkbox"
-                  [ngModel]="cell.isAssigned"
-                  (ngModelChange)="toggleCell(cell, $event)"
-                  [attr.aria-label]="cell.permissionKey"
-                />
+                <input type="checkbox"
+                       [ngModel]="cell.isAssigned"
+                       (ngModelChange)="toggleCell(cell, $event)"
+                       [attr.aria-label]="cell.permissionKey" />
               </label>
               } @else {
               <div class="permission-cell empty-slot" aria-hidden="true"></div>

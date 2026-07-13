@@ -8,7 +8,7 @@ namespace LuongChiHai_QLSV.Server.DTOs.Permissions
 
     public class RolePermissionMatrixCellDto
     {
-        public int PermissionID { get; set; }
+        public string PermissionID { get; set; } = string.Empty;
         public string PermissionKey { get; set; } = string.Empty;
         public string Action { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -32,6 +32,6 @@ namespace LuongChiHai_QLSV.Server.DTOs.Permissions
 
     public class SaveRolePermissionMatrixRequestDto
     {
-        public List<string> SelectedPermissionKeys { get; set; } = new();
+        public List<string> SelectedPermissionIds { get; set; } = new();
     }
 }

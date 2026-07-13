@@ -1,6 +1,7 @@
 using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.DTOs.Users;
 using LuongChiHai_QLSV.Server.Entities;
+using LuongChiHai_QLSV.Server.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
         }
 
         [HttpGet]
+        [HasPermission("0102")]
         public async Task<ActionResult<IEnumerable<UserListDto>>> GetUsers(
             [FromQuery] string? search = null,
             [FromQuery] bool? isActive = null,
@@ -60,6 +62,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [HasPermission("0102")]
         public async Task<ActionResult<UserDetailDto>> GetUser(int id)
         {
             var user = await _context.Users
@@ -77,6 +80,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
         }
 
         [HttpPost]
+        [HasPermission("0101")]
         public async Task<ActionResult<UserDetailDto>> CreateUser([FromBody] CreateUserRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Username) ||
@@ -130,6 +134,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [HasPermission("0103")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Username) ||
@@ -178,6 +183,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [HasPermission("0104")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             if (GetCurrentUserId() == id)
@@ -198,6 +204,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
         }
 
         [HttpPatch("{id:int}/status")]
+        [HasPermission("0103")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UserStatusRequestDto request)
         {
             if (GetCurrentUserId() == id)
@@ -218,6 +225,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
         }
 
         [HttpPost("{id:int}/change-password")]
+        [HasPermission("0103")]
         public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.CurrentPassword) ||
@@ -244,6 +252,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
         }
 
         [HttpPost("{id:int}/reset-password")]
+        [HasPermission("0103")]
         public async Task<IActionResult> ResetPassword(int id, [FromBody] ResetPasswordRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.NewPassword))

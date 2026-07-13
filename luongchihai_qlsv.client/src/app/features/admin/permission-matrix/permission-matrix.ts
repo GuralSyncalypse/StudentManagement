@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
 import { PermissionMatrixService } from './permission-matrix.service';
 import {
   RolePermissionMatrixCell,
@@ -81,6 +80,7 @@ export class PermissionMatrixComponent implements OnInit {
     this.clearNotice();
   }
 
+  // === ĐÃ SỬA: Hàm save chuyển sang gom gom permissionId thay vì permissionKey ===
   save(): void {
     if (this.selectedRoleId === null) {
       return;
@@ -89,12 +89,13 @@ export class PermissionMatrixComponent implements OnInit {
     this.isSaving = true;
     this.clearNotice();
 
-    const selectedPermissionKeys = this.rows
+    const selectedPermissionIds = this.rows
       .flatMap(row => row.cells)
       .filter(cell => cell.isAssigned)
-      .map(cell => cell.permissionKey);
+      .map(cell => cell.permissionId); // Lấy mã số ID dạng '0101', '0102'
 
-    this.permissionService.saveMatrix(this.selectedRoleId, { selectedPermissionKeys })
+    // Gửi payload dạng { selectedPermissionIds: [...] } phù hợp DTO Backend mới
+    this.permissionService.saveMatrix(this.selectedRoleId, { selectedPermissionIds })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -128,8 +129,9 @@ export class PermissionMatrixComponent implements OnInit {
     return this.filteredRows.length > 0;
   }
 
+  // Lưu ý: Check kỹ trường roleID (Backend trả về Pascal/camelCase ra sao thì sửa lại dòng này)
   get selectedRole(): RolePermissionRoleOption | undefined {
-    return this.roles.find(role => role.roleID === this.selectedRoleId);
+    return this.roles.find(role => (role as any).roleID === this.selectedRoleId || (role as any).roleId === this.selectedRoleId);
   }
 
   getCell(row: RolePermissionMatrixRow, action: string): RolePermissionMatrixCell | null {
@@ -143,13 +145,21 @@ export class PermissionMatrixComponent implements OnInit {
 
   private applyResponse(response: RolePermissionMatrixResponse): void {
     this.roles = response.roles ?? [];
-    this.selectedRoleId = response.selectedRoleID || (this.roles[0]?.roleID ?? null);
+
+    const firstRole = this.roles[0] as any;
+    this.selectedRoleId = response.selectedRoleID || firstRole?.roleID || firstRole?.roleId || null;
+
     this.rows = (response.rows ?? []).map(row => ({
       ...row,
-      cells: row.cells.map(cell => ({
-        ...cell,
-        isAssigned: cell.isAssigned
-      }))
+      cells: row.cells.map(cell => {
+        const rawCell = cell as any;
+        return {
+          ...cell,
+          // SỬA TẠI ĐÂY: Ép nhận diện cả 3 kiểu đặt tên phổ biến từ Backend đổ về
+          permissionId: rawCell.permissionId || rawCell.permissionID || rawCell.PermissionID,
+          isAssigned: cell.isAssigned
+        };
+      })
     }));
     this.applyFilters();
   }
@@ -167,7 +177,8 @@ export class PermissionMatrixComponent implements OnInit {
         const rowMatches = [
           row.resource,
           row.resourceLabel,
-          ...row.cells.map(cell => `${cell.permissionKey} ${cell.action} ${cell.description}`)
+          // Bổ sung thêm cell.permissionId vào chuỗi tìm kiếm để hỗ trợ tìm theo mã số (VD: gõ "0101")
+          ...row.cells.map(cell => `${cell.permissionId} ${cell.permissionKey} ${cell.action} ${cell.description}`)
         ].some(value => value.toLowerCase().includes(normalized));
 
         if (rowMatches) {
@@ -177,7 +188,7 @@ export class PermissionMatrixComponent implements OnInit {
         return {
           ...row,
           cells: row.cells.filter(cell =>
-            `${cell.permissionKey} ${cell.action} ${cell.description}`.toLowerCase().includes(normalized)
+            `${cell.permissionId} ${cell.permissionKey} ${cell.action} ${cell.description}`.toLowerCase().includes(normalized)
           )
         };
       })

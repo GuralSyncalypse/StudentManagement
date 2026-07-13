@@ -1,11 +1,14 @@
 using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.DTOs;
 using LuongChiHai_QLSV.Server.Entities;
+using LuongChiHai_QLSV.Server.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(Roles = "Admin")]
 public class CourseSectionsController : ControllerBase
 {
     private readonly SchoolContext _context;
@@ -16,6 +19,7 @@ public class CourseSectionsController : ControllerBase
 
     // GET: api/CourseSection
     [HttpGet]
+    [HasPermission("0702")]
     public async Task<ActionResult<IEnumerable<CourseSectionDto>>> GetCourseSection()
     {
         var data = await _context.CourseSections
@@ -43,6 +47,7 @@ public class CourseSectionsController : ControllerBase
 
     // GET: api/CourseSection/5W
     [HttpGet("{sectionid}")]
+    [HasPermission("0702")]
     public async Task<ActionResult<CourseSectionDto>> GetCourseSection(int sectionid)
     {
         var coursesection = await _context.CourseSections
@@ -73,6 +78,7 @@ public class CourseSectionsController : ControllerBase
     // PUT: api/CourseSection/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{sectionid}")]
+    [HasPermission("0703")]
     public async Task<IActionResult> PutCourseSection(int? sectionid, CreateUpdateSectionDto request)
     {
         if (sectionid == null)
@@ -114,6 +120,7 @@ public class CourseSectionsController : ControllerBase
     // POST: api/CourseSection
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
+    [HasPermission("0701")]
     public async Task<ActionResult<CourseSectionDto>> PostCourseSection(CreateUpdateSectionDto request)
     {
         var coursesection = new CourseSection
@@ -146,6 +153,7 @@ public class CourseSectionsController : ControllerBase
 
     // DELETE: api/CourseSection/5
     [HttpDelete("{sectionid}")]
+    [HasPermission("0704")]
     public async Task<IActionResult> DeleteCourseSection(int? sectionid)
     {
         var coursesection = await _context.CourseSections.FindAsync(sectionid);
@@ -163,9 +171,5 @@ public class CourseSectionsController : ControllerBase
     private bool CourseSectionExists(int? sectionid)
     {
         return _context.CourseSections.Any(e => e.SectionID == sectionid);
-    }
-
-
-
-    
+    } 
 }

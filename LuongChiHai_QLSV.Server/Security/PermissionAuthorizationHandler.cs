@@ -25,7 +25,7 @@ namespace LuongChiHai_QLSV.Server.Security
             // 2. Kiểm tra DB xem User có Permission này không thông qua RolePermission.
             var hasPermission = await _context.UserRoles
                 .Where(ur => ur.UserID == userId)
-                .AnyAsync(ur => ur.Role.RolePermissions.Any(rp => rp.Permission.PermissionID == int.Parse(requirement.Permission)));
+                .AnyAsync(ur => ur.Role.RolePermissions.Any(rp => rp.Permission.PermissionID == requirement.Permission));
 
             // 3. Nếu hợp lệ thì cho qua
             if (hasPermission)

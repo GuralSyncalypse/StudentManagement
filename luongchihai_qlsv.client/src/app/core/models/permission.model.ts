@@ -1,10 +1,10 @@
 export interface RolePermissionRoleOption {
-  roleID: number;
+  roleID: number; // Hoặc roleId tùy cấu hình JSON serializer của bạn
   roleName: string;
 }
 
 export interface RolePermissionMatrixCell {
-  permissionID: number;
+  permissionId: string;
   permissionKey: string;
   action: string;
   description: string;
@@ -25,5 +25,5 @@ export interface RolePermissionMatrixResponse {
 }
 
 export interface SaveRolePermissionMatrixRequest {
-  selectedPermissionKeys: string[];
+  selectedPermissionIds: string[];
 }

@@ -33,6 +33,7 @@ public class EnrollmentsController : ControllerBase
     }
 
     [HttpGet]
+    [HasPermission("0802")]
     public async Task<ActionResult<IEnumerable<EnrollmentDto>>> GetEnrollments()
     {
         var result = await _enrollmentService.GetAllEnrollmentsAsync();
@@ -40,6 +41,7 @@ public class EnrollmentsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [HasPermission("0802")]
     public async Task<ActionResult<EnrollmentDto>> GetEnrollment(int id)
     {
         var result = await _enrollmentService.GetEnrollmentAsync(id);
@@ -52,6 +54,7 @@ public class EnrollmentsController : ControllerBase
     }
 
     [HttpPut("{enrollmentid}")]
+    [HasPermission("0803")]
     public async Task<IActionResult> PutEnrollment(int? enrollmentid, Enrollment enrollment)
     {
         if (enrollmentid == null || enrollmentid != enrollment.EnrollmentID)
@@ -75,6 +78,7 @@ public class EnrollmentsController : ControllerBase
     }
 
     [HttpPost]
+    [HasPermission("0801")]
     public async Task<IActionResult> RegisterForStudent([FromBody] AdminRegistrationDto dto)
     {
         try
@@ -93,6 +97,7 @@ public class EnrollmentsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [HasPermission("0804")]
     public async Task<IActionResult> DeleteEnrollment(int id)
     {
         try
@@ -107,6 +112,7 @@ public class EnrollmentsController : ControllerBase
     }
 
     [HttpDelete("admin-cancel")]
+    [HasPermission("0804")]
     public async Task<IActionResult> AdminCancelEnrollment([FromQuery] int sectionID, [FromQuery] string studentID)
     {
         try
