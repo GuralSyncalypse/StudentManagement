@@ -99,6 +99,23 @@ public class StudentsController : ControllerBase
         }
     }
 
+    [HttpGet("me")]
+    [HasPermission("0402")]
+    public async Task<ActionResult<StudentResponseDto>> GetCurrentStudent()
+    {
+        var studentId = User.FindFirst("StudentID")?.Value;
+
+        if (string.IsNullOrEmpty(studentId))
+            return Unauthorized();
+
+        // Service sẽ chịu trách nhiệm tìm và map sang DTO
+        var studentDto = await _studentService.GetByIdAsync(studentId);
+        if (studentDto == null)
+            return NotFound();
+
+        return Ok(studentDto);
+    }
+
     // DELETE: api/Student/5
     [HttpDelete("{id}")]
     [HasPermission("0404")]
@@ -110,25 +127,6 @@ public class StudentsController : ControllerBase
         await _studentService.DeleteAsync(id);
 
         return NoContent();
-    }
-
-    [HttpGet("me")]
-    [HasPermission("student:view_own_profile")]
-    public async Task<ActionResult<StudentResponseDto>> GetCurrentStudent()
-    {
-        var studentId = User.FindFirst("StudentID")?.Value
-                     ?? User.FindFirst(ClaimTypes.Name)?.Value
-                     ?? User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(studentId))
-            return Unauthorized();
-
-        // Service sẽ chịu trách nhiệm tìm và map sang DTO
-        var studentDto = await _studentService.GetByIdAsync(studentId);
-        if (studentDto == null)
-            return NotFound();
-
-        return Ok(studentDto);
     }
 
 }

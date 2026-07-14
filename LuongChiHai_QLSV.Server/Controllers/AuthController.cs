@@ -1,6 +1,8 @@
 ﻿using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.DTOs.Auths;
 using LuongChiHai_QLSV.Server.Entities;
+using LuongChiHai_QLSV.Server.Helpers;
+using LuongChiHai_QLSV.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,11 +20,13 @@ namespace LuongChiHai_QLSV.Server.Controllers
     {
         private readonly SchoolContext _context; 
         private readonly IConfiguration _config;
+        private readonly TokenService _tokenService;
 
-        public AuthController(SchoolContext context, IConfiguration config)
+        public AuthController(SchoolContext context, IConfiguration config, TokenService tokenService)
         {
             _context = context;
             _config = config;
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
@@ -147,7 +151,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
             var token = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(4), // Token có giá trị trong 4 tiếng
+                Expires = DateTime.UtcNow.AddMinutes(5),
                 Issuer = jwtSettings["Issuer"],
                 Audience = jwtSettings["Audience"],
                 SigningCredentials = creds
@@ -155,13 +159,229 @@ namespace LuongChiHai_QLSV.Server.Controllers
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var securityToken = tokenHandler.CreateToken(token);
+            var accessTokenString = tokenHandler.WriteToken(securityToken);
+
+            // ==========================================
+            // 5. TẠO REFRESH TOKEN VÀ LƯU VÀO DATABASE
+            // ==========================================
+            var refreshTokenString = _tokenService.GenerateRefreshToken();
+
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            var deviceFriendlyName = DeviceDetector.GetDeviceFriendlyName(userAgent);
+
+            // 3. CHỈ VÔ HIỆU HÓA các token cũ của User này TRÊN CÙNG THIẾT BỊ NÀY
+            var existingTokensOnDevice = await _context.UserRefreshTokens
+                .Where(t => t.UserID == user.UserID
+                         && t.Device == deviceFriendlyName
+                         && !t.IsRevoked
+                         && t.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+
+            foreach (var oldToken in existingTokensOnDevice)
+            {
+                oldToken.IsRevoked = true;
+                oldToken.RevokedAt = DateTime.UtcNow;
+            }
+
+            // 4. Lưu Refresh Token mới cùng thông tin thiết bị
+            var refreshTokenEntity = new UserRefreshToken
+            {
+                UserID = user.UserID,
+                Token = refreshTokenString,
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Device = deviceFriendlyName, // Lưu thiết bị dễ đọc
+                UserAgent = userAgent        // Lưu raw user-agent
+            };
+
+            _context.UserRefreshTokens.Add(refreshTokenEntity);
+            await _context.SaveChangesAsync();
+
+            // ==========================================
+            // 6. THIẾT LẬP COOKIE HTTP-ONLY CHỨA REFRESH TOKEN
+            // ==========================================
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,        // Javascript ở Frontend (Angular) không thể đọc => Chống XSS độc hại
+                Secure = true,          // Chỉ truyền qua HTTPS (Localhost phát triển vẫn tự động chạy được)
+                SameSite = SameSiteMode.Strict, // Chống tấn công giả mạo yêu cầu chéo trang CSRF
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+            Response.Cookies.Append("refreshToken", refreshTokenString, cookieOptions);
 
             return Ok(new AuthResponseDto
             {
-                Token = tokenHandler.WriteToken(securityToken),
+                Token = accessTokenString,
                 Username = user.Username
             });
         }
 
+        [HttpPost("refresh-token")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshToken()
+        {
+            // 1. Lấy Refresh Token từ HttpOnly Cookie
+            var refreshToken = Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                return Unauthorized(new { message = "Không tìm thấy Refresh Token!" });
+            }
+
+            // 2. Kiểm tra token trong DB kèm thông tin User & Roles
+            var tokenInDb = await _context.UserRefreshTokens
+                .Include(t => t.User)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                .SingleOrDefaultAsync(t => t.Token == refreshToken);
+
+            // 3. Xác thực tính hợp lệ của Token cũ
+            if (tokenInDb == null)
+            {
+                return Unauthorized(new { message = "Refresh Token không tồn tại!" });
+            }
+
+            // PHÁT HIỆN GIAN LẬN: Nếu token đã dùng rồi (IsRevoked = true) mà lại gửi lên tiếp
+            if (tokenInDb.IsRevoked)
+            {
+                // Thu hồi TẤT CẢ token đang hoạt động của user này để đảm bảo an toàn
+                var activeTokens = await _context.UserRefreshTokens
+                    .Where(t => t.UserID == tokenInDb.UserID && !t.IsRevoked)
+                    .ToListAsync();
+
+                foreach (var t in activeTokens)
+                {
+                    t.IsRevoked = true;
+                    t.RevokedAt = DateTime.UtcNow;
+                }
+                await _context.SaveChangesAsync();
+
+                return Unauthorized(new { message = "Cảnh báo bảo mật! Vui lòng đăng nhập lại." });
+            }
+
+            if (tokenInDb.ExpiresAt < DateTime.UtcNow)
+            {
+                return Unauthorized(new { message = "Refresh Token đã hết hạn!" });
+            }
+
+            // =========================================================
+            // 4. XOAY VÒNG TOKEN (ROTATION): Vô hiệu hóa token cũ vừa dùng
+            // =========================================================
+            tokenInDb.IsRevoked = true;
+            tokenInDb.RevokedAt = DateTime.UtcNow;
+
+            // 5. Tái tạo danh sách Claims cho Access Token mới
+            var user = tokenInDb.User;
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
+                new Claim(ClaimTypes.Name, user.Username)
+            };
+
+            foreach (var userRole in user.UserRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, userRole.Role.RoleName));
+            }
+
+            var student = await _context.Students
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.UserID == user.UserID);
+
+            if (student != null)
+            {
+                claims.Add(new Claim("StudentID", student.StudentID));
+            }
+
+            // 6. Ký và sinh chuỗi Access Token (JWT) mới
+            var jwtSettings = _config.GetSection("JwtSettings");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(15), // Hạn Access Token
+                Issuer = jwtSettings["Issuer"],
+                Audience = jwtSettings["Audience"],
+                SigningCredentials = creds
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var securityToken = tokenHandler.CreateToken(tokenDescriptor);
+            var newAccessTokenString = tokenHandler.WriteToken(securityToken);
+
+            // =========================================================
+            // 7. TẠO REFRESH TOKEN MỚI & CẬP NHẬT THÔNG TIN THIẾT BỊ
+            // =========================================================
+            var newRefreshTokenString = _tokenService.GenerateRefreshToken();
+
+            // Lấy thông tin thiết bị tại thời điểm refresh (đề phòng user vừa cập nhật trình duyệt)
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            var deviceFriendlyName = DeviceDetector.GetDeviceFriendlyName(userAgent);
+
+            var newRefreshTokenEntity = new UserRefreshToken
+            {
+                UserID = user.UserID,
+                Token = newRefreshTokenString, // Đồng nhất sử dụng CHUNG 1 chuỗi token mới
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Device = deviceFriendlyName,
+                UserAgent = userAgent
+            };
+
+            _context.UserRefreshTokens.Add(newRefreshTokenEntity);
+            await _context.SaveChangesAsync();
+
+            // 8. Đè Cookie cũ bằng Cookie chứa Refresh Token MỚI
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+            Response.Cookies.Append("refreshToken", newRefreshTokenString, cookieOptions);
+
+            // 9. Trả Access Token mới về cho Angular
+            return Ok(new AuthResponseDto
+            {
+                Token = newAccessTokenString,
+                Username = user.Username
+            });
+        }
+
+        [HttpPost("logout")]
+        [AllowAnonymous] // Nên dùng AllowAnonymous vì khi bấm Logout, Access Token của Client có thể đã hết hạn.
+        public async Task<IActionResult> Logout()
+        {
+            // 1. Lấy Refresh Token từ HttpOnly Cookie do Angular gửi lên (nhờ withCredentials)
+            var refreshToken = Request.Cookies["refreshToken"];
+
+            if (!string.IsNullOrEmpty(refreshToken))
+            {
+                // 2. Tìm đúng Token đó trong Database
+                var tokenInDb = await _context.UserRefreshTokens
+                    .SingleOrDefaultAsync(t => t.Token == refreshToken);
+
+                // 3. Nếu tìm thấy và token chưa bị hủy, tiến hành thu hồi nó
+                if (tokenInDb != null && !tokenInDb.IsRevoked)
+                {
+                    tokenInDb.IsRevoked = true;
+                    tokenInDb.RevokedAt = DateTime.UtcNow;
+
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            // 4. Đuổi Cookie khỏi trình duyệt Client
+            // Việc này sẽ set Expired của cookie về quá khứ, ép trình duyệt tự động xóa bỏ hoàn toàn
+            Response.Cookies.Delete("refreshToken", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            });
+
+            return Ok(new { message = "Đăng xuất và xóa phiên làm việc thành công!" });
+        }
     }
 }

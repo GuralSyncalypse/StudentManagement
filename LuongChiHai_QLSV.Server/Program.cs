@@ -24,6 +24,7 @@ builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<TokenService>();
 
 
 builder.Services.AddAuthentication(options =>
@@ -40,7 +41,12 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+
+        // =======================================================
+        // 🔥 THÊM DÒNG NÀY VÀO ĐỂ XÓA BỎ 5 PHÚT ÂN HẠN MẶC ĐỊNH
+        // =======================================================
+        ClockSkew = TimeSpan.Zero
     };
 });
 

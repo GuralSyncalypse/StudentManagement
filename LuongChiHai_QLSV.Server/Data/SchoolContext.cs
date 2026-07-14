@@ -16,6 +16,7 @@ namespace LuongChiHai_QLSV.Server.Data
         public DbSet<User> Users { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
+        public DbSet<UserPermission> UserPermissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<AcademicProfile> AcademicProfiles { get; set; }
@@ -23,6 +24,7 @@ namespace LuongChiHai_QLSV.Server.Data
         public DbSet<CourseSection> CourseSections { get; set; }
         public DbSet<Enrollment> Enrollments { get; set; }
         public DbSet<Score> Scores { get; set; }
+        public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
 
         // Views
@@ -30,7 +32,6 @@ namespace LuongChiHai_QLSV.Server.Data
         public DbSet<StudentCompleteProfileView> StudentCompleteProfiles { get; set; }
         public DbSet<StudentCumulativeGpaView> StudentCumulativeGpas { get; set; }
         public DbSet<StudentSemesterGpaView> StudentSemesterGpas { get; set; }
-        public DbSet<UserPermissionView> UserPermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -102,7 +103,6 @@ namespace LuongChiHai_QLSV.Server.Data
             modelBuilder.Entity<StudentCompleteProfileView>().ToView("v_StudentCompleteProfile").HasNoKey();
             modelBuilder.Entity<StudentCumulativeGpaView>().ToView("v_StudentCumulativeGPA").HasNoKey();
             modelBuilder.Entity<StudentSemesterGpaView>().ToView("v_StudentSemesterGPA").HasNoKey();
-            modelBuilder.Entity<UserPermissionView>().ToView("vw_UserPermissions").HasNoKey();
         }
     }
 }

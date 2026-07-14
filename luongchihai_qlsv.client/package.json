@@ -22,7 +22,9 @@
     "@angular/material": "^22.0.4",
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
+    "apexcharts": "^5.16.0",
     "jest-editor-support": "*",
+    "ng-apexcharts": "^2.4.0",
     "run-script-os": "*",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

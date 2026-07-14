@@ -5,6 +5,7 @@ using LuongChiHai_QLSV.Server.Security;
 using LuongChiHai_QLSV.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -53,18 +54,18 @@ public class EnrollmentsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("{enrollmentid}")]
+    [HttpPut("{id}")]
     [HasPermission("0803")]
-    public async Task<IActionResult> PutEnrollment(int? enrollmentid, Enrollment enrollment)
+    public async Task<IActionResult> PutEnrollment(int? id, Enrollment enrollment)
     {
-        if (enrollmentid == null || enrollmentid != enrollment.EnrollmentID)
+        if (id == null || id != enrollment.EnrollmentID)
         {
             return BadRequest();
         }
 
         try
         {
-            var result = await _enrollmentService.UpdateEnrollmentAsync(enrollmentid.Value, enrollment);
+            var result = await _enrollmentService.UpdateEnrollmentAsync(id.Value, enrollment);
             return Ok(result);
         }
         catch (NotFoundException ex)
@@ -111,9 +112,10 @@ public class EnrollmentsController : ControllerBase
         }
     }
 
-    [HttpDelete("admin-cancel")]
+    [HttpDelete]
+    [Authorize(Roles = "Admin")]
     [HasPermission("0804")]
-    public async Task<IActionResult> AdminCancelEnrollment([FromQuery] int sectionID, [FromQuery] string studentID)
+    public async Task<IActionResult> DeleteEnrollmentByAdmin([FromQuery][Required] int sectionID, [FromQuery][Required] string studentID)
     {
         try
         {

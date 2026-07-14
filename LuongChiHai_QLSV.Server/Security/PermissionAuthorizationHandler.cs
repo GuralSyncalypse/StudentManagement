@@ -7,7 +7,7 @@ namespace LuongChiHai_QLSV.Server.Security
 {
     public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
     {
-        private readonly SchoolContext _context; // Inject DbContext của bạn vào đây
+        private readonly SchoolContext _context;
 
         public PermissionAuthorizationHandler(SchoolContext context)
         {
@@ -21,6 +21,27 @@ namespace LuongChiHai_QLSV.Server.Security
             if (userIdClaim == null) return;
 
             if (!int.TryParse(userIdClaim.Value, out int userId)) return;
+
+            var directPermission = await _context.UserPermissions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(up => up.UserID == userId && up.PermissionID == requirement.Permission);
+
+            if (directPermission != null)
+            {
+                // NẾU CÓ QUYỀN RIÊNG -> Áp dụng luật ghi đè hoàn toàn, không cần check Role nữa
+                if (directPermission.IsAllowed)
+                {
+                    context.Succeed(requirement); // Cho qua nếu IsAllowed = true
+                }
+                else
+                {
+                    // Nếu IsAllowed = false tức là cấm tuyệt đối (Blacklist), return ngay để chặn lại
+                    // (Kể cả role của user này có quyền thì quyền riêng false vẫn thắng)
+                    return;
+                }
+
+                return;
+            }
 
             // 2. Kiểm tra DB xem User có Permission này không thông qua RolePermission.
             var hasPermission = await _context.UserRoles

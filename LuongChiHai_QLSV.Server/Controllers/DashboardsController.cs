@@ -67,8 +67,6 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 return NotFound(new { message = "Hệ thống chưa thiết lập học kỳ hiện tại!" });
             }
 
-            // 3. Truy vấn song song hoặc tuần tự các View (Đã tối ưu Index Seek bằng StudentID)
-
             // Thẻ thông tin cá nhân
             var profileData = await _context.StudentCompleteProfiles
                 .Where(p => p.StudentID == studentId)
@@ -137,7 +135,8 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 .Select(g => new
                 {
                     Semester = g.Semester,
-                    SemesterGpa = g.SemesterGPA
+                    SemesterGpa = g.SemesterGPA,
+                    CumulativeGpa = g.CumulativeGPA
                 })
                 .ToListAsync();
 
