@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace LuongChiHai_QLSV.Server.Services
+namespace LuongChiHai_QLSV.Server.Helpers
 {
     public class TokenService
     {

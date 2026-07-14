@@ -32,7 +32,7 @@ export class StudentReportService {
     const params = new HttpParams()
       .set('semester', semester);
 
-    // URL gọi thực tế sẽ có dạng: /api/Reports/semester-summary?studentId=SVxxx&semester=1
+    // URL gọi thực tế sẽ có dạng: /api/Reports/summary?studentId=SVxxx&semester=1
     return this.http.get<StudentReport>(`${this.apiUrl}/summary`, { params });
   }
 }
