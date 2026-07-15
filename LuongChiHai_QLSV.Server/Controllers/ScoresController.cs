@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.Entities;
-using LuongChiHai_QLSV.Server.Data;
+using LuongChiHai_QLSV.Server.Security;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -17,6 +18,7 @@ public class ScoresController : ControllerBase
 
     // GET: api/Score
     [HttpGet]
+    [HasPermission("0902")]
     public async Task<ActionResult<IEnumerable<Score>>> GetScore()
     {
         return await _context.Scores.AsNoTracking().ToListAsync();
@@ -24,6 +26,7 @@ public class ScoresController : ControllerBase
 
     // GET: api/Score/5
     [HttpGet("{scoreid}")]
+    [HasPermission("0902")]
     public async Task<ActionResult<Score>> GetScore(int scoreid)
     {
         var score = await _context.Scores
@@ -41,6 +44,7 @@ public class ScoresController : ControllerBase
     // PUT: api/Score/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{scoreid}")]
+    [HasPermission("0903")]
     public async Task<IActionResult> PutScore(int? scoreid, Score score)
     {
         if (scoreid != score.ScoreID)
@@ -73,7 +77,7 @@ public class ScoresController : ControllerBase
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     // 1. API Tạo lẻ 1 đầu điểm (Dùng khi giảng viên muốn thêm thủ công 1 môn)
     [HttpPost("{enrollmentID}")]
-    [Authorize(Policy = "grade:manage")]
+    [HasPermission("0901")]
     public async Task<IActionResult> SaveScores(int enrollmentID, [FromBody] List<Score> scores)
     {
         // 1. Kiểm tra danh sách trống
@@ -114,6 +118,7 @@ public class ScoresController : ControllerBase
 
     // DELETE: api/Score/5
     [HttpDelete("{scoreid}")]
+    [HasPermission("0904")]
     public async Task<IActionResult> DeleteScore(int? scoreid)
     {
         var score = await _context.Scores.FindAsync(scoreid);

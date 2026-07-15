@@ -7,10 +7,18 @@ import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
+import { NgApexchartsModule } from 'ng-apexcharts';
 
 @NgModule({
   declarations: [App, LoginComponent, RegisterComponent],
-  imports: [BrowserModule, HttpClientModule, AppRoutingModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    AppRoutingModule,
+    FormsModule,
+    ReactiveFormsModule,
+    NgApexchartsModule,
+  ],
   providers: [
     provideBrowserGlobalErrorListeners(),
     // ĐĂNG KÝ INTERCEPTOR TẠI ĐÂY 👇

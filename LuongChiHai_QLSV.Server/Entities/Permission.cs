@@ -7,11 +7,8 @@ namespace LuongChiHai_QLSV.Server.Entities
     public class Permission
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int PermissionID { get; set; }
-        [Required]
-        [StringLength(100)]
-        public string PermissionKey { get; set; } = string.Empty;
+        [StringLength(4)]
+        public string PermissionID { get; set; } = string.Empty;
         [StringLength(255)]
         public string Description { get; set; } = string.Empty;
 

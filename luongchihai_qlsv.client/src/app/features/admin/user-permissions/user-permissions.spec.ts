@@ -1,18 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 
-import { UserList } from './user-list';
+import { UserPermissions } from './user-permissions';
 
-describe('UserList', () => {
-  let component: UserList;
-  let fixture: ComponentFixture<UserList>;
+describe('UserPermissions', () => {
+  let component: UserPermissions;
+  let fixture: ComponentFixture<UserPermissions>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, UserList],
+      declarations: [UserPermissions],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(UserList);
+    fixture = TestBed.createComponent(UserPermissions);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

@@ -16,8 +16,7 @@ namespace LuongChiHai_QLSV.Server.Repositories
         public async Task<List<Student>> GetAllWithProfileAsync()
         {
             // Sử dụng _dbSet (đại diện cho _context.Students) được thừa kế từ lớp cha
-            return await _dbSet.Include(s => s.AcademicProfile)
-                               .ToListAsync();
+            return await _dbSet.Include(s => s.AcademicProfile).ToListAsync();
         }
 
         // 🌟 Hàm lấy chi tiết một Sinh viên theo ID kèm theo AcademicProfile

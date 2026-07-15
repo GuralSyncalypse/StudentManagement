@@ -9,7 +9,7 @@ namespace LuongChiHai_QLSV.Server.Entities
         public virtual User User { get; set; } = null!;
 
         [ForeignKey("PermissionID")]
-        public int PermissionID { get; set; }
+        public string PermissionID { get; set; } = null!;
         public bool IsAllowed { get; set; }
 
         public virtual Permission Permission { get; set; } = null!;

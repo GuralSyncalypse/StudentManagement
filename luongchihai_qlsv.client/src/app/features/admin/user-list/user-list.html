@@ -1,1 +1,348 @@
-<p>user-list works!</p>
+<div class="page">
+  <svg class="icon-sprite" aria-hidden="true" focusable="false">
+    <symbol id="icon-user-plus" viewBox="0 0 24 24">
+      <circle cx="12" cy="8" r="3"></circle>
+      <path d="M5 20a7 7 0 0 1 14 0"></path>
+      <path d="M19 8v6"></path>
+      <path d="M16 11h6"></path>
+    </symbol>
+    <symbol id="icon-filter-clear" viewBox="0 0 24 24">
+      <path d="M4 5h16l-6 7v5l-4 2v-7L4 5z"></path>
+      <path d="M16 8l4 4"></path>
+      <path d="M20 8l-4 4"></path>
+    </symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24">
+      <path d="M21 12a9 9 0 1 1-3-6.7"></path>
+      <path d="M21 3v6h-6"></path>
+    </symbol>
+    <symbol id="icon-xmark" viewBox="0 0 24 24">
+      <path d="M18 6L6 18"></path>
+      <path d="M6 6l12 12"></path>
+    </symbol>
+    <symbol id="icon-cancel" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"></circle>
+      <path d="M9 9l6 6"></path>
+      <path d="M15 9l-6 6"></path>
+    </symbol>
+    <symbol id="icon-save" viewBox="0 0 24 24">
+      <path d="M5 4h11l3 3v13H5z"></path>
+      <path d="M8 4v6h8V4"></path>
+      <path d="M8 14h8"></path>
+    </symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24">
+      <path d="M4 20h4l11-11a2.8 2.8 0 0 0-4-4L4 16v4z"></path>
+      <path d="M13 7l4 4"></path>
+    </symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24">
+      <rect x="5" y="11" width="14" height="9" rx="2"></rect>
+      <path d="M8 11V8a4 4 0 0 1 8 0v3"></path>
+    </symbol>
+    <symbol id="icon-unlock" viewBox="0 0 24 24">
+      <rect x="5" y="11" width="14" height="9" rx="2"></rect>
+      <path d="M9 11V8a4 4 0 0 1 7.5-2"></path>
+      <path d="M16.5 6H18"></path>
+    </symbol>
+    <symbol id="icon-key" viewBox="0 0 24 24">
+      <circle cx="8" cy="12" r="3"></circle>
+      <path d="M10.5 12H20l-2 2"></path>
+      <path d="M18 14l-2 2"></path>
+    </symbol>
+    <symbol id="icon-reset" viewBox="0 0 24 24">
+      <path d="M3 12a9 9 0 0 1 15-6.7"></path>
+      <path d="M18 5v6h-6"></path>
+      <path d="M21 12a9 9 0 0 1-15 6.7"></path>
+    </symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24">
+      <path d="M4 7h16"></path>
+      <path d="M7 7l1 13h8l1-13"></path>
+      <path d="M9 7V5h6v2"></path>
+    </symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24">
+      <path d="M17 21a5 5 0 0 0-10 0"></path>
+      <circle cx="12" cy="8" r="4"></circle>
+      <path d="M19 21a4 4 0 0 0-3-4"></path>
+      <path d="M15 4.5a4 4 0 0 1 0 7"></path>
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path d="M20 6L9 17l-5-5"></path>
+    </symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24">
+      <path d="M12 9v4"></path>
+      <path d="M12 17h.01"></path>
+      <path d="M10.3 4.8 2.6 19a1 1 0 0 0 .9 1.5h17a1 1 0 0 0 .9-1.5l-7.7-14.2a1 1 0 0 0-1.8 0z"></path>
+    </symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"></circle>
+      <path d="M12 10v6"></path>
+      <path d="M12 7h.01"></path>
+    </symbol>
+    <symbol id="icon-more" viewBox="0 0 24 24">
+      <circle cx="12" cy="5" r="1.5"></circle>
+      <circle cx="12" cy="12" r="1.5"></circle>
+      <circle cx="12" cy="19" r="1.5"></circle>
+    </symbol>
+  </svg>
+
+  <section class="hero-card">
+    <div class="hero-copy">
+      <h2>
+        <svg class="svg-icon" aria-hidden="true"><use href="#icon-users"></use></svg>
+        Quản lý tài khoản
+      </h2>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Tổng tài khoản</span>
+        <strong>{{ totalCount }}</strong>
+      </div>
+      <div class="stat-card success">
+        <span class="stat-label">Đang hoạt động</span>
+        <strong>{{ activeCount }}</strong>
+      </div>
+      <div class="stat-card danger">
+        <span class="stat-label">Đang khóa</span>
+        <strong>{{ lockedCount }}</strong>
+      </div>
+    </div>
+  </section>
+
+  @if (successMessage || errorMessage) {
+  <div class="notice" [class.notice-success]="noticeType === 'success'" [class.notice-error]="noticeType === 'error'">
+    <svg class="svg-icon notice-icon" aria-hidden="true">
+      <use [attr.href]="noticeType === 'success' ? '#icon-check' : '#icon-alert'"></use>
+    </svg>
+    <div class="notice-body">
+      <strong>{{ noticeType === 'success' ? 'Thao tác thành công' : 'Thao tác thất bại' }}</strong>
+      <span>{{ successMessage || errorMessage }}</span>
+    </div>
+  </div>
+  }
+
+  <section class="toolbar-card">
+    <div class="toolbar-header">
+      <div>
+        <h3>Bộ lọc</h3>
+        <p>{{ visibleCount }} / {{ totalCount }} tài khoản đang hiển thị</p>
+      </div>
+      <div class="toolbar-meta">
+        <span class="meta-pill">{{ appliedFiltersCount }} bộ lọc áp dụng</span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <label class="search-field">
+        <span>Tìm kiếm</span>
+        <div class="search-box">
+          <svg class="svg-icon" aria-hidden="true"><use href="#icon-info"></use></svg>
+          <input
+            type="text"
+            [ngModel]="searchTerm"
+            (ngModelChange)="onSearch($event)"
+            placeholder="Tên đăng nhập, email, số điện thoại, vai trò"
+          />
+        </div>
+      </label>
+
+      <label>
+        <span>Trạng thái</span>
+        <select [ngModel]="selectedStatus" (ngModelChange)="onStatusChange($event)">
+          <option value="All">Tất cả</option>
+          <option value="Active">Đang hoạt động</option>
+          <option value="Inactive">Đang khóa</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Vai trò</span>
+        <select [ngModel]="selectedRole" (ngModelChange)="onRoleChange($event)">
+          <option value="All">Tất cả vai trò</option>
+          @for (role of roleOptions; track role) {
+          <option [value]="role">{{ role }}</option>
+          }
+        </select>
+      </label>
+
+      <div class="toolbar-actions">
+        <button type="button" class="action-chip action-chip-neutral" (click)="clearFilters()" [disabled]="!hasFiltersApplied">
+          <svg class="svg-icon" aria-hidden="true"><use href="#icon-filter-clear"></use></svg>
+          <span>Xóa lọc</span>
+        </button>
+        <button type="button" class="action-chip action-chip-success" (click)="loadUsers()">
+          <svg class="svg-icon" aria-hidden="true"><use href="#icon-refresh"></use></svg>
+          <span>Tải lại</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  @if (isFormOpen) {
+  <section class="form-panel">
+    <div class="form-panel-header">
+      <div>
+        <h3>{{ formMode === 'create' ? 'Tạo tài khoản mới' : 'Cập nhật tài khoản' }}</h3>
+        <p>Nhập thông tin tối thiểu, còn mật khẩu được xử lý qua các thao tác riêng bên dưới.</p>
+      </div>
+
+      <button type="button" class="close-form-btn icon-only" (click)="closeForm()" aria-label="Đóng form" title="Đóng form">
+        <svg class="svg-icon" aria-hidden="true"><use href="#icon-xmark"></use></svg>
+      </button>
+    </div>
+
+    <form class="account-form" (ngSubmit)="saveUser()">
+      <label>
+        <span>Tên đăng nhập</span>
+        <input name="username" [(ngModel)]="form.username" placeholder="vd: admin01" />
+      </label>
+
+      <label>
+        <span>Email</span>
+        <input name="email" [(ngModel)]="form.email" type="email" placeholder="admin@school.edu.vn" />
+      </label>
+
+      <label>
+        <span>Số điện thoại</span>
+        <input name="phoneNumber" [(ngModel)]="form.phoneNumber" placeholder="090..." />
+      </label>
+
+      <label>
+        <span>Vai trò</span>
+        <select name="roleName" [(ngModel)]="form.roleName">
+          @for (role of getFormRoleOptions(); track role) {
+          <option [value]="role">{{ role }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="switch-field">
+        <span>Trạng thái</span>
+        <button
+          type="button"
+          class="switch-btn"
+          [class.active]="form.isActive"
+          (click)="form.isActive = !form.isActive">
+          {{ form.isActive ? 'Đang hoạt động' : 'Đang khóa' }}
+        </button>
+      </label>
+
+      @if (formMode === 'create') {
+      <label class="wide">
+        <span>Mật khẩu khởi tạo</span>
+        <input name="password" [(ngModel)]="form.password" type="password" placeholder="Nhập mật khẩu ban đầu" />
+      </label>
+      }
+
+      <div class="form-actions wide">
+        <button type="button" class="secondary-btn icon-btn" (click)="closeForm()">
+          <svg class="svg-icon" aria-hidden="true"><use href="#icon-cancel"></use></svg>
+          <span>Hủy</span>
+        </button>
+        <button type="submit" class="btn btn-primary icon-btn">
+          <svg class="svg-icon" aria-hidden="true"><use href="#icon-save"></use></svg>
+          <span>{{ formMode === 'create' ? 'Tạo tài khoản' : 'Lưu thay đổi' }}</span>
+        </button>
+      </div>
+    </form>
+  </section>
+  }
+
+  <section class="table-card">
+    @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Đang tải danh sách tài khoản...</p>
+    </div>
+    } @else if (users.length === 0) {
+    <div class="empty-state">
+      <svg class="svg-icon empty-icon" aria-hidden="true"><use href="#icon-users"></use></svg>
+      <h3>Không có tài khoản phù hợp</h3>
+      <p>Hãy thử nới bộ lọc hoặc tạo tài khoản mới để bắt đầu.</p>
+      <button class="btn btn-primary icon-btn" type="button" (click)="openCreateForm()">
+        <svg class="svg-icon" aria-hidden="true"><use href="#icon-user-plus"></use></svg>
+        <span>Thêm tài khoản</span>
+      </button>
+    </div>
+    } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tài khoản</th>
+            <th>Liên hệ</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (user of users; track user.userID) {
+          <tr>
+            <td class="code">{{ user.userID }}</td>
+            <td>
+              <div class="user-cell">
+                <div class="stack">
+                  <strong>{{ user.username }}</strong>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="contact-cell">
+                <span>{{ user.email }}</span>
+                <small>{{ user.phoneNumber }}</small>
+              </div>
+            </td>
+            <td>{{ getVisibleRoleLabel(user) }}</td>
+            <td>
+              <span class="status-badge" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                {{ user.isActive ? 'Đang hoạt động' : 'Đang khóa' }}
+              </span>
+            </td>
+            <td>{{ user.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <div class="actions-grid">
+                <button type="button" class="btn-icon edit" (click)="openEditForm(user)" title="Sửa tài khoản" aria-label="Sửa tài khoản">
+                  <svg class="svg-icon" aria-hidden="true"><use href="#icon-edit"></use></svg>
+                </button>
+                <button type="button" class="btn-icon toggle" (click)="toggleStatus(user)" title="Khóa / mở khóa" aria-label="Khóa / mở khóa">
+                  <svg class="svg-icon" aria-hidden="true">
+                    <use [attr.href]="user.isActive ? '#icon-lock' : '#icon-unlock'"></use>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="btn-icon more"
+                  (click)="toggleActionMenu(user.userID)"
+                  title="Thao tác khác"
+                  aria-label="Thao tác khác">
+                  <svg class="svg-icon" aria-hidden="true"><use href="#icon-more"></use></svg>
+                </button>
+
+                @if (openActionMenuId === user.userID) {
+                <div class="action-menu">
+                  <button type="button" class="menu-item" (click)="changePassword(user); closeActionMenu()">
+                    <svg class="svg-icon" aria-hidden="true"><use href="#icon-key"></use></svg>
+                    <span>Đổi mật khẩu</span>
+                  </button>
+                  <button type="button" class="menu-item" (click)="resetPassword(user); closeActionMenu()">
+                    <svg class="svg-icon" aria-hidden="true"><use href="#icon-reset"></use></svg>
+                    <span>Đặt lại mật khẩu</span>
+                  </button>
+                  <button type="button" class="menu-item danger" (click)="deleteUser(user)">
+                    <svg class="svg-icon" aria-hidden="true"><use href="#icon-trash"></use></svg>
+                    <span>Xóa tài khoản</span>
+                  </button>
+                </div>
+                }
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+</div>

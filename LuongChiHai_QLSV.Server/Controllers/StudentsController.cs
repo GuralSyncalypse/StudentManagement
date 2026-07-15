@@ -24,7 +24,7 @@ public class StudentsController : ControllerBase
 
     // GET: api/Student
     [HttpGet]
-    [Authorize(Policy = "student:read_all")]
+    [HasPermission("0402")]
     public async Task<ActionResult<IEnumerable<StudentResponseDto>>> GetStudent()
     {
         var response = await _studentService.GetAllAsync();
@@ -40,7 +40,7 @@ public class StudentsController : ControllerBase
 
     // GET: api/Student/5
     [HttpGet("{id}")]
-    [Authorize(Policy = "student:read_detail")]
+    [HasPermission("0402")]
     public async Task<ActionResult<StudentResponseDto>> GetStudent(string id)
     {
         var response = await _studentService.GetByIdAsync(id);
@@ -54,7 +54,7 @@ public class StudentsController : ControllerBase
     // PUT: api/Student/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    [Authorize(Policy = "student:update")]
+    [HasPermission("0403")]
     public async Task<IActionResult> PutStudent(string id, StudentRequestDto request)
     {
         if (id != request.StudentID)
@@ -71,7 +71,7 @@ public class StudentsController : ControllerBase
     // POST: api/Student
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    [Authorize(Policy = "student:create")]
+    [HasPermission("0401")]
     public async Task<ActionResult<StudentResponseDto>> PostStudent(StudentRequestDto request)
     {
         try
@@ -99,26 +99,11 @@ public class StudentsController : ControllerBase
         }
     }
 
-    // DELETE: api/Student/5
-    [HttpDelete("{id}")]
-    [Authorize(Policy = "student:delete")]
-    public async Task<IActionResult> DeleteStudent(string? id)
-    {
-        if (id == null)
-            return BadRequest("Mã sinh viên không được để trống.");
-
-        await _studentService.DeleteAsync(id);
-
-        return NoContent();
-    }
-
     [HttpGet("me")]
-    [HasPermission("student:view_own_profile")]
+    [HasPermission("0402")]
     public async Task<ActionResult<StudentResponseDto>> GetCurrentStudent()
     {
-        var studentId = User.FindFirst("StudentID")?.Value
-                     ?? User.FindFirst(ClaimTypes.Name)?.Value
-                     ?? User.FindFirst("sub")?.Value;
+        var studentId = User.FindFirst("StudentID")?.Value;
 
         if (string.IsNullOrEmpty(studentId))
             return Unauthorized();
@@ -129,6 +114,19 @@ public class StudentsController : ControllerBase
             return NotFound();
 
         return Ok(studentDto);
+    }
+
+    // DELETE: api/Student/5
+    [HttpDelete("{id}")]
+    [HasPermission("0404")]
+    public async Task<IActionResult> DeleteStudent(string? id)
+    {
+        if (id == null)
+            return BadRequest("Mã sinh viên không được để trống.");
+
+        await _studentService.DeleteAsync(id);
+
+        return NoContent();
     }
 
 }

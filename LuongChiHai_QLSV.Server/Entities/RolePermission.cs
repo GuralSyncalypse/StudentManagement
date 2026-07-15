@@ -6,7 +6,7 @@ namespace LuongChiHai_QLSV.Server.Entities
     {
         public int RoleID { get; set; }
 
-        public int PermissionID { get; set; }
+        public string PermissionID { get; set; }
 
         public virtual Role Role { get; set; } = null!;
 
