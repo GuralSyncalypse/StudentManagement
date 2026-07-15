@@ -139,6 +139,89 @@ namespace LuongChiHai_QLSV.Server.Controllers
             });
         }
 
+        [HttpGet("exclusive")]
+        public async Task<ActionResult<UserPermissionMatrixResponseDto>> GetExclusiveMatrix([FromQuery] int? userId = null)
+        {
+            // 1. Lấy danh sách người dùng để làm Option cho dropdown ở Frontend
+            var users = await _context.Users
+                .AsNoTracking()
+                .OrderBy(u => u.Username)
+                .Select(u => new UserPermissionUserOptionDto
+                {
+                    UserID = u.UserID,
+                    Username = u.Username
+                })
+                .ToListAsync();
+
+            if (users.Count == 0)
+            {
+                return Ok(new UserPermissionMatrixResponseDto
+                {
+                    Users = new(),
+                    Rows = new()
+                });
+            }
+
+            // 2. Xác định User được chọn (mặc định lấy User đầu tiên nếu không truyền userId)
+            var selectedUserId = userId ?? users.First().UserID;
+
+            var selectedUserExists = await _context.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.UserID == selectedUserId);
+
+            if (!selectedUserExists)
+            {
+                return NotFound(new { message = "Không tìm thấy user được chọn." });
+            }
+
+            // 3. Lấy danh sách quyền riêng biệt đã gán cho User hiện tại
+            var assignedPermissions = await _context.UserPermissions
+                .AsNoTracking()
+                .Where(up => up.UserID == selectedUserId)
+                .Select(up => new UserPermissionDto
+                {
+                    UserId = up.UserID,
+                    PermissionId = up.PermissionID,
+                    IsAllowed = up.IsAllowed
+                })
+                .ToListAsync();
+
+            // Chuyển sang Dictionary tối ưu hóa việc tìm kiếm O(1)
+            var assignedPermissionDict = assignedPermissions
+                .ToDictionary(ap => ap.PermissionId, ap => ap.IsAllowed);
+
+            // 4. Lấy toàn bộ danh sách Quyền gốc có trong hệ thống
+            var permissions = await _context.Permissions
+                .AsNoTracking()
+                .OrderBy(p => p.PermissionID)
+                .ToListAsync();
+
+            // 5. Khớp dữ liệu (Map) ra danh sách hiển thị
+            var rows = permissions
+                .Select(permission =>
+                {
+                    bool isAssigned = assignedPermissionDict.ContainsKey(permission.PermissionID);
+                    bool isAllowed = isAssigned && assignedPermissionDict[permission.PermissionID];
+
+                    return new ExclusivePermissionRowDto
+                    {
+                        PermissionID = permission.PermissionID,
+                        Description = permission.Description,
+                        IsAssigned = isAssigned,
+                        IsAllowed = isAllowed
+                    };
+                })
+                .ToList();
+
+            // 6. Trả về Response DTO chuẩn hóa
+            return Ok(new UserPermissionMatrixResponseDto
+            {
+                Users = users,
+                SelectedUserID = selectedUserId,
+                Rows = rows
+            });
+        }
+
         [HttpPut("{roleId:int}")]
         public async Task<IActionResult> SaveMatrix(int roleId, [FromBody] SaveRolePermissionMatrixRequestDto request)
         {
@@ -208,6 +291,81 @@ namespace LuongChiHai_QLSV.Server.Controllers
 
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+
+        [HttpPost("save-permissions")]
+        public async Task<IActionResult> SaveUserPermissions([FromBody] UpdateUserPermissionsDto model)
+        {
+            if (model == null || model.UserID <= 0)
+            {
+                return BadRequest(new { message = "Dữ liệu yêu cầu không hợp lệ." });
+            }
+
+            // 1. Kiểm tra sự tồn tại của User
+            var userExists = await _context.Users.AnyAsync(u => u.UserID == model.UserID);
+            if (!userExists)
+            {
+                return NotFound(new { message = "Không tìm thấy người dùng trong hệ thống." });
+            }
+
+            // 2. Lấy toàn bộ quyền hiện tại của User này từ Database ra để so sánh
+            var existingUserPermissions = await _context.UserPermissions
+                .Where(up => up.UserID == model.UserID)
+                .ToListAsync();
+
+            // Chuyển danh sách hiện tại thành Dictionary để tra cứu nhanh theo PermissionID
+            var existingDict = existingUserPermissions.ToDictionary(up => up.PermissionID);
+
+            // 3. Duyệt qua danh sách thay đổi gửi lên từ Frontend
+            foreach (var item in model.Permissions)
+            {
+                bool exists = existingDict.TryGetValue(item.PermissionID, out var existingPermission);
+
+                if (item.IsAssigned)
+                {
+                    if (exists)
+                    {
+                        // THỘP: Đã tồn tại -> Cập nhật lại thuộc tính IsAllowed nếu có thay đổi
+                        if (existingPermission!.IsAllowed != item.IsAllowed)
+                        {
+                            existingPermission.IsAllowed = item.IsAllowed;
+                            _context.Entry(existingPermission).State = EntityState.Modified;
+                        }
+                    }
+                    else
+                    {
+                        // THÊM MỚI: Chưa tồn tại và được gán -> Thêm mới bản ghi vào bảng trung gian
+                        var newPermission = new UserPermission
+                        {
+                            UserID = model.UserID,
+                            PermissionID = item.PermissionID,
+                            IsAllowed = item.IsAllowed
+                        };
+                        await _context.UserPermissions.AddAsync(newPermission);
+                    }
+                }
+                else
+                {
+                    // XÓA: Nếu tồn tại trong DB nhưng Frontend gửi lên IsAssigned = false -> Xóa khỏi DB
+                    if (exists)
+                    {
+                        _context.UserPermissions.Remove(existingPermission!);
+                    }
+                }
+            }
+
+            // 4. Lưu tất cả thay đổi vào Database (bọc trong Transaction ngầm định của SaveChangesAsync)
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Cập nhật ma trận phân quyền thành công!" });
+            }
+            catch (DbUpdateException ex)
+            {
+                // Log lỗi tại đây (ví dụ: _logger.LogError(ex, "..."))
+                return StatusCode(500, new { message = "Có lỗi xảy ra khi lưu dữ liệu phân quyền.", detail = ex.Message });
+            }
         }
 
         /// <summary>

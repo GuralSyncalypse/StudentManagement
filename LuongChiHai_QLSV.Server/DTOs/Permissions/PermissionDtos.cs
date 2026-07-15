@@ -40,4 +40,17 @@ namespace LuongChiHai_QLSV.Server.DTOs.Permissions
     {
         public List<string> SelectedPermissionKeys { get; set; } = new();
     }
+
+    public class UpdateUserPermissionsDto
+    {
+        public int UserID { get; set; }
+        public List<PermissionStatusDto> Permissions { get; set; } = new();
+    }
+
+    public class PermissionStatusDto
+    {
+        public string PermissionID { get; set; } = null!;
+        public bool IsAssigned { get; set; }
+        public bool IsAllowed { get; set; }
+    }
 }

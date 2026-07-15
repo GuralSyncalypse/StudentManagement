@@ -80,7 +80,50 @@ export class PermissionMatrixComponent implements OnInit {
     this.clearNotice();
   }
 
-  // === ĐÃ SỬA: Hàm save chuyển sang gom gom permissionId thay vì permissionKey ===
+  // --- CẢI TIẾN THAO TÁC HÀNG LOẠT (BULK ACTIONS) ---
+
+  /** Bật/Tắt tất cả các ô trong một hàng cụ thể */
+  toggleRow(row: RolePermissionMatrixRow, checked: boolean): void {
+    row.cells.forEach(cell => {
+      cell.isAssigned = checked;
+    });
+    this.clearNotice();
+  }
+
+  /** Kiểm tra xem toàn bộ các quyền trong hàng đã được chọn chưa */
+  isRowAllChecked(row: RolePermissionMatrixRow): boolean {
+    if (!row.cells.length) return false;
+    return row.cells.every(cell => cell.isAssigned);
+  }
+
+  /** Bật/Tắt tất cả các ô thuộc một cột (Create/Read/Update/Delete) trên tất cả các hàng đang hiển thị */
+  toggleColumn(action: string, checked: boolean): void {
+    const normalizedAction = this.normalize(action);
+    this.filteredRows.forEach(row => {
+      const cell = row.cells.find(c => this.normalize(c.action) === normalizedAction);
+      if (cell) {
+        cell.isAssigned = checked;
+      }
+    });
+    this.clearNotice();
+  }
+
+  /** Kiểm tra xem toàn bộ cột đó đã được tích chọn hết chưa */
+  isColumnAllChecked(action: string): boolean {
+    if (!this.filteredRows.length) return false;
+    const normalizedAction = this.normalize(action);
+
+    // Chỉ kiểm tra các ô thực tế tồn tại trên cột đó ở các hàng đang hiển thị
+    const targetCells = this.filteredRows
+      .map(row => row.cells.find(c => this.normalize(c.action) === normalizedAction))
+      .filter((cell): cell is RolePermissionMatrixCell => !!cell);
+
+    if (!targetCells.length) return false;
+    return targetCells.every(cell => cell.isAssigned);
+  }
+
+  // --------------------------------------------------
+
   save(): void {
     if (this.selectedRoleId === null) {
       return;
@@ -92,9 +135,8 @@ export class PermissionMatrixComponent implements OnInit {
     const selectedPermissionIds = this.rows
       .flatMap(row => row.cells)
       .filter(cell => cell.isAssigned)
-      .map(cell => cell.permissionId); // Lấy mã số ID dạng '0101', '0102'
+      .map(cell => cell.permissionId);
 
-    // Gửi payload dạng { selectedPermissionIds: [...] } phù hợp DTO Backend mới
     this.permissionService.saveMatrix(this.selectedRoleId, { selectedPermissionIds })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -129,7 +171,6 @@ export class PermissionMatrixComponent implements OnInit {
     return this.filteredRows.length > 0;
   }
 
-  // Lưu ý: Check kỹ trường roleID (Backend trả về Pascal/camelCase ra sao thì sửa lại dòng này)
   get selectedRole(): RolePermissionRoleOption | undefined {
     return this.roles.find(role => (role as any).roleID === this.selectedRoleId || (role as any).roleId === this.selectedRoleId);
   }
@@ -155,7 +196,6 @@ export class PermissionMatrixComponent implements OnInit {
         const rawCell = cell as any;
         return {
           ...cell,
-          // SỬA TẠI ĐÂY: Ép nhận diện cả 3 kiểu đặt tên phổ biến từ Backend đổ về
           permissionId: rawCell.permissionId || rawCell.permissionID || rawCell.PermissionID,
           isAssigned: cell.isAssigned
         };
@@ -177,7 +217,6 @@ export class PermissionMatrixComponent implements OnInit {
         const rowMatches = [
           row.resource,
           row.resourceLabel,
-          // Bổ sung thêm cell.permissionId vào chuỗi tìm kiếm để hỗ trợ tìm theo mã số (VD: gõ "0101")
           ...row.cells.map(cell => `${cell.permissionId} ${cell.permissionKey} ${cell.action} ${cell.description}`)
         ].some(value => value.toLowerCase().includes(normalized));
 

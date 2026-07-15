@@ -27,3 +27,22 @@ export interface RolePermissionMatrixResponse {
 export interface SaveRolePermissionMatrixRequest {
   selectedPermissionIds: string[];
 }
+
+
+export interface UserOption {
+  userID: number;
+  username: string;
+}
+
+export interface PermissionRow {
+  permissionID: string;
+  description: string;
+  isAssigned: boolean;
+  isAllowed: boolean;
+}
+
+export interface UserPermissionMatrixResponse {
+  users: UserOption[];
+  selectedUserID: number;
+  rows: PermissionRow[];
+}

@@ -12,6 +12,7 @@ import { Reports } from './student-list/report/reports'
 import { CourseSectionListComponent } from './course-section-list/course-section-list.component'
 import { UserList } from './user-list/user-list'
 import { PermissionMatrixComponent } from './permission-matrix/permission-matrix'
+import { UserPermissions } from './user-permissions/user-permissions'
 
 const routes: Routes = [
   {
@@ -27,6 +28,7 @@ const routes: Routes = [
       { path: 'courseSections', component: CourseSectionListComponent },
       { path: 'users', component: UserList },
       { path: 'permissions', component: PermissionMatrixComponent },
+      { path: 'userPermissions', component: UserPermissions },
       { path: 'enrollments', component: EnrollmentList },
       {
         path: 'students/:studentID/report',
