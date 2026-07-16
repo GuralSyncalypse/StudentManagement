@@ -3,8 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import {
-  StudentRequest,
-  StudentResponse
+  StudentBaseDto,
+  StudentDetailDto,
+  StudentListDto
 } from '../../../core/models/student.model';
 
 @Injectable({
@@ -15,22 +16,22 @@ export class AdminStudentService {
   private apiUrl = '/api/students';
 
   // GET ALL
-  getStudents(): Observable<StudentResponse[]> {
-    return this.http.get<StudentResponse[]>(this.apiUrl);
+  getStudents(): Observable<StudentListDto[]> {
+    return this.http.get<StudentListDto[]>(this.apiUrl);
   }
 
   // GET BY ID
-  getStudent(id: string): Observable<StudentResponse> {
-    return this.http.get<StudentResponse>(`${this.apiUrl}/${id}`);
+  getStudent(id: string): Observable<StudentDetailDto> {
+    return this.http.get<StudentDetailDto>(`${this.apiUrl}/${id}`);
   }
 
   // CREATE
-  createStudent(student: StudentRequest): Observable<StudentResponse> {
-    return this.http.post<StudentResponse>(this.apiUrl, student);
+  createStudent(student: StudentBaseDto & { studentID: string }): Observable<any> {
+    return this.http.post<any>(this.apiUrl, student);
   }
 
   // UPDATE
-  updateStudent(id: string, student: StudentRequest): Observable<void> {
+  updateStudent(id: string, student: StudentBaseDto): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${id}`, student);
   }
 

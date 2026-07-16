@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AdminStudentService } from '../student-list.service';
-import { StudentRequest } from '../../../../core/models/student.model';
+import { StudentDetailDto } from '../../../../core/models/student.model';
 
 @Component({
   selector: 'app-form.component',
@@ -57,16 +57,34 @@ export class StudentFormComponent implements OnInit {
     });
   }
 
+  formatDateToInput(dateInput: any): string {
+    if (!dateInput) return '';
+
+    const date = new Date(dateInput);
+    // Kiểm tra xem date có hợp lệ không
+    if (isNaN(date.getTime())) return '';
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Tháng chạy từ 0-11 nên phải +1
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
   loadStudent(id: string) {
     this.studentService.getStudent(id).subscribe(res => {
-      this.studentForm.patchValue(res);
+      this.studentForm.patchValue({
+        ...res,
+        birthDate: this.formatDateToInput(res.birthDate),
+        citizenIDIssueDate: this.formatDateToInput(res.citizenIDIssueDate)
+      });
     });
   }
 
   onSubmit() {
     if (this.studentForm.invalid) return;
 
-    const data: StudentRequest = this.studentForm.value;
+    const data: StudentDetailDto = this.studentForm.value;
 
     if (this.isEditMode) {
       this.studentService.updateStudent(this.studentId, data)

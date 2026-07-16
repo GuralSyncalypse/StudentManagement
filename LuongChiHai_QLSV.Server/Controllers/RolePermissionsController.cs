@@ -54,8 +54,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 {
                     RoleID = r.RoleID,
                     RoleName = r.RoleName
-                })
-                .ToListAsync();
+                }).ToListAsync();
 
             if (roles.Count == 0)
             {

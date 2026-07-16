@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { StudentResponse } from '../../core/models/student.model';
+import { StudentDetailDto } from '../../core/models/student.model';
 
 @Injectable({ providedIn: 'root' })
 export class StudentService {
@@ -9,8 +9,8 @@ export class StudentService {
   private apiUrl = 'api/Students';
 
   // For the logged-in student's own dashboard
-  getMyProfile(): Observable<StudentResponse> {
-    return this.http.get<StudentResponse>(`${this.apiUrl}/me`);
+  getMyProfile(): Observable<StudentDetailDto> {
+    return this.http.get<StudentDetailDto>(`${this.apiUrl}/me`);
   }
 
 }

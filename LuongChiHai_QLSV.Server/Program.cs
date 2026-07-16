@@ -1,17 +1,21 @@
 using LuongChiHai_QLSV.Server.Data;
 using LuongChiHai_QLSV.Server.Helpers;
 using LuongChiHai_QLSV.Server.Interfaces;
+using LuongChiHai_QLSV.Server.Middlewares; // 🔥 THÊM VÀO: Namespace chứa file GlobalExceptionHandler của bạn
 using LuongChiHai_QLSV.Server.Security;
 using LuongChiHai_QLSV.Server.Services;
 using LuongChiHai_QLSV.Server.UnitOfWorks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
 // 1. Lấy cấu hình từ appsettings.json
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? "Key_Chua_Chay_Mac_Dinh_Sieu_Dai_Cho_Hai_2026_!";
@@ -27,6 +31,12 @@ builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<TokenService>();
 
+// ============================================================================
+// 🔥 THÊM VÀO Ở ĐÂY: ĐĂNG KÝ DỊCH VỤ BẮT LỖI TẬP TRUNG (BEFORE BUILD)
+// ============================================================================
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+// ============================================================================
 
 builder.Services.AddAuthentication(options =>
 {
@@ -44,10 +54,60 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
 
-        // =======================================================
-        // 🔥 THÊM DÒNG NÀY VÀO ĐỂ XÓA BỎ 5 PHÚT ÂN HẠN MẶC ĐỊNH
-        // =======================================================
+        // 🔥 XÓA BỎ 5 PHÚT ÂN HẠN MẶC ĐỊNH
         ClockSkew = TimeSpan.Zero
+    };
+
+    // ============================================================================
+    // 🔥 THÊM CẤU HÌNH BẮT LỖI 401 / 403 CHO JWT TẠI ĐÂY
+    // ============================================================================
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async context =>
+        {
+            // Bỏ qua hành vi mặc định (tránh gửi trùng tiêu đề WWW-Authenticate mặc định)
+            context.HandleResponse();
+
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/problem+json";
+
+            // Tạo phản hồi Problem Details chuẩn RFC 7807 giống hệt GlobalExceptionHandler
+            var problemDetails = new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Type = "https://datatracker.ietf.org/doc/html/rfc7807",
+                Title = "Unauthorized",
+                Detail = "Yêu cầu không hợp lệ. Bạn cần cung cấp JWT Token hợp lệ để truy cập tài nguyên này.",
+                Instance = context.Request.Path
+            };
+
+            // Nếu trong quá trình xác thực có lỗi cụ thể (ví dụ: Token hết hạn, Token sai định dạng...)
+            if (!string.IsNullOrEmpty(context.ErrorDescription))
+            {
+                problemDetails.Detail = $"{problemDetails.Detail} Chi tiết lỗi: {context.ErrorDescription}";
+            }
+
+            var result = JsonSerializer.Serialize(problemDetails);
+            await context.Response.WriteAsync(result);
+        },
+
+        OnForbidden = async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/problem+json";
+
+            var problemDetails = new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Type = "https://datatracker.ietf.org/doc/html/rfc7807",
+                Title = "Forbidden",
+                Detail = "Tài khoản của bạn không có quyền truy cập vào tài nguyên này (Forbidden).",
+                Instance = context.Request.Path
+            };
+
+            var result = JsonSerializer.Serialize(problemDetails);
+            await context.Response.WriteAsync(result);
+        }
     };
 });
 
@@ -56,6 +116,7 @@ builder.Services.AddDbContext<SchoolContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -92,6 +153,13 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// ============================================================================
+// 🔥 THÊM VÀO Ở ĐÂY: SỬ DỤNG EXCEPTION HANDLER MIDDLEWARE (NGAY SAU BUILD)
+// Phải đặt ở đầu Pipeline để bắt được tất cả các lỗi xảy ra ở phía sau (Auth, Routing, Controllers...)
+// ============================================================================
+app.UseExceptionHandler();
+// ============================================================================
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -106,7 +174,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.MapFallbackToFile("/index.html");
 
 app.Run();
