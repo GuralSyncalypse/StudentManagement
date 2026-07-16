@@ -117,7 +117,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
             // 2. Kiểm tra tài khoản và mã hóa password (ở đây viết đơn giản, thực tế nên dùng BCrypt)
             if (user == null || user.PasswordHash != request.Password || !user.IsActive)
             {
-                return Unauthorized(new { message = $"Tài khoản hoặc mật khẩu không chính xác!" });
+                throw new UnauthorizedAccessException("Tài khoản hoặc mật khẩu không chính xác!");
             }
 
             // 3. Tạo danh sách các Claims quyền hạn
