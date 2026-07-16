@@ -1,141 +1,195 @@
-<div class="page">
-  <div class="page-header gap-4">
+<div class="p-6 bg-slate-50 min-h-screen text-slate-700">
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <div class="space-y-1">
-      <h2>Danh sách đăng ký & nhập điểm</h2>
-      <p>Quản lý đăng ký học phần và cập nhật điểm số sinh viên</p>
+      <h2 class="text-2xl font-bold text-slate-900">Danh sách đăng ký & nhập điểm</h2>
+      <p class="text-sm text-slate-500">Quản lý đăng ký học phần và cập nhật điểm số sinh viên</p>
     </div>
 
-    <div class="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur">
+    <div class="self-start sm:self-center rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur">
       {{ enrollments.length }} / {{ allEnrollments.length }} lượt đăng ký
     </div>
   </div>
 
-  <div class="toolbar rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur">
-    <input
-      type="text"
-      [ngModel]="searchTerm"
-      (ngModelChange)="onSearch($event)"
-      placeholder="Tìm theo mã đăng ký, mã SV, mã lớp..."
-      class="min-w-0 flex-1"
-    />
+  <div class="flex flex-col md:flex-row gap-4 items-stretch md:items-center rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur mb-6">
+    <input type="text"
+           [ngModel]="searchTerm"
+           (ngModelChange)="onSearch($event)"
+           placeholder="Tìm theo mã đăng ký, mã SV, mã lớp..."
+           class="flex-1 min-w-0 h-10 rounded-xl border border-slate-200 bg-slate-50/50 px-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100" />
 
-    <select [ngModel]="selectedScoreState" (ngModelChange)="onScoreStateChange($event)">
+    <select [ngModel]="selectedScoreState"
+            (ngModelChange)="onScoreStateChange($event)"
+            class="h-10 rounded-xl border border-slate-200 bg-slate-50/50 px-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 cursor-pointer">
       <option value="All">Tất cả trạng thái điểm</option>
       <option value="HasScores">Đã có bảng điểm</option>
       <option value="NoScores">Chưa có bảng điểm</option>
     </select>
 
-    <button
-      type="button"
-      class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
-      (click)="clearFilters()">
+    <button type="button"
+            class="h-10 flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-5 text-sm font-semibold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50/50 hover:text-indigo-700 active:scale-[0.98] whitespace-nowrap"
+            (click)="clearFilters()">
       Xóa lọc
     </button>
   </div>
 
-  <div class="layout-container">
-    <div class="card table-card">
-      <table>
-        <thead>
-          <tr>
-            <th>Mã đăng ký</th>
-            <th>Mã sinh viên</th>
-            <th>Mã lớp học phần</th>
-            <th>Ngày đăng ký</th>
-            <th width="180">Hành động</th>
-          </tr>
-        </thead>
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-        <tbody>
-          @for (enrollment of enrollments; track enrollment.enrollmentID) {
-          <tr [class.selected]="selectedEnrollment?.enrollmentID === enrollment.enrollmentID"
-              (click)="selectEnrollment(enrollment)" class="clickable-row">
+    <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b border-slate-100 bg-slate-50/70 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th class="px-6 py-4">Mã đăng ký</th>
+              <th class="px-6 py-4">Mã sinh viên</th>
+              <th class="px-6 py-4">Mã lớp học phần</th>
+              <th class="px-6 py-4">Ngày đăng ký</th>
+              <th class="px-6 py-4 text-center w-[180px]">Hành động</th>
+            </tr>
+          </thead>
 
-            <td>{{ enrollment.enrollmentID }}</td>
-            <td><strong>{{ enrollment.studentID }}</strong></td>
-            <td>{{ enrollment.sectionID }}</td>
-            <td>{{ enrollment.enrollDate | date:'dd/MM/yyyy' }}</td>
+          <tbody class="divide-y divide-slate-100">
+            @for (enrollment of enrollments; track enrollment.enrollmentID) {
+            <tr [class.bg-indigo-50]="selectedEnrollment?.enrollmentID === enrollment.enrollmentID"
+                [class.border-l-4]="selectedEnrollment?.enrollmentID === enrollment.enrollmentID"
+                [class.border-l-indigo-600]="selectedEnrollment?.enrollmentID === enrollment.enrollmentID"
+                (click)="selectEnrollment(enrollment)"
+                class="hover:bg-slate-50/80 cursor-pointer transition-colors">
+              <td class="px-6 py-4 font-mono text-xs text-slate-500">{{ enrollment.enrollmentID }}</td>
+              <td class="px-6 py-4"><strong class="font-semibold text-slate-900">{{ enrollment.studentID }}</strong></td>
+              <td class="px-6 py-4 text-slate-600">{{ enrollment.sectionID }}</td>
+              <td class="px-6 py-4 text-slate-500">{{ enrollment.enrollDate | date:'dd/MM/yyyy' }}</td>
 
-            <td>
-              <div class="actions" (click)="$event.stopPropagation()">
-                <button class="btn-icon score" (click)="selectEnrollment(enrollment)" title="Nhập điểm">
-                  💯 Chấm điểm
-                </button>
-                <button class="btn-icon delete" (click)="deleteEnrollment(enrollment.enrollmentID)">
-                  🗑
-                </button>
-              </div>
-            </td>
+              <td class="px-6 py-4" (click)="$event.stopPropagation()">
+                <div class="flex items-center justify-center gap-3">
+                  <button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-colors whitespace-nowrap"
+                          (click)="selectEnrollment(enrollment)"
+                          title="Nhập điểm">Chấm điểm</button>
 
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="5" class="empty">Không có lượt đăng ký nào phù hợp với bộ lọc hiện tại.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
+                  <button class="p-2 rounded-lg bg-transparent hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors flex items-center justify-center border-none cursor-pointer"
+                          (click)="deleteEnrollment(enrollment.enrollmentID)"
+                          title="Xóa đăng ký">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="5" class="px-6 py-10 text-center text-slate-400">
+                Không có lượt đăng ký nào phù hợp với bộ lọc hiện tại.
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
 
     @if (selectedEnrollment) {
-    <div class="card detail-card animate-fade-in">
-      <div class="detail-header">
-        <h3>📝 Nhập điểm cho SV: {{ selectedEnrollment.studentID }} (Mã ĐK: {{ selectedEnrollment.enrollmentID }})</h3>
-        <button class="btn-close" (click)="selectedEnrollment = null">✕</button>
+    <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-md p-6 animate-[fadeIn_0.2s_ease-out]">
+
+      <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 mb-6">
+        <div class="space-y-0.5">
+          <h3 class="font-bold text-slate-900 text-base leading-snug">
+            📝 Nhập điểm: SV {{ selectedEnrollment.studentID }}
+          </h3>
+          <p class="text-xs text-slate-400">
+            Mã đăng ký: <span class="font-semibold text-slate-600">#{{ selectedEnrollment.enrollmentID }}</span>
+            | Lớp HP: <span class="font-semibold text-slate-600">{{ selectedEnrollment.sectionID }}</span>
+          </p>
+        </div>
+        <button class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                (click)="selectedEnrollment = null">
+          ✕
+        </button>
       </div>
 
-      <table class="score-table">
-        <thead>
-          <tr>
-            <th>Loại điểm (Thành phần)</th>
-            <th width="100">Trọng số (%)</th>
-            <th width="150">Điểm số</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (score of selectedEnrollment.scores; track score.scoreID) {
-          <tr>
-            <td>
-              <select [(ngModel)]="score.scoreType" class="form-control">
-                <option value="" disabled selected>-- Chọn loại điểm --</option>
-                @for (type of scoreTypes; track type) {
-                <option [value]="type">{{ type }}</option>
-                }
-              </select>
-            </td>
-            <td>
-              <input type="number"  [ngModel]="getWeightPercent(score)" (ngModelChange)="setWeightPercent(score, $event)" min="0" max="100" class="form-control text-center" />
-            </td>
-            <td>
-              <input type="number" [(ngModel)]="score.scoreValue" min="0" max="10" step="0.1" placeholder="0.0" class="form-control score-input" />
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="3" class="empty">Chưa cấu hình đầu điểm cho lớp này.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
+      <div class="overflow-x-auto mb-6">
+        <table class="w-full border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              <th class="pb-3 pr-4">Loại điểm (Thành phần)</th>
+              <th class="pb-3 pr-4 text-center w-[100px]">Trọng số (%)</th>
+              <th class="pb-3 text-center w-[120px]">Điểm số</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (score of selectedEnrollment.scores; track score.scoreID) {
+            <tr class="align-middle">
+              <td class="py-3 pr-4">
+                <select [(ngModel)]="score.scoreType"
+                        class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 cursor-pointer">
+                  <option value="" disabled selected>-- Chọn loại điểm --</option>
+                  @for (type of scoreTypes; track type) {
+                  <option [value]="type">{{ type }}</option>
+                  }
+                </select>
+              </td>
+              <td class="py-3 pr-4">
+                <input type="number"
+                       [ngModel]="getWeightPercent(score)"
+                       (ngModelChange)="setWeightPercent(score, $event)"
+                       min="0"
+                       max="100"
+                       class="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm outline-none text-center focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              </td>
+              <td class="py-3">
+                <input type="number"
+                       [(ngModel)]="score.scoreValue"
+                       min="0"
+                       max="10"
+                       step="0.1"
+                       placeholder="0.0"
+                       class="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm font-semibold text-center text-indigo-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              </td>
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="3" class="py-8 text-center text-slate-400">
+                Chưa cấu hình đầu điểm cho lớp này.
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
-      <div class="summary-score-zone">
-        <div class="score-box">
-          <span class="label">Điểm tổng kết (Hệ 10):</span>
-          <span class="value text-primary">{{ calculateTotalScore() | number:'1.1-2' }}</span>
+      <div class="grid grid-cols-2 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 mb-6">
+        <div class="flex flex-col gap-1">
+          <span class="text-xs text-slate-400 font-medium">Điểm tổng kết (Hệ 10)</span>
+          <span class="text-xl font-bold text-indigo-600">{{ calculateTotalScore() | number:'1.1-2' }}</span>
         </div>
-        <div class="score-box">
-          <span class="label">Kết quả đánh giá:</span>
-          @if (calculateTotalScore() >= 4) {
-          <span class="badge status-pass">🎉 ĐỖ (PASSED)</span>
+        <div class="flex flex-col gap-1 items-end sm:items-start justify-center">
+          <span class="text-xs text-slate-400 font-medium">Kết quả đánh giá</span>
+
+          @if (!selectedEnrollment.scores || selectedEnrollment.scores.length === 0 || calculateTotalScore() === 0) {
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+            Chưa đánh giá
+          </span>
+          } @else if (calculateTotalScore() >= 4) {
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+            🎉 ĐỖ (PASSED)
+          </span>
           } @else {
-          <span class="badge status-fail">❌ TRƯỢT (FAILED)</span>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-100">
+            ❌ TRƯỢT (FAILED)
+          </span>
           }
         </div>
       </div>
 
-      <div class="detail-actions">
-        <button class="btn btn-secondary-outline" (click)="addNewScoreRow()">+ Thêm đầu điểm</button>
-        <button class="btn btn-success" (click)="saveScores()">💾 Lưu bảng điểm</button>
+      <div class="flex items-center justify-between gap-4 pt-4 border-t border-slate-100">
+        <button class="px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition cursor-pointer"
+                (click)="addNewScoreRow()">
+          + Thêm đầu điểm
+        </button>
+        <button class="px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white shadow-sm shadow-indigo-100 active:scale-95 transition cursor-pointer"
+                (click)="saveScores()">
+          💾 Lưu bảng điểm
+        </button>
       </div>
     </div>
     }

@@ -30,6 +30,9 @@ export class EnrollmentList implements OnInit {
   searchTerm = '';
   selectedScoreState = 'All';
 
+  // Biến cờ theo dõi xem bảng điểm hiện tại đã bị thay đổi (dirty) hay chưa
+  isDirty = false;
+
   ngOnInit(): void {
     this.loadEnrollments();
   }
@@ -40,12 +43,34 @@ export class EnrollmentList implements OnInit {
 
   setWeightPercent(score: Score, value: number): void {
     score.weight = value / 100;
+    this.markAsDirty(); // Đánh dấu có thay đổi dữ liệu
   }
 
-  // Chọn một dòng để hiển thị chi tiết nhập điểm
+  // Hàm lắng nghe sự thay đổi bất kỳ trên form nhập điểm
+  markAsDirty(): void {
+    this.isDirty = true;
+  }
+
+  // Chọn một dòng để hiển thị chi tiết nhập điểm (Đã thêm cơ chế kiểm tra Safe-guard)
   selectEnrollment(enrollment: Enrollment): void {
-    // Deep clone để tránh thay đổi trực tiếp data trên bảng chính khi chưa ấn Lưu
+    // Nếu ID trùng với ID đang chọn thì không làm gì cả
+    if (this.selectedEnrollment?.enrollmentID === enrollment.enrollmentID) {
+      return;
+    }
+
+    // 1. Kiểm tra xem người dùng có đang nhập dở điểm của sinh viên khác không
+    if (this.isDirty) {
+      const confirmLeave = confirm(
+        'Bạn có thay đổi chưa lưu trên bảng điểm của sinh viên hiện tại. Bạn có chắc chắn muốn chuyển sang sinh viên khác mà không lưu?'
+      );
+      if (!confirmLeave) {
+        return; // Hủy chuyển dòng, giữ nguyên sinh viên cũ
+      }
+    }
+
+    // 2. Deep clone dữ liệu để thao tác độc lập
     this.selectedEnrollment = JSON.parse(JSON.stringify(enrollment));
+    this.isDirty = false; // Reset cờ trạng thái về sạch cho sinh viên mới
     console.log(this.selectedEnrollment);
   }
 
@@ -60,10 +85,11 @@ export class EnrollmentList implements OnInit {
         scoreValue: 0
       };
       this.selectedEnrollment.scores.push(newScore);
+      this.markAsDirty(); // Thêm hàng mới cũng tính là thay đổi dữ liệu
     }
   }
 
-  // Gửi dữ liệu điểm về cho Backend lưu (Đã dọn dẹp code thừa)
+  // Gửi dữ liệu điểm về cho Backend lưu
   saveScores(): void {
     if (!this.selectedEnrollment) return;
 
@@ -74,11 +100,12 @@ export class EnrollmentList implements OnInit {
       return;
     }
 
-    // 2. Gọi API thật từ Server
+    // 2. Gọi API từ Server
     this.scoreService.saveScores(this.selectedEnrollment.enrollmentID, this.selectedEnrollment.scores)
       .subscribe({
         next: () => {
           alert('Cập nhật bảng điểm thành công!');
+          this.isDirty = false; // Reset cờ dirty khi đã lưu thành công
           this.loadEnrollments();
           this.selectedEnrollment = null;
         },
@@ -90,7 +117,7 @@ export class EnrollmentList implements OnInit {
   }
 
   calculateTotalScore(): number {
-    if (!this.selectedEnrollment || !this.selectedEnrollment.scores.length) {
+    if (!this.selectedEnrollment || !this.selectedEnrollment.scores || !this.selectedEnrollment.scores.length) {
       return 0;
     }
 
@@ -170,6 +197,7 @@ export class EnrollmentList implements OnInit {
           alert('Xóa lượt đăng ký thành công!');
           if (this.selectedEnrollment?.enrollmentID === id) {
             this.selectedEnrollment = null;
+            this.isDirty = false;
           }
           this.loadEnrollments();
         },

@@ -26,6 +26,9 @@ export class UserPermissions implements OnInit {
   isLoading = signal<boolean>(false);
   isSaving = signal<boolean>(false);
 
+  // Mặc định chọn 'ALL' để hiển thị tổng quan, hoặc bạn có thể đổi thành '01' nếu muốn mặc định phân hệ đầu
+  selectedGroupCode = signal<string>('ALL');
+
   private groupNames: Record<string, string> = {
     '01': 'Quản lý tài khoản',
     '02': 'Quản lý vai trò',
@@ -57,6 +60,17 @@ export class UserPermissions implements OnInit {
     }));
   });
 
+  // Lọc danh sách phân hệ hiển thị dựa trên ComboBox
+  filteredGroupedPermissions = computed<PermissionGroup[]>(() => {
+    const groups = this.groupedPermissions();
+    const filterCode = this.selectedGroupCode();
+
+    if (filterCode === 'ALL') {
+      return groups;
+    }
+    return groups.filter(g => g.groupCode === filterCode);
+  });
+
   ngOnInit(): void {
     this.loadMatrix();
   }
@@ -84,6 +98,11 @@ export class UserPermissions implements OnInit {
     const userId = Number(selectElement.value);
     this.selectedUserID.set(userId);
     this.loadMatrix(userId);
+  }
+
+  onGroupChange(event: Event): void {
+    const selectElement = event.target as HTMLSelectElement;
+    this.selectedGroupCode.set(selectElement.value);
   }
 
   toggleAssigned(targetRow: PermissionRow): void {
@@ -118,12 +137,10 @@ export class UserPermissions implements OnInit {
     );
   }
 
-  // TÍNH NĂNG MỚI: Kiểm tra xem toàn bộ group đã được tích "Gán" chưa
   isGroupAllAssigned(groupRows: PermissionRow[]): boolean {
     return groupRows.every(r => r.isAssigned);
   }
 
-  // TÍNH NĂNG MỚI: Bật/Tắt toàn bộ quyền trong một Card
   toggleAllInGroup(groupCode: string, currentStatus: boolean): void {
     const nextStatus = !currentStatus;
     this.permissionRows.update(rows =>
@@ -132,7 +149,6 @@ export class UserPermissions implements OnInit {
           return {
             ...row,
             isAssigned: nextStatus,
-            // Nếu bỏ gán tất cả thì tắt luôn Allowed, nếu gán tất cả thì giữ nguyên Allowed cũ
             isAllowed: nextStatus ? row.isAllowed : false
           };
         }

@@ -85,7 +85,7 @@
                 📊
               </button>
 
-              <button class="btn-icon edit" title="Sửa thông tin">✏</button>
+              <button class="btn-icon edit" [routerLink]="['/admin/students', 'edit', student.studentID]" title="Sửa thông tin">✏</button>
               <button class="btn-icon delete"
                       (click)="deleteStudent(student.studentID)"
                       title="Xóa sinh viên">
