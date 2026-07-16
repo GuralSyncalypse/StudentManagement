@@ -14,7 +14,6 @@ interface DashboardSummary {
   standalone: true,
   imports: [RouterLink, DecimalPipe],
   templateUrl: './admin-dashboard.component.html',
-  styleUrls: ['./admin-dashboard.component.css'],
   // Kích hoạt OnPush để tối ưu hiệu năng và kiểm soát UI chủ động qua CDR
   changeDetection: ChangeDetectionStrategy.OnPush
 })

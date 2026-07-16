@@ -1,78 +1,92 @@
-<div class="dashboard-body">
+<div class="p-6 bg-gray-50 min-h-screen text-gray-800">
 
-    <section class="welcome-section">
-        <h3 class="welcome-title">Xin chào quay trở lại! 👋</h3>
-        <p class="welcome-subtitle">Dưới đây là tình hình hoạt động của hệ thống trong ngày hôm nay.</p>
+    <section class="mb-8">
+        <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            Xin chào quay trở lại! 👋
+        </h3>
+        <p class="text-gray-500 mt-1">
+            Dưới đây là tình hình hoạt động của hệ thống trong ngày hôm nay.
+        </p>
     </section>
 
-    <section class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-data">
-                <p class="kpi-label">Tổng số học viên</p>
-                <h4 class="kpi-value">{{ stats?.totalStudents | number }}</h4>
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center transition-all hover:shadow-md">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Tổng số học viên</p>
+                <h4 class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.totalStudents | number }}</h4>
             </div>
-            <div class="kpi-icon-box icon-indigo">🎓</div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-semibold">
+                🎓
+            </div>
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-data">
-                <p class="kpi-label">Tổng số khóa học</p>
-                <h4 class="kpi-value">{{ stats?.totalCourses | number }}</h4>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center transition-all hover:shadow-md">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Tổng số khóa học</p>
+                <h4 class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.totalCourses | number }}</h4>
             </div>
-            <div class="kpi-icon-box icon-amber">📚</div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-semibold">
+                📚
+            </div>
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-data">
-                <p class="kpi-label">Lớp học phần đang mở</p>
-                <h4 class="kpi-value">{{ stats?.totalSections | number }}</h4>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center transition-all hover:shadow-md">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Lớp học phần đang mở</p>
+                <h4 class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.totalSections | number }}</h4>
             </div>
-            <div class="kpi-icon-box icon-rose">🏫</div>
+            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-semibold">
+                🏫
+            </div>
         </div>
     </section>
 
-    <section class="management-section">
-        <h4 class="section-title">Danh mục quản lý chính</h4>
+    <section>
+        <h4 class="text-lg font-bold text-gray-900 mb-6">Danh mục quản lý chính</h4>
 
-        <div class="category-grid">
-            <div class="category-card">
-                <div class="card-main-content">
-                    <div class="category-icon">🎓</div>
-                    <h5 class="category-name">Hồ sơ Học viên</h5>
-                    <p class="category-desc">Quản lý lý lịch, thông tin liên lạc, hồ sơ nhập học và tiến trình học tập chi tiết của từng sinh viên.</p>
-                    <div class="stats-row">
-                        <div class="stat-item">
-                            <span class="stat-label">Tổng số học viên</span>
-                            <span class="stat-value">{{ stats?.totalStudents | number }}</span>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between overflow-hidden transition-all hover:shadow-md">
+                <div class="p-6 flex-1">
+                    <div class="text-2xl mb-4">🎓</div>
+                    <h5 class="text-xl font-bold text-gray-900 mb-2">Hồ sơ Học viên</h5>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-6">
+                        Quản lý lý lịch, thông tin liên lạc, hồ sơ nhập học và tiến trình học tập chi tiết của từng sinh viên.
+                    </p>
+                    <div class="pt-4 border-t border-gray-100 flex gap-6">
+                        <div>
+                            <span class="block text-xs text-gray-400 uppercase tracking-wider">Tổng số học viên</span>
+                            <span class="text-lg font-semibold text-gray-800">{{ stats?.totalStudents | number }}</span>
                         </div>
                     </div>
                 </div>
-                <div class="card-actions">
-                    <button [routerLink]="['/admin/students']" class="category-btn">
-                        Truy cập danh sách <span>→</span>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                    <button [routerLink]="['/admin/students']" class="group flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                        Truy cập danh sách <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
                     </button>
                 </div>
             </div>
 
-            <div class="category-card">
-                <div class="card-main-content">
-                    <div class="category-icon">📚</div>
-                    <h5 class="category-name">Chương trình & Khóa học</h5>
-                    <p class="category-desc">Cấu hình khung chương trình đào tạo, quản lý lớp học, phân công giảng dạy và sắp xếp thời khóa biểu.</p>
-                    <div class="stats-row">
-                        <div class="stat-item">
-                            <span class="stat-label">Khóa học</span>
-                            <span class="stat-value">{{ stats?.totalCourses | number }}</span>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between overflow-hidden transition-all hover:shadow-md">
+                <div class="p-6 flex-1">
+                    <div class="text-2xl mb-4">📚</div>
+                    <h5 class="text-xl font-bold text-gray-900 mb-2">Chương trình & Khóa học</h5>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-6">
+                        Cấu hình khung chương trình đào tạo, quản lý lớp học, phân công giảng dạy và sắp xếp thời khóa biểu.
+                    </p>
+                    <div class="pt-4 border-t border-gray-100 flex gap-8">
+                        <div>
+                            <span class="block text-xs text-gray-400 uppercase tracking-wider">Khóa học</span>
+                            <span class="text-lg font-semibold text-gray-800">{{ stats?.totalCourses | number }}</span>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Lớp học phần</span>
-                            <span class="stat-value">{{ stats?.totalSections | number }}</span>
+                        <div>
+                            <span class="block text-xs text-gray-400 uppercase tracking-wider">Lớp học phần</span>
+                            <span class="text-lg font-semibold text-gray-800">{{ stats?.totalSections | number }}</span>
                         </div>
                     </div>
                 </div>
-                <div class="card-actions">
-                    <button [routerLink]="['/admin/courses']" class="category-btn">
-                        Quản lý phân hệ <span>→</span>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                    <button [routerLink]="['/admin/courses']" class="group flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                        Quản lý phân hệ <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
                     </button>
                 </div>
             </div>

@@ -22,6 +22,7 @@ const routes: Routes = [
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'students', component: StudentList },
       { path: 'students/form', component: StudentFormComponent },
+      { path: 'students/edit/:id', component: StudentFormComponent },
       { path: 'courses', component: CourseList },
       { path: 'courses/create', component: CourseFormComponent },
       { path: 'courses/edit/:id', component: CourseFormComponent },

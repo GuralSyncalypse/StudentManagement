@@ -36,7 +36,7 @@ namespace LuongChiHai_QLSV.Server.Controllers
 
             // 2. Sửa lỗi Logic tính GPA: Chỉ tính các môn ĐÃ CÓ ĐIỂM
             // Môn nào "Chưa có điểm" (Pending) thì không được lôi vào để tính Điểm trung bình học kỳ
-            var cacMonDaCoDiem = chiTietMonHoc.Where(x => !x.TotalScore.HasValue).ToList();
+            var cacMonDaCoDiem = chiTietMonHoc.Where(x => x.TotalScore.HasValue).ToList();
 
             var tongTinChiHocKy = cacMonDaCoDiem.Sum(x => x.Credits);
             var tongDiemNhanTinChi = cacMonDaCoDiem.Sum(x => (x.TotalScore ?? 0) * x.Credits);

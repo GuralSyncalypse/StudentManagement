@@ -4,7 +4,7 @@ import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { StudentReport } from '../../../../core/models/report.model';
-import { StudentReportService } from '../../../../core/services/report.services'; // 1. IMPORT SERVICE MỚI
+import { StudentReportService } from '../../../../core/services/report.services';
 
 @Component({
   selector: 'app-reports',
