@@ -7,15 +7,16 @@
             <p class="text-sm text-gray-500 mt-1">Hệ thống quản lý, phân lớp và đăng ký học tập dành cho Quản trị viên</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <!-- Bộ lọc linh hoạt & Cụm nút chức năng mở rộng nâng cao -->
+        <div class="flex flex-col sm:flex-row sm:items-center flex-wrap gap-3 w-full lg:w-auto">
             <!-- Ô tìm kiếm -->
             <input type="text"
                    placeholder="Tìm tên môn, mã học phần..."
                    class="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64 shadow-sm transition"
                    (input)="onSearch($event)">
 
-            <!-- THÊM MỚI: Bộ lọc chọn Học kỳ động -->
-            <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition"
+            <!-- Bộ lọc chọn Học kỳ động -->
+            <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition w-full sm:w-auto"
                     (change)="onFilterSemester($event)">
                 <option value="All">Tất cả học kỳ</option>
                 @for (sem of uniqueSemesters; track sem.semesterID) {
@@ -24,18 +25,40 @@
             </select>
 
             <!-- Bộ lọc chọn Trạng thái lớp -->
-            <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition"
+            <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition w-full sm:w-auto"
                     (change)="onFilterStatus($event)">
                 <option value="All">Tất cả trạng thái</option>
                 <option value="Open">Đang mở (Open)</option>
                 <option value="Closed">Đã khóa (Closed)</option>
             </select>
 
+            <!-- CỤM TÍNH NĂNG: Mở/Thu gọn nhanh toàn bộ cây thư mục -->
+            <div class="inline-flex rounded-md shadow-sm w-full sm:w-auto" role="group">
+                <button type="button"
+                        class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50 transition"
+                        title="Mở toàn bộ danh sách lớp"
+                        (click)="toggleAllCourses(true)">
+                    📂 Mở hết
+                </button>
+                <button type="button"
+                        class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border-t border-b border-r border-gray-300 rounded-r-lg hover:bg-gray-50 transition"
+                        title="Thu gọn toàn bộ danh sách lớp"
+                        (click)="toggleAllCourses(false)">
+                    📁 Thu hết
+                </button>
+            </div>
+
+            <!-- CỤM TÍNH NĂNG: Nhập dữ liệu hàng loạt bằng File -->
+            <button class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm transition flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto whitespace-nowrap"
+                    (click)="onImportExcelClick()">
+                <span>📥</span> Nhập Excel
+            </button>
+
             <!-- Nút làm mới dữ liệu -->
-            <button class="px-4 py-2 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 disabled:opacity-50 font-medium rounded-lg text-sm transition flex items-center gap-2 shadow-sm"
+            <button class="px-4 py-2 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 disabled:opacity-50 font-medium rounded-lg text-sm transition flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto whitespace-nowrap"
                     (click)="loadOpenSections()"
                     [disabled]="isLoading">
-                🔄 Làm mới
+                <span>🔄</span> Làm mới
             </button>
         </div>
     </div>
@@ -64,65 +87,121 @@
     <div class="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    <th class="px-5 py-3.5">Mã Học Phần</th>
-                    <th class="px-5 py-3.5">Tên Môn Học</th>
-                    <th class="px-5 py-3.5">Lớp Bố Trí</th>
-                    <!-- THÊM MỚI: Cột Học kỳ tuyến tính hiển thị phẳng -->
-                    <th class="px-5 py-3.5">Học Kỳ</th>
-                    <th class="px-5 py-3.5 text-center">Sĩ Số</th>
-                    <th class="px-5 py-3.5 text-center">Trạng Trái</th>
-                    <th class="px-5 py-3.5 text-center w-48">Thao tác</th>
+                <tr class="bg-gray-100 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th class="px-5 py-4 w-48">Mã Học Phần</th>
+                    <th class="px-5 py-4">Tên Môn Học / Lớp Bố Trí</th>
+                    <th class="px-5 py-4 w-48">Học Kỳ</th>
+                    <th class="px-5 py-4 text-center w-36">Sĩ Số</th>
+                    <th class="px-5 py-4 text-center w-36">Trạng Thái</th>
+                    <th class="px-5 py-4 text-center w-64">Thao tác</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
-                @for (section of sections; track section.sectionID) {
-                <tr class="hover:bg-gray-50/80 transition-colors">
-                    <td class="px-5 py-4 font-mono font-medium text-gray-900">{{ section.courseID }}</td>
-                    <td class="px-5 py-4 font-semibold text-gray-800">{{ section.courseName || 'Chưa cập nhật tên môn' }}</td>
-                    <td class="px-5 py-4">
-                        <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md border border-indigo-100">
-                            {{ section.classSection }}
+            <tbody class="divide-y divide-gray-200 text-sm text-gray-700">
+                @for (course of groupedCourses; track course.courseID) {
+
+                <!-- 1. DÒNG CHA: Thông tin tổng quan của Môn học -->
+                <tr class="bg-gray-50/70 border-l-4 border-blue-500 font-medium text-gray-900 cursor-pointer hover:bg-gray-100/70 transition"
+                    (click)="toggleCourseExpand(course)">
+                    <td class="px-5 py-3.5 font-mono font-bold text-blue-900">
+                        <span class="inline-block w-4 transform transition-transform duration-200"
+                              [class.rotate-90]="course.isExpanded">▶</span>
+                        {{ course.courseID }}
+                    </td>
+                    <td class="px-5 py-3.5 text-base font-bold text-gray-800">
+                        {{ course.courseName }}
+                        <span class="ml-2 text-xs font-normal px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full">
+                            {{ course.sections.length }} lớp
                         </span>
                     </td>
-                    <!-- THÊM MỚI: Hiển thị thông tin học kỳ phẳng -->
-                    <td class="px-5 py-4">
-                        <div class="text-xs font-medium text-gray-800">{{ section.semesterDisplayName }}</div>
-                        <div class="text-[11px] text-gray-400 mt-0.5">NH {{ section.academicYear }}</div>
+                    <td class="px-5 py-3.5">
+                        <span class="text-xs text-gray-700 font-semibold">{{ course.semesterDisplayName }}</span>
+                        <span class="text-[11px] text-gray-400 block">NH {{ course.academicYear }}</span>
                     </td>
-                    <td class="px-5 py-4 text-center">
-                        <span [ngClass]="{'text-red-600 font-bold': section.maxCapacity ? (section.currentEnrollment ?? 0) >= section.maxCapacity : false}">
-                            {{ section.currentEnrollment ?? 0 }} / {{ section.maxCapacity ?? '∞' }}
+
+                    <!-- Bổ sung cụm phítás xử lý nhanh hàng loạt theo môn học -->
+                    <td colspan="3" class="px-5 py-3.5 text-right space-x-3">
+                        <button class="text-xs text-green-600 hover:text-green-800 font-semibold transition bg-green-50 px-2 py-1 rounded border border-green-200"
+                                (click)="$event.stopPropagation(); onBulkUpdateStatus(course, 'Open')">
+                            🔓 Mở hết lớp
+                        </button>
+                        <button class="text-xs text-red-600 hover:text-red-800 font-semibold transition bg-red-50 px-2 py-1 rounded border border-red-200"
+                                (click)="$event.stopPropagation(); onBulkUpdateStatus(course, 'Closed')">
+                            🔒 Khóa hết lớp
+                        </button>
+                        <span class="text-xs text-gray-400 italic pl-2">| Click dòng để đóng/mở</span>
+                    </td>
+                </tr>
+
+                <!-- 2. DÒNG CON: Danh sách các lớp cụ thể thuộc môn học trên -->
+                @if (course.isExpanded) {
+                @for (section of course.sections; track section.sectionID) {
+                <tr class="hover:bg-blue-50/20 transition-colors border-l-4 border-transparent"
+                    [ngClass]="{'bg-blue-50/50 hover:bg-blue-50/70': section?.isEnrolled}">
+                    <td class="px-5 py-3.5 text-gray-400 font-mono text-xs pl-9">└─ Lớp:</td>
+                    <td class="px-5 py-3.5">
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-extrabold rounded-md border border-indigo-200 shadow-sm">
+                                {{ section?.classSection }}
+                            </span>
+                            @if (section?.isEnrolled) {
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800">
+                                ✓ Đã được xếp lớp
+                            </span>
+                            }
+                        </div>
+                    </td>
+                    <td class="px-5 py-3.5 text-gray-400 text-xs">Theo môn học</td>
+
+                    <!-- ĐÃ SỬA: Thay đổi logic ngClass sang gọi hàm ts -->
+                    <td class="px-5 py-3.5 text-center">
+                        <span class="font-bold text-sm" [ngClass]="getSectionCapacityClass(section)">
+                            {{ section?.currentEnrollment ?? 0 }} / {{ section?.maxCapacity ?? '∞' }}
                         </span>
                     </td>
-                    <td class="px-5 py-4 text-center">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
-                              [ngClass]="{
-                                  'bg-green-50 text-green-700 border-green-200': section.status === 'Open',
-                                  'bg-red-50 text-red-700 border-red-200': section.status !== 'Open'
-                              }">
-                            {{ section.status }}
-                        </span>
+
+                    <!-- Cột Trạng thái tích hợp nút bấm Đổi trạng thái nhanh -->
+                    <td class="px-5 py-3.5 text-center">
+                        <button class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border shadow-sm cursor-pointer hover:opacity-80 transition"
+                                title="Bấm để thay đổi nhanh trạng thái lớp này"
+                                [ngClass]="{
+                                      'bg-green-50 text-green-700 border-green-200': section?.status === 'Open',
+                                      'bg-red-50 text-red-700 border-red-200': section?.status !== 'Open'
+                                  }"
+                                (click)="$event.stopPropagation(); onToggleQuickStatus(section)">
+                            {{ section?.status === 'Open' ? 'Đang mở 🔓' : 'Đã khóa 🔒' }}
+                        </button>
                     </td>
-                    <td class="px-5 py-4">
-                        <div class="flex items-center justify-center gap-2">
-                            <button class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 font-medium text-white text-xs rounded-md transition shadow-sm disabled:shadow-none disabled:cursor-not-allowed"
-                                    [disabled]="section.status !== 'Open' || (section.maxCapacity && (section.currentEnrollment ?? 0) >= section.maxCapacity)"
-                                    (click)="onRegister(section)">
+
+                    <!-- THAO TÁC CỘT CHI TIẾT LỚP -->
+                    <td class="px-5 py-3.5 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <!-- Xem danh sách sinh viên hiện hữu trong lớp -->
+                            <button class="px-2 py-1.5 bg-gray-100 border border-gray-300 hover:bg-gray-200 font-medium text-gray-700 text-xs rounded-md transition shadow-sm"
+                                    title="Xem danh sách chi tiết sinh viên của lớp học phần"
+                                    (click)="$event.stopPropagation(); onViewStudentsInSection(section)">
+                                👁️ Xem SV
+                            </button>
+
+                            <button class="px-2 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 font-medium text-white text-xs rounded-md transition shadow-sm disabled:cursor-not-allowed"
+                                    [disabled]="section?.status !== 'Open' || (section?.maxCapacity && (section?.currentEnrollment ?? 0) >= (section?.maxCapacity ?? 0)) || section?.isEnrolled"
+                                    (click)="$event.stopPropagation(); onRegister(section)">
                                 Đăng ký hộ
                             </button>
-                            <button class="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 disabled:opacity-40 font-medium text-xs rounded-md transition shadow-sm disabled:shadow-none disabled:cursor-not-allowed"
-                                    [disabled]="(section.currentEnrollment ?? 0) <= 0"
-                                    (click)="onUnregister(section)">
-                                Hủy đăng ký
+                            <button class="px-2 py-1.5 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 disabled:opacity-40 font-medium text-xs rounded-md transition shadow-sm disabled:cursor-not-allowed"
+                                    [disabled]="(section?.currentEnrollment ?? 0) <= 0"
+                                    (click)="$event.stopPropagation(); onUnregister(section)">
+                                Hủy ký
                             </button>
                         </div>
                     </td>
                 </tr>
+                }
+                }
+
                 } @empty {
                 <tr>
-                    <td colspan="7" class="px-5 py-10 text-center text-gray-400 italic bg-gray-50/50">
-                        Hiện tại không có lớp học phần nào phù hợp với bộ lọc.
+                    <td colspan="6" class="px-5 py-12 text-center text-gray-400 italic bg-gray-50/50">
+                        Hiện tại không có môn hay lớp học phần nào phù hợp với bộ lọc.
                     </td>
                 </tr>
                 }
@@ -145,10 +224,10 @@
 
         <div class="p-5 space-y-4">
             <div class="bg-blue-50/60 p-3.5 rounded-lg border border-blue-100 text-sm text-blue-900 space-y-1.5">
-                <p>📖 <strong>Môn học:</strong> {{ selectedSection.courseName }}</p>
-                <p>🏫 <strong>Lớp bố trí:</strong> {{ selectedSection.classSection }}</p>
-                <p>📅 <strong>Học kỳ:</strong> {{ selectedSection.semesterDisplayName }} (NH {{ selectedSection.academicYear }})</p>
-                <p>👥 <strong>Sĩ số hiện tại:</strong> {{ selectedSection.currentEnrollment ?? 0 }} / {{ selectedSection.maxCapacity ?? '∞' }}</p>
+                <p>📖 <strong>Môn học:</strong> {{ selectedSection?.courseName }}</p>
+                <p>🏫 <strong>Lớp bố trí:</strong> {{ selectedSection?.classSection }}</p>
+                <p>📅 <strong>Học kỳ:</strong> {{ selectedSection?.semesterDisplayName }} (NH {{ selectedSection?.academicYear }})</p>
+                <p>👥 <strong>Sĩ số hiện tại:</strong> {{ selectedSection?.currentEnrollment ?? 0 }} / {{ selectedSection?.maxCapacity ?? '∞' }}</p>
             </div>
 
             <div class="space-y-1.5">
@@ -168,7 +247,7 @@
                 Hủy bỏ
             </button>
             <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-medium rounded-lg shadow transition disabled:cursor-not-allowed"
-                    [disabled]="!studentIdInput.trim()"
+                    [disabled]="!studentIdInput.trim() || isLoading"
                     (click)="submitAdminRegistration()">
                 ⚡ Xác nhận xếp lớp
             </button>
@@ -190,9 +269,9 @@
 
         <div class="p-5 space-y-4">
             <div class="bg-amber-50 p-3.5 rounded-lg border border-amber-200 text-sm text-amber-900 space-y-1.5">
-                <p>📖 <strong>Môn học:</strong> {{ selectedSection.courseName }}</p>
-                <p>🏫 <strong>Lớp bố trí:</strong> {{ selectedSection.classSection }}</p>
-                <p>📅 <strong>Học kỳ:</strong> {{ selectedSection.semesterDisplayName }} (NH {{ selectedSection.academicYear }})</p>
+                <p>📖 <strong>Môn học:</strong> {{ selectedSection?.courseName }}</p>
+                <p>🏫 <strong>Lớp bố trí:</strong> {{ selectedSection?.classSection }}</p>
+                <p>📅 <strong>Học kỳ:</strong> {{ selectedSection?.semesterDisplayName }} (NH {{ selectedSection?.academicYear }})</p>
             </div>
 
             <div class="space-y-1.5">
@@ -212,7 +291,7 @@
                 Hủy bỏ
             </button>
             <button class="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white text-sm font-medium rounded-lg shadow transition disabled:cursor-not-allowed"
-                    [disabled]="!studentIdUnregInput.trim()"
+                    [disabled]="!studentIdUnregInput.trim() || isLoading"
                     (click)="submitAdminUnregistration()">
                 🗑️ Xác nhận xóa sinh viên
             </button>

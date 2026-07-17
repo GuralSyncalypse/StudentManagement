@@ -19,9 +19,9 @@ public class CourseSectionsController : ControllerBase
 
     // GET: api/CourseSection
     // GET: api/CourseSection
-    [HttpGet]
+    [HttpGet("available")]
     [HasPermission("0702")]
-    public async Task<ActionResult<IEnumerable<CourseSectionDto>>> GetCourseSection()
+    public async Task<ActionResult<IEnumerable<CourseSectionDto>>> GetAvailableCourseSection()
     {
         var today = DateTime.Today;
 
@@ -41,6 +41,36 @@ public class CourseSectionsController : ControllerBase
         var data = await _context.CourseSections
             .AsNoTracking()
             .Where(s => s.Status == "Open" && s.SemesterID == openSemester.SemesterID) // Lọc theo SemesterID
+            .Select(s => new CourseSectionDto
+            {
+                SectionID = s.SectionID,
+                CourseID = s.CourseID,
+                CourseName = s.Course != null ? s.Course.CourseName : null,
+                SemesterID = s.SemesterID,
+                SemesterNo = s.Semester.SemesterNo,
+                StartYear = s.Semester.StartYear,
+                SemesterDisplayName = s.Semester.SemesterNo == 1 ? "Học kỳ I" :
+                                      s.Semester.SemesterNo == 2 ? "Học kỳ II" :
+                                      s.Semester.SemesterNo == 3 ? "Học kỳ hè" : "Không xác định",
+                ClassSection = s.ClassSection,
+                MaxCapacity = s.MaxCapacity,
+                Status = s.Status,
+                CurrentEnrollment = s.Enrollments.Count,
+                IsEnrolled = false
+            })
+            .ToListAsync();
+
+        return Ok(data);
+    }
+
+    [HttpGet]
+    [HasPermission("0702")]
+    public async Task<ActionResult<IEnumerable<CourseSectionDto>>> GetCourseSection()
+    {
+        // 2. Lọc CourseSections chỉ thuộc học kỳ đó
+        var data = await _context.CourseSections
+            .AsNoTracking()
+            .Where(s => s.Status == "Open")
             .Select(s => new CourseSectionDto
             {
                 SectionID = s.SectionID,

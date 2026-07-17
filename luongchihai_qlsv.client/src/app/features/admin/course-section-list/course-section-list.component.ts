@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,11 +6,19 @@ import { CourseSectionService } from './course-section-list.services';
 import { EnrollmentService } from '../../../core/services/enrollment.services';
 import { AvailableCourseSection } from '../../../core/models/course.model';
 
-// Định nghĩa interface nội bộ cho danh sách bộ lọc học kỳ
 interface SemesterFilterOption {
   semesterID: number;
   semesterDisplayName: string;
   academicYear: string;
+}
+
+interface GroupedCourse {
+  courseID: string;
+  courseName: string;
+  semesterDisplayName: string;
+  academicYear: string;
+  isExpanded: boolean;
+  sections: AvailableCourseSection[];
 }
 
 @Component({
@@ -18,7 +26,8 @@ interface SemesterFilterOption {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './course-section-list.component.html',
-  styleUrl: './course-section-list.component.css'
+  styleUrl: './course-section-list.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CourseSectionListComponent implements OnInit {
   private sectionService = inject(CourseSectionService);
@@ -28,7 +37,7 @@ export class CourseSectionListComponent implements OnInit {
 
   // --- DỮ LIỆU BẢNG ---
   allSections: AvailableCourseSection[] = [];
-  sections: AvailableCourseSection[] = [];
+  groupedCourses: GroupedCourse[] = [];
   isLoading: boolean = true;
   errorMessage?: string;
 
@@ -42,8 +51,8 @@ export class CourseSectionListComponent implements OnInit {
   // --- BỘ LỌC TÌM KIẾM ---
   searchTerm: string = '';
   selectedStatus: string = 'All';
-  selectedSemesterId: string = 'All'; // THÊM MỚI: Trạng thái lọc học kỳ đang chọn
-  uniqueSemesters: SemesterFilterOption[] = []; // THÊM MỚI: Danh sách danh mục học kỳ duy nhất
+  selectedSemesterId: string = 'All';
+  uniqueSemesters: SemesterFilterOption[] = [];
 
   ngOnInit(): void {
     this.loadOpenSections();
@@ -59,11 +68,7 @@ export class CourseSectionListComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.allSections = data;
-          this.sections = data;
-
-          // THÊM MỚI: Trích xuất tự động danh sách Học kỳ duy nhất không trùng lặp từ Backend trả về
           this.extractUniqueSemesters(data);
-
           this.isLoading = false;
           this.applyFilters();
         },
@@ -76,7 +81,6 @@ export class CourseSectionListComponent implements OnInit {
       });
   }
 
-  // THÊM MỚI: Hàm gom cụm danh sách Học kỳ để đưa vào Dropdown bộ lọc
   private extractUniqueSemesters(data: AvailableCourseSection[]): void {
     const seenIds = new Set<number>();
     this.uniqueSemesters = [];
@@ -91,8 +95,6 @@ export class CourseSectionListComponent implements OnInit {
         });
       }
     });
-
-    // Sắp xếp học kỳ theo thứ tự thời gian hiển thị (nếu cần)
     this.uniqueSemesters.sort((a, b) => b.semesterID - a.semesterID);
   }
 
@@ -106,31 +108,68 @@ export class CourseSectionListComponent implements OnInit {
     this.applyFilters();
   }
 
-  // THÊM MỚI: Xử lý sự kiện khi Admin thay đổi dropdown lọc học kỳ
   onFilterSemester(event: Event): void {
     this.selectedSemesterId = (event.target as HTMLSelectElement).value;
     this.applyFilters();
   }
 
+  toggleCourseExpand(course: GroupedCourse): void {
+    course.isExpanded = !course.isExpanded;
+    this.cdr.markForCheck();
+  }
+
   private applyFilters(): void {
-    this.sections = this.allSections.filter(section => {
-      // 1. Kiểm tra tìm kiếm text (Mã môn, Tên môn, Lớp bố trí)
+    const filteredFlat = this.allSections.filter(section => {
       const matchSearch = !this.searchTerm || (
         section.courseID?.toLowerCase().includes(this.searchTerm) ||
         section.courseName?.toLowerCase().includes(this.searchTerm) ||
         section.classSection?.toLowerCase().includes(this.searchTerm)
       );
-
-      // 2. Kiểm tra bộ lọc trạng thái (Open / Closed)
       const matchStatus = this.selectedStatus === 'All' || section.status === this.selectedStatus;
-
-      // 3. THÊM MỚI: Kiểm tra bộ lọc học kỳ tuyến tính
       const matchSemester = this.selectedSemesterId === 'All' || section.semesterID === +this.selectedSemesterId;
 
       return matchSearch && matchStatus && matchSemester;
     });
 
+    const groups: { [key: string]: GroupedCourse } = {};
+
+    filteredFlat.forEach(section => {
+      const key = `${section.courseID}_${section.semesterID}`;
+      if (!groups[key]) {
+        groups[key] = {
+          courseID: section.courseID || '',
+          courseName: section.courseName || 'Chưa cập nhật tên môn',
+          semesterDisplayName: section.semesterDisplayName || '',
+          academicYear: section.academicYear || '',
+          isExpanded: true,
+          sections: []
+        };
+      }
+      groups[key].sections.push(section);
+    });
+
+    this.groupedCourses = Object.values(groups);
     this.cdr.markForCheck();
+  }
+
+  // --- LOGIC ĐỔI MÀU SĨ SỐ (CHUYỂN TỪ HTML SANG) ---
+  getSectionCapacityClass(section: AvailableCourseSection | null | undefined): string {
+    if (!section || !section.maxCapacity) {
+      return 'text-gray-700';
+    }
+
+    const current = section.currentEnrollment ?? 0;
+    const max = section.maxCapacity;
+
+    if (current >= max) {
+      return 'text-red-600';
+    }
+
+    if (current / max >= 0.85) {
+      return 'text-amber-600';
+    }
+
+    return 'text-gray-700';
   }
 
   onRegister(section: AvailableCourseSection): void {
@@ -161,6 +200,28 @@ export class CourseSectionListComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  toggleAllCourses(expand: boolean): void {
+    this.groupedCourses.forEach(c => c.isExpanded = expand);
+    this.cdr.markForCheck();
+  }
+
+  onImportExcelClick(): void {
+    alert('Tính năng nhập sinh viên hàng loạt bằng Excel đang được phát triển!');
+  }
+
+  onBulkUpdateStatus(course: any, status: 'Open' | 'Closed'): void {
+    alert(`Đang cập nhật trạng thái các lớp của môn ${course.courseName} thành: ${status}`);
+  }
+
+  onToggleQuickStatus(section: any): void {
+    section.status = section.status === 'Open' ? 'Closed' : 'Open';
+    this.cdr.markForCheck();
+  }
+
+  onViewStudentsInSection(section: any): void {
+    alert(`Đang mở danh sách sinh viên thực tế lớp ${section.classSection}`);
+  }
+
   submitAdminRegistration(): void {
     const mssv = this.studentIdInput.trim();
     if (!this.selectedSection || !mssv) {
@@ -171,10 +232,7 @@ export class CourseSectionListComponent implements OnInit {
     this.isLoading = true;
     this.cdr.markForCheck();
 
-    const payload = {
-      sectionID: this.selectedSection.sectionID,
-      studentID: mssv
-    };
+    const payload = { sectionID: this.selectedSection.sectionID, studentID: mssv };
 
     this.enrollmentService.adminRegisterEnrollment(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -197,10 +255,10 @@ export class CourseSectionListComponent implements OnInit {
     const mssv = this.studentIdUnregInput.trim();
     if (!mssv || !this.selectedSection) return;
 
-    const payload = {
-      sectionID: this.selectedSection.sectionID,
-      studentID: mssv
-    };
+    this.isLoading = true;
+    this.cdr.markForCheck();
+
+    const payload = { sectionID: this.selectedSection.sectionID, studentID: mssv };
 
     this.enrollmentService.adminCancelEnrollment(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
