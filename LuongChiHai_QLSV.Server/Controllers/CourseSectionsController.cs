@@ -18,34 +18,52 @@ public class CourseSectionsController : ControllerBase
     }
 
     // GET: api/CourseSection
+    // GET: api/CourseSection
     [HttpGet]
     [HasPermission("0702")]
     public async Task<ActionResult<IEnumerable<CourseSectionDto>>> GetCourseSection()
     {
-        var data = await _context.CourseSections
-        .AsNoTracking()
-        .Where(s => s.Status == "Open")
-        .Select(s => new
+        var today = DateTime.Today;
+
+        // 1. Tìm học kỳ đang mở đăng ký dựa trên ngày và trạng thái IsRegistrationEnabled
+        var openSemester = await _context.Semesters
+            .FirstOrDefaultAsync(s => s.IsRegistrationEnabled &&
+                                      today >= s.RegistrationStartDate &&
+                                      today <= s.RegistrationEndDate);
+
+        // Nếu không tìm thấy kỳ nào đang mở, trả về danh sách rỗng hoặc thông báo
+        if (openSemester == null)
         {
-            SectionID = s.SectionID,
-            CourseID = s.CourseID,
-            Semester = s.Semester,
-            ClassSection = s.ClassSection,
-            MaxCapacity = s.MaxCapacity,
-            Status = s.Status,
-            Course = s.Course != null ? new
+            return Ok(new List<CourseSectionDto>());
+        }
+
+        // 2. Lọc CourseSections chỉ thuộc học kỳ đó
+        var data = await _context.CourseSections
+            .AsNoTracking()
+            .Where(s => s.Status == "Open" && s.SemesterID == openSemester.SemesterID) // Lọc theo SemesterID
+            .Select(s => new CourseSectionDto
             {
-                CourseID = s.Course.CourseID,
-                CourseName = s.Course.CourseName
-            } : null,
-            CurrentEnrollment = s.Enrollments.Count
-        })
-        .ToListAsync();
+                SectionID = s.SectionID,
+                CourseID = s.CourseID,
+                CourseName = s.Course != null ? s.Course.CourseName : null,
+                SemesterID = s.SemesterID,
+                SemesterNo = s.Semester.SemesterNo,
+                StartYear = s.Semester.StartYear,
+                SemesterDisplayName = s.Semester.SemesterNo == 1 ? "Học kỳ I" :
+                                      s.Semester.SemesterNo == 2 ? "Học kỳ II" :
+                                      s.Semester.SemesterNo == 3 ? "Học kỳ hè" : "Không xác định",
+                ClassSection = s.ClassSection,
+                MaxCapacity = s.MaxCapacity,
+                Status = s.Status,
+                CurrentEnrollment = s.Enrollments.Count,
+                IsEnrolled = false
+            })
+            .ToListAsync();
 
         return Ok(data);
     }
 
-    // GET: api/CourseSection/5W
+    // GET: api/CourseSection/5
     [HttpGet("{sectionid}")]
     [HasPermission("0702")]
     public async Task<ActionResult<CourseSectionDto>> GetCourseSection(int sectionid)
@@ -57,11 +75,16 @@ public class CourseSectionsController : ControllerBase
             {
                 SectionID = s.SectionID,
                 CourseID = s.CourseID,
-                Semester = s.Semester,
+                CourseName = s.Course != null ? s.Course.CourseName : null,
+                SemesterID = s.SemesterID,
+                SemesterNo = s.Semester.SemesterNo,
+                StartYear = s.Semester.StartYear,
+                SemesterDisplayName = s.Semester.SemesterNo == 1 ? "Học kỳ I" :
+                                      s.Semester.SemesterNo == 2 ? "Học kỳ II" :
+                                      s.Semester.SemesterNo == 3 ? "Học kỳ hè" : "Không xác định",
                 ClassSection = s.ClassSection,
                 MaxCapacity = s.MaxCapacity,
                 Status = s.Status,
-                CourseName = s.Course.CourseName,
                 CurrentEnrollment = s.Enrollments.Count,
                 IsEnrolled = false
             })
@@ -72,28 +95,23 @@ public class CourseSectionsController : ControllerBase
             return NotFound();
         }
 
-        return coursesection;
+        return Ok(coursesection);
     }
 
     // PUT: api/CourseSection/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{sectionid}")]
     [HasPermission("0703")]
-    public async Task<IActionResult> PutCourseSection(int? sectionid, CreateUpdateSectionDto request)
+    public async Task<IActionResult> PutCourseSection(int sectionid, CreateUpdateSectionDto request)
     {
-        if (sectionid == null)
-        {
-            return BadRequest();
-        }
-
         var coursesection = await _context.CourseSections.FindAsync(sectionid);
         if (coursesection == null)
         {
             return NotFound();
         }
 
+        // Cập nhật các trường dữ liệu theo DTO mới
         coursesection.CourseID = request.CourseID;
-        coursesection.Semester = request.Semester;
+        coursesection.SemesterID = request.SemesterID; // Thay đổi từ Semester sang SemesterID
         coursesection.ClassSection = request.ClassSection ?? coursesection.ClassSection;
         coursesection.MaxCapacity = request.MaxCapacity;
         coursesection.Status = request.Status;
@@ -118,7 +136,6 @@ public class CourseSectionsController : ControllerBase
     }
 
     // POST: api/CourseSection
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
     [HasPermission("0701")]
     public async Task<ActionResult<CourseSectionDto>> PostCourseSection(CreateUpdateSectionDto request)
@@ -126,7 +143,7 @@ public class CourseSectionsController : ControllerBase
         var coursesection = new CourseSection
         {
             CourseID = request.CourseID,
-            Semester = request.Semester,
+            SemesterID = request.SemesterID, // Thay đổi từ Semester sang SemesterID
             ClassSection = request.ClassSection ?? "L01",
             MaxCapacity = request.MaxCapacity,
             Status = request.Status
@@ -135,18 +152,28 @@ public class CourseSectionsController : ControllerBase
         _context.CourseSections.Add(coursesection);
         await _context.SaveChangesAsync();
 
-        var response = new CourseSectionDto
-        {
-            SectionID = coursesection.SectionID,
-            CourseID = coursesection.CourseID,
-            Semester = coursesection.Semester,
-            ClassSection = coursesection.ClassSection,
-            MaxCapacity = coursesection.MaxCapacity,
-            Status = coursesection.Status,
-            CourseName = null,
-            CurrentEnrollment = 0,
-            IsEnrolled = false
-        };
+        // Lấy lại dữ liệu kèm các bảng liên kết (Course, Semester) để trả về DTO đầy đủ thông tin nhất cho Client
+        var response = await _context.CourseSections
+            .AsNoTracking()
+            .Where(s => s.SectionID == coursesection.SectionID)
+            .Select(s => new CourseSectionDto
+            {
+                SectionID = s.SectionID,
+                CourseID = s.CourseID,
+                CourseName = s.Course != null ? s.Course.CourseName : null,
+                SemesterID = s.SemesterID,
+                SemesterNo = s.Semester.SemesterNo,
+                StartYear = s.Semester.StartYear,
+                SemesterDisplayName = s.Semester.SemesterNo == 1 ? "Học kỳ I" :
+                                      s.Semester.SemesterNo == 2 ? "Học kỳ II" :
+                                      s.Semester.SemesterNo == 3 ? "Học kỳ hè" : "Không xác định",
+                ClassSection = s.ClassSection,
+                MaxCapacity = s.MaxCapacity,
+                Status = s.Status,
+                CurrentEnrollment = 0,
+                IsEnrolled = false
+            })
+            .FirstOrDefaultAsync();
 
         return CreatedAtAction(nameof(GetCourseSection), new { sectionid = coursesection.SectionID }, response);
     }

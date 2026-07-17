@@ -25,7 +25,7 @@ public class StudentsController : ControllerBase
     // GET: api/Student
     [HttpGet]
     [HasPermission("0402")]
-    public async Task<ActionResult<IEnumerable<StudentResponseDto>>> GetStudent()
+    public async Task<ActionResult<IEnumerable<StudentListDto>>> GetStudent()
     {
         var response = await _studentService.GetAllAsync();
 
@@ -41,7 +41,7 @@ public class StudentsController : ControllerBase
     // GET: api/Student/5
     [HttpGet("{id}")]
     [HasPermission("0402")]
-    public async Task<ActionResult<StudentResponseDto>> GetStudent(string id)
+    public async Task<ActionResult<StudentDetailDto>> GetStudent(string id)
     {
         var response = await _studentService.GetByIdAsync(id);
 
@@ -55,10 +55,10 @@ public class StudentsController : ControllerBase
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
     [HasPermission("0403")]
-    public async Task<IActionResult> PutStudent(string id, StudentRequestDto request)
+    public async Task<IActionResult> PutStudent(string id, StudentUpdateDto request)
     {
-        if (id != request.StudentID)
-            return BadRequest("Mã cấu trúc không khớp.");
+        // 🔥 Không cần check id != request.StudentID nữa! 
+        // Hệ thống sẽ dùng trực tiếp tham số 'id' từ URL để tìm và cập nhật.
 
         var isUpdated = await _studentService.UpdateAsync(id, request);
 
@@ -72,13 +72,13 @@ public class StudentsController : ControllerBase
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
     [HasPermission("0401")]
-    public async Task<ActionResult<StudentResponseDto>> PostStudent(StudentRequestDto request)
+    public async Task<ActionResult<StudentCreateDto>> PostStudent(StudentCreateDto request)
     {
         try
         {
             await _studentService.CreateStudentAccountAsync(request);
 
-            var response = new StudentResponseDto
+            var response = new 
             {
                 StudentID = request.StudentID,
                 StudentName = request.StudentName,
@@ -101,7 +101,7 @@ public class StudentsController : ControllerBase
 
     [HttpGet("me")]
     [HasPermission("0402")]
-    public async Task<ActionResult<StudentResponseDto>> GetCurrentStudent()
+    public async Task<ActionResult<StudentDetailDto>> GetCurrentStudent()
     {
         var studentId = User.FindFirst("StudentID")?.Value;
 

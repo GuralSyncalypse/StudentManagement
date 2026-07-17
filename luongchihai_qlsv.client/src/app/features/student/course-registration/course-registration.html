@@ -1,66 +1,297 @@
-<div class="registration-container">
-  <h2>📚 Đăng Ký Học Phần</h2>
-  <p class="subtitle">Lựa chọn các lớp học phần đang mở dưới đây để đăng ký lịch học của bạn.</p>
+<div class="p-6 max-w-7xl mx-auto bg-gray-50/50 min-h-screen rounded-2xl relative">
 
-  <div *ngIf="successMessage" class="alert alert-success">
-    {{ successMessage }}
-  </div>
-  <div *ngIf="errorMessage" class="alert alert-danger">
-    {{ errorMessage }}
-  </div>
-
-  <div *ngIf="isLoading" class="loading-spinner">
-    <span>Đang xử lý hệ thống, vui lòng đợi...</span>
+  <!-- TIÊU ĐỀ TRANG VÀ MÔ TẢ -->
+  <div class="text-center mb-8">
+    <h2 class="text-2xl font-bold text-gray-800 tracking-tight flex items-center justify-center gap-2">
+      📚 Đăng Ký Học Phần Trực Tuyến
+    </h2>
+    <p class="text-sm text-gray-500 mt-1">Lựa chọn các môn học dưới đây, nhấn để xem chi tiết các lớp thiết kế đang mở.</p>
   </div>
 
-  <div class="table-responsive" *ngIf="!isLoading && sections.length > 0">
-    <table class="registration-table">
+  <!-- BỘ THEO DÕI TÍN CHỈ VÀ BỘ LỌC HỌC KỲ -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="md:col-span-2 bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-around text-center">
+      <div>
+        <span class="block text-xs uppercase tracking-wider font-semibold text-gray-400">Số lớp đã chọn</span>
+        <span class="text-xl font-bold text-indigo-600 mt-0.5 block">{{ totalRegisteredCourses }} lớp</span>
+      </div>
+      <div class="h-8 w-px bg-gray-200"></div>
+      <div>
+        <span class="block text-xs uppercase tracking-wider font-semibold text-gray-400">Tổng số tín chỉ tích lũy</span>
+        <span class="text-xl font-bold text-emerald-600 mt-0.5 block">{{ totalRegisteredCredits }} tín chỉ</span>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
+      <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Chọn Học Kỳ Tác Nghiệp:</label>
+      <select class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-inner"
+              (change)="onFilterSemester($event)">
+        <option value="All">Tất cả học kỳ có mở lớp</option>
+        @for (sem of uniqueSemesters; track sem.semesterID) {
+        <option [value]="sem.semesterID">
+          {{ sem.semesterDisplayName }} — NH {{ sem.academicYear }}
+        </option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- LOADING SPINNER -->
+  @if (isLoading) {
+  <div class="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="animate-spin rounded-full h-10 w-10 border-4 border-indigo-600 border-t-transparent mb-3"></div>
+    <p class="text-gray-500 text-sm font-medium">Đang xử lý dữ liệu hệ thống, vui lòng đợi giây lát...</p>
+  </div>
+  } @else {
+  <!-- BẢNG DANH SÁCH MÔN HỌC (ACCORDION TABLE) -->
+  @if (courseGroups.length > 0) {
+  <div class="overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200">
+    <table class="w-full text-left border-collapse">
       <thead>
-        <tr>
-          <th>Mã Lớp</th>
-          <th>Tên Học Phần</th>
-          <th>Học Kỳ</th>
-          <th>Lớp Học Bản</th>
-          <th>Sĩ Số</th>
-          <th>Trạng Thái</th>
+        <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+          <th class="px-5 py-3.5 w-12 text-center"></th>
+          <th class="px-5 py-3.5 w-32">Mã Học Phần</th>
+          <th class="px-5 py-3.5">Tên Học Phần</th>
+          <th class="px-5 py-3.5 w-28 text-center">Số Tín Chỉ</th>
+          <th class="px-5 py-3.5 w-40 text-center">Số Lớp Mở</th>
+          <th class="px-5 py-3.5 w-48 text-center">Trạng Thái Đăng Ký</th>
         </tr>
       </thead>
-      <tbody>
-        <tr *ngFor="let section of sections" [class.row-enrolled]="section.isEnrolled">
-          <td>{{ section.sectionID }}</td>
-          <td class="course-name">{{ section.courseName }}</td>
-          <td>{{ section.semester }}</td>
-          <td>{{ section.classSection }}</td>
-          <td>
-            <span class="badge" [ngClass]="section.currentEnrollment >= section.maxCapacity ? 'badge-danger' : 'badge-info'">
-              {{ section.currentEnrollment }} / {{ section.maxCapacity }}
+      <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+        @for (group of courseGroups; track group.courseID) {
+
+        <!-- 1. DÒNG CHA -->
+        <tr class="hover:bg-gray-50/80 transition-colors cursor-pointer font-medium"
+            [class.bg-emerald-50]="group.hasEnrolled"
+            (click)="toggleExpand(group)">
+          <td class="px-5 py-4 text-center">
+            <span class="inline-block transition-transform duration-200 text-gray-400 text-xs"
+                  [class.rotate-90]="group.isExpanded">
+              ▶
             </span>
           </td>
-          <td>
-            <div *ngIf="section.isEnrolled" class="enrolled-group">
-              <span class="text-success">✓ Đã đăng ký</span>
-              <button class="btn btn-danger btn-sm" (click)="onDrop(section)">
-                Hủy đăng ký
-              </button>
-            </div>
-
-            <button *ngIf="!section.isEnrolled && section.currentEnrollment >= section.maxCapacity" class="btn btn-full" disabled>
-              🚫 Lớp đã đầy
-            </button>
-
-            <button *ngIf="!section.isEnrolled && section.currentEnrollment < section.maxCapacity"
-                    class="btn btn-action"
-                    (click)="onRegister(section)">
-              Đăng Ký
-            </button>
-
+          <td class="px-5 py-4 font-mono font-bold text-gray-600">{{ group.courseID }}</td>
+          <td class="px-5 py-4">
+            <div class="text-gray-900 font-semibold hover:text-indigo-600 transition">{{ group.courseName }}</div>
+          </td>
+          <td class="px-5 py-4 text-center text-gray-600">{{ group.credits }} TC</td>
+          <td class="px-5 py-4 text-center">
+            <span class="px-2 py-0.5 bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs rounded-full font-semibold">
+              {{ group.sections.length }} lớp mở
+            </span>
+          </td>
+          <td class="px-5 py-4 text-center">
+            @if (group.hasEnrolled) {
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold">
+              ✓ Đã chọn ({{ group.enrolledSectionCode }})
+            </span>
+            } @else {
+            <span class="text-xs text-gray-400 italic">Chưa chọn lớp</span>
+            }
           </td>
         </tr>
+
+        <!-- 2. DÒNG CON (ACCORDION CONTENT) -->
+        @if (group.isExpanded) {
+        <tr class="bg-gray-50/50">
+          <td colspan="6" class="p-0 border-b border-gray-100">
+            <div class="px-16 py-4 bg-gray-50/40 border-y border-gray-100">
+              <table class="w-full text-left text-xs text-gray-600">
+                <thead>
+                  <tr class="text-gray-400 font-bold uppercase tracking-wider border-b border-gray-200 pb-2">
+                    <th class="py-2 w-28">Mã Lớp</th>
+                    <th class="py-2 w-36">Lớp Thiết Kế</th>
+                    <th class="py-2 w-32">Sĩ Số</th>
+                    <th class="py-2">Học Kỳ</th>
+                    <th class="py-2 text-center w-56">Hành Động Đăng Ký</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200/60">
+                  @for (section of group.sections; track section.sectionID) {
+                  <tr class="hover:bg-gray-100/50 transition-colors" [class.bg-emerald-50]="section.isEnrolled">
+                    <td class="py-3 font-mono text-gray-500 font-medium">{{ section.sectionID }}</td>
+                    <td class="py-3">
+                      <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded border border-indigo-100">
+                        {{ section.classSection }}
+                      </span>
+                    </td>
+                    <td class="py-3">
+                      <span class="font-medium inline-block px-2 py-0.5 rounded text-xs"
+                            [class]="section.currentEnrollment >= section.maxCapacity ? 'bg-red-50 text-red-700 font-bold border border-red-200' : 'bg-blue-50 text-blue-700 border border-blue-100'">
+                        {{ section.currentEnrollment }} / {{ section.maxCapacity }}
+                      </span>
+                    </td>
+                    <td class="py-3 text-gray-500">{{ section.semesterDisplayName }}</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center">
+
+                        <!-- TRƯỜNG HỢP 1: ĐÃ ĐĂNG KÝ THÀNH CÔNG LỚP NÀY -->
+                        @if (section.isEnrolled) {
+                        <div class="flex items-center justify-between w-full bg-white p-1 rounded-lg border border-emerald-200 shadow-sm">
+                          <span class="text-emerald-600 font-bold text-[11px] flex items-center gap-1 pl-2">
+                            <span>✓</span> Đã chọn
+                          </span>
+                          <button class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold rounded transition"
+                                  (click)="onDrop(section); $event.stopPropagation()">
+                            Hủy đăng ký
+                          </button>
+                        </div>
+                        }
+
+                        <!-- TRƯỜNG HỢP 2: LỚP CHƯA ĐĂNG KÝ NHƯNG ĐÃ ĐẦY SĨ SỐ -->
+                        @if (!section.isEnrolled && section.currentEnrollment >= section.maxCapacity) {
+                        <button class="w-full py-1.5 bg-gray-100 text-gray-400 text-[11px] font-medium rounded-lg border border-gray-200 cursor-not-allowed flex items-center justify-center gap-1"
+                                disabled>
+                          🚫 Hết chỗ
+                        </button>
+                        }
+
+                        <!-- TRƯỜNG HỢP 3: LỚP CHƯA ĐĂNG KÝ VÀ CÒN CHỖ TRỐNG -->
+                        @if (!section.isEnrolled && section.currentEnrollment < section.maxCapacity) {
+
+                        <!-- 3a. NẾU HỌC PHẦN NÀY TRONG HỌC KỲ NÀY ĐÃ ĐƯỢC ĐĂNG KÝ LỚP KHÁC -> KHÓA NÚT -->
+                        @if (isCourseInSemesterLocked(section.courseID, section.semesterID)) {
+                        <button class="w-full py-1.5 bg-gray-100 text-gray-400 text-[11px] font-medium rounded-lg border border-gray-200 cursor-not-allowed flex items-center justify-center gap-1"
+                                title="Bạn đã đăng ký một lớp khác cho học phần này trong học kỳ"
+                                disabled>
+                          🔒 Đã chọn lớp khác của học phần này
+                        </button>
+                        }
+
+                        <!-- 3b. NẾU CHƯA CÓ LỚP NÀO CỦA HỌC PHẦN NÀY ĐƯỢC ĐĂNG KÝ -> CHO PHÉP ĐĂNG KÝ -->
+                        @else {
+                        <button class="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold rounded-lg shadow-sm transition transform hover:-translate-y-0.5"
+                                (click)="onRegister(section); $event.stopPropagation()">
+                          Đăng Ký Lớp này
+                        </button>
+                        }
+
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>
+        }
+
+        }
       </tbody>
     </table>
   </div>
-
-  <div *ngIf="!isLoading && sections.length === 0" class="empty-state">
-    Hiện tại không có lớp học phần nào được mở đăng ký trong học kỳ này.
+  } @else {
+  <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
+    <span class="text-4xl block mb-2">📭</span>
+    <p class="text-gray-400 italic text-sm">Hiện tại không có lớp học phần nào thuộc danh mục học kỳ đã chọn được mở đăng ký.</p>
   </div>
+  }
+  }
+
+  <!-- FLOATING SNACKBAR / TOAST NOTIFICATION -->
+  <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-3 max-w-sm w-full px-4 sm:px-0 pointer-events-auto">
+    @if (successMessage) {
+    <div class="flex items-center justify-between p-4 bg-emerald-600 text-white rounded-xl shadow-2xl transition-all duration-300 animate-slide-in">
+      <div class="flex items-center gap-3 text-sm font-medium">
+        <span class="text-xl">🎉</span>
+        <span>{{ successMessage }}</span>
+      </div>
+      <button (click)="clearAlerts()" class="text-white/80 hover:text-white font-bold px-2 text-sm ml-4">✕</button>
+    </div>
+    }
+
+    @if (errorMessage) {
+    <div class="flex items-center justify-between p-4 bg-red-600 text-white rounded-xl shadow-2xl transition-all duration-300 animate-slide-in">
+      <div class="flex items-start gap-3 text-sm font-medium">
+        <span class="text-xl">⚠️</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+      <button (click)="clearAlerts()" class="text-white/80 hover:text-white font-bold px-2 text-sm ml-4">✕</button>
+    </div>
+    }
+  </div>
+
+  <!-- RESPONSIVE CONFIRMATION POPUP -->
+  @if (isConfirmOpen && selectedSectionForAction) {
+  <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center transition-opacity duration-300">
+    <div class="absolute inset-0 cursor-default" (click)="closeConfirm()"></div>
+    <div class="relative bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all duration-300 max-h-[90vh] flex flex-col z-10 animate-slide-up sm:animate-fade-in">
+
+      <div class="flex justify-center py-2 sm:hidden">
+        <div class="w-12 h-1.5 bg-gray-200 rounded-full"></div>
+      </div>
+
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-900">
+          {{ confirmActionType === 'register' ? 'Xác Nhận Đăng Ký' : 'Xác Nhận Hủy Đăng Ký' }}
+        </h3>
+        <button (click)="closeConfirm()" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition">
+          ✕
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 rounded-full"
+               [class]="confirmActionType === 'register' ? 'bg-indigo-50 text-indigo-600' : 'bg-red-50 text-red-600'">
+            @if (confirmActionType === 'register') {
+            <span class="text-xl">📥</span>
+            } @else {
+            <span class="text-xl">🗑️</span>
+            }
+          </div>
+          <p class="text-sm text-gray-500">
+            {{ confirmActionType === 'register' ? 'Vui lòng kiểm tra lại thông tin học phần để đăng ký:' : 'Bạn có chắc chắn muốn hủy đăng ký học phần sau?' }}
+          </p>
+        </div>
+
+        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200/60 space-y-3">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-semibold text-gray-400 uppercase">Học Phần</span>
+            <span class="px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] font-mono rounded">{{ selectedSectionForAction.courseID }}</span>
+          </div>
+          <h4 class="font-bold text-gray-800 text-base leading-tight">{{ selectedSectionForAction.courseName }}</h4>
+
+          <div class="h-px bg-gray-200/80"></div>
+
+          <div class="grid grid-cols-2 gap-y-2 gap-x-1 text-xs">
+            <div>
+              <span class="text-gray-400 block">Lớp thiết kế:</span>
+              <span class="font-bold text-indigo-600">{{ selectedSectionForAction.classSection }}</span>
+            </div>
+            <div>
+              <span class="text-gray-400 block">Số tín chỉ:</span>
+              <span class="font-bold text-gray-700">{{ selectedSectionForAction.credits || 3 }} Tín chỉ</span>
+            </div>
+            <div class="col-span-2">
+              <span class="text-gray-400 block">Học kỳ:</span>
+              <span class="font-bold text-gray-700">{{ selectedSectionForAction.semesterDisplayName }}</span>
+            </div>
+          </div>
+        </div>
+
+        @if (confirmActionType === 'drop') {
+        <p class="text-xs text-red-500 font-medium flex items-center gap-1">
+          ⚠️ Chú ý: Sau khi hủy, hệ thống sẽ mở lại chỗ trống cho các sinh viên khác đăng ký ngay lập tức.
+        </p>
+        }
+      </div>
+
+      <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row gap-2.5 sm:justify-end">
+        <button (click)="closeConfirm()"
+                class="w-full sm:w-auto px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition text-sm">
+          Quay lại
+        </button>
+        <button (click)="confirmAction()"
+                [class]="confirmActionType === 'register' ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'"
+                class="w-full sm:w-auto px-5 py-2.5 font-semibold rounded-xl shadow-sm transition text-sm">
+          {{ confirmActionType === 'register' ? 'Đồng Ý Đăng Ký' : 'Đồng Ý Hủy' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+  }
 </div>

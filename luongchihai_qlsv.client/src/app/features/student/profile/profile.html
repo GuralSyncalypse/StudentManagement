@@ -1,62 +1,98 @@
 @if (student) {
-<div class="profile-card">
-  <div class="profile-header">
-    <div class="flex flex-col gap-2 p-8 sm:flex-row sm:items-center sm:gap-6 sm:py-4 ...">
-      <div class="avatar">
-        {{ student.studentName.charAt(0).toUpperCase() }}
-      </div>
-      <div class="space-y-2 text-center sm:text-left">
-        <div class="space-y-0.5">
-          <p class="text-lg font-semibold text-black">{{ student.studentName }}</p>
-          <p class="font-medium text-gray-500">{{ student.studentID }}</p>
+<div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+  <!-- Header -->
+  <div class="flex items-center gap-6 p-8 bg-blue-700 text-white">
+    <div class="flex items-center justify-center w-20 h-20 text-3xl font-bold text-blue-700 bg-white rounded-full shadow-lg">
+      {{ student.studentName.charAt(0).toUpperCase() }}
+    </div>
+    <div>
+      <h2 class="text-2xl font-bold tracking-tight">{{ student.studentName }}</h2>
+      <p class="text-blue-100 font-medium">MSSV: {{ student.studentID }}</p>
+    </div>
+  </div>
+
+  <div class="p-8 space-y-10">
+    <!-- Thông tin cá nhân - Tối ưu Grid -->
+    <div>
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">Thông tin cá nhân</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-6">
+        <div class="space-y-1">
+          <p class="text-[10px] font-bold text-gray-400 uppercase">Ngày sinh</p>
+          <p class="text-gray-900 font-medium">{{ student.birthDate | date:'dd/MM/yyyy' }}</p>
+        </div>
+        <div class="space-y-1">
+          <p class="text-[10px] font-bold text-gray-400 uppercase">Giới tính</p>
+          <p class="text-gray-900 font-medium">{{ student.gender }}</p>
+        </div>
+        <div class="space-y-1">
+          <p class="text-[10px] font-bold text-gray-400 uppercase">Dân tộc / Tôn giáo</p>
+          <p class="text-gray-900 font-medium">{{ student.ethnicity }} / {{ student.religion }}</p>
+        </div>
+        <div class="space-y-1">
+          <p class="text-[10px] font-bold text-gray-400 uppercase">Quốc tịch</p>
+          <p class="text-gray-900 font-medium">{{ student.nationality }}</p>
+        </div>
+        <div class="col-span-2 space-y-1">
+          <p class="text-[10px] font-bold text-gray-400 uppercase">Nơi sinh</p>
+          <p class="text-gray-900 font-medium">{{ student.birthPlace }}</p>
         </div>
       </div>
     </div>
-  </div>
 
-  <hr class="divider" />
-
-  <div class="profile-section">
-    <h3>Personal Information</h3>
-    <div class="profile-grid">
-      <div class="info-group">
-        <label>Gender</label>
-        <p>{{ student.gender }}</p>
+    <!-- Địa chỉ & CCCD - Căn chỉnh đồng bộ -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-gray-100 pt-8">
+      <div class="space-y-6">
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Địa chỉ</h3>
+        <div class="space-y-4">
+          <div class="space-y-1">
+            <p class="text-[10px] font-bold text-gray-400 uppercase">Thường trú</p>
+            <p class="text-gray-900">{{ student.permanentAddress }}</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-[10px] font-bold text-gray-400 uppercase">Tạm trú</p>
+            <p class="text-gray-900">{{ student.temporaryAddress }}</p>
+          </div>
+        </div>
       </div>
-      <div class="info-group">
-        <label>Ethnicity</label>
-        <p>{{ student.ethnicity }}</p>
-      </div>
-      <div class="info-group full-width">
-        <label>Permanent Address</label>
-        <p>{{ student.permanentAddress }}</p>
+      <div class="space-y-6">
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Căn cước công dân</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="col-span-2 space-y-1">
+            <p class="text-[10px] font-bold text-gray-400 uppercase">Số CCCD</p>
+            <p class="text-gray-900 font-mono font-medium tracking-wide">{{ student.citizenID }}</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-[10px] font-bold text-gray-400 uppercase">Ngày cấp</p>
+            <p class="text-gray-900">{{ student.citizenIDIssueDate | date:'dd/MM/yyyy' }}</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-[10px] font-bold text-gray-400 uppercase">Nơi cấp</p>
+            <p class="text-gray-900">{{ student.citizenIDIssuePlace }}</p>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  @if (student.academicProfile) {
-  <hr class="divider" />
-  <div class="profile-section">
-    <h3>Academic Profile</h3>
-    <div class="profile-grid">
-      <div class="info-group">
-        <label>Faculty</label>
-        <p>{{ student.academicProfile.facultyName }}</p>
-      </div>
-      <div class="info-group">
-        <label>Major</label>
-        <p>{{ student.academicProfile.majorName }}</p>
-      </div>
-      <div class="info-group">
-        <label>Class</label>
-        <p>{{ student.academicProfile.className }}</p>
+    <!-- Thông tin học tập -->
+    @if (student.academicProfile) {
+    <div class="border-t border-gray-100 pt-8">
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Thông tin học tập</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl">
+          <p class="text-[10px] font-bold text-blue-600 uppercase mb-1">Khoa</p>
+          <p class="text-gray-900 font-semibold">{{ student.academicProfile.facultyName }}</p>
+        </div>
+        <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl">
+          <p class="text-[10px] font-bold text-blue-600 uppercase mb-1">Ngành</p>
+          <p class="text-gray-900 font-semibold">{{ student.academicProfile.majorName }}</p>
+        </div>
+        <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl">
+          <p class="text-[10px] font-bold text-blue-600 uppercase mb-1">Lớp</p>
+          <p class="text-gray-900 font-semibold">{{ student.academicProfile.className }}</p>
+        </div>
       </div>
     </div>
+    }
   </div>
-  }
-</div>
-} @else {
-<div class="profile-loading">
-  <p>Đang tải thông tin sinh viên...</p>
 </div>
 }

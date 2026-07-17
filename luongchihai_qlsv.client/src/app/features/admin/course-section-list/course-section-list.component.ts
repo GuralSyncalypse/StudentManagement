@@ -1,15 +1,22 @@
 import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; // Hoặc @angular/core/rxjs-interop tùy phiên bản Angular 16/17+
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CourseSectionService } from './course-section-list.services';
 import { EnrollmentService } from '../../../core/services/enrollment.services';
-import { CourseSection } from '../../../core/models/course.model';
+import { AvailableCourseSection } from '../../../core/models/course.model';
+
+// Định nghĩa interface nội bộ cho danh sách bộ lọc học kỳ
+interface SemesterFilterOption {
+  semesterID: number;
+  semesterDisplayName: string;
+  academicYear: string;
+}
 
 @Component({
   selector: 'app-course-section-list',
   standalone: true,
-  imports: [CommonModule, FormsModule], // ĐÃ THÊM: FormsModule
+  imports: [CommonModule, FormsModule],
   templateUrl: './course-section-list.component.html',
   styleUrl: './course-section-list.component.css'
 })
@@ -20,25 +27,28 @@ export class CourseSectionListComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   // --- DỮ LIỆU BẢNG ---
-  allSections: CourseSection[] = [];
-  sections: CourseSection[] = [];
+  allSections: AvailableCourseSection[] = [];
+  sections: AvailableCourseSection[] = [];
   isLoading: boolean = true;
   errorMessage?: string;
 
-  // --- ĐÃ BỔ SUNG: BIẾN TRẠNG THÁI MODAL ĐĂNG KÝ (ADMIN) ---
+  // --- TRẠNG THÁI MODAL (ADMIN) ---
   isRegModalOpen: boolean = false;
-  selectedSection: CourseSection | null = null;
+  isUnregModalOpen: boolean = false;
+  selectedSection: AvailableCourseSection | null = null;
   studentIdInput: string = '';
+  studentIdUnregInput: string = '';
 
-  // --- ĐÃ BỔ SUNG: BIẾN PHỤC VỤ BỘ LỌC SONG SONG ---
+  // --- BỘ LỌC TÌM KIẾM ---
   searchTerm: string = '';
   selectedStatus: string = 'All';
+  selectedSemesterId: string = 'All'; // THÊM MỚI: Trạng thái lọc học kỳ đang chọn
+  uniqueSemesters: SemesterFilterOption[] = []; // THÊM MỚI: Danh sách danh mục học kỳ duy nhất
 
   ngOnInit(): void {
     this.loadOpenSections();
   }
 
-  // Tải danh sách lớp học phần
   loadOpenSections(): void {
     this.isLoading = true;
     this.errorMessage = undefined;
@@ -50,6 +60,10 @@ export class CourseSectionListComponent implements OnInit {
         next: (data) => {
           this.allSections = data;
           this.sections = data;
+
+          // THÊM MỚI: Trích xuất tự động danh sách Học kỳ duy nhất không trùng lặp từ Backend trả về
+          this.extractUniqueSemesters(data);
+
           this.isLoading = false;
           this.applyFilters();
         },
@@ -62,66 +76,70 @@ export class CourseSectionListComponent implements OnInit {
       });
   }
 
-  // Xử lý khi gõ ô Tìm kiếm
+  // THÊM MỚI: Hàm gom cụm danh sách Học kỳ để đưa vào Dropdown bộ lọc
+  private extractUniqueSemesters(data: AvailableCourseSection[]): void {
+    const seenIds = new Set<number>();
+    this.uniqueSemesters = [];
+
+    data.forEach(item => {
+      if (item.semesterID && !seenIds.has(item.semesterID)) {
+        seenIds.add(item.semesterID);
+        this.uniqueSemesters.push({
+          semesterID: item.semesterID,
+          semesterDisplayName: item.semesterDisplayName || `Học kỳ ${item.semesterNo}`,
+          academicYear: item.academicYear
+        });
+      }
+    });
+
+    // Sắp xếp học kỳ theo thứ tự thời gian hiển thị (nếu cần)
+    this.uniqueSemesters.sort((a, b) => b.semesterID - a.semesterID);
+  }
+
   onSearch(event: Event): void {
     this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
     this.applyFilters();
   }
 
-  // ĐÃ BỔ SUNG: Xử lý khi chọn Dropdown trạng thái
   onFilterStatus(event: Event): void {
     this.selectedStatus = (event.target as HTMLSelectElement).value;
     this.applyFilters();
   }
 
-  // ĐÃ CẢI TIẾN: Hàm lọc tổng hợp
+  // THÊM MỚI: Xử lý sự kiện khi Admin thay đổi dropdown lọc học kỳ
+  onFilterSemester(event: Event): void {
+    this.selectedSemesterId = (event.target as HTMLSelectElement).value;
+    this.applyFilters();
+  }
+
   private applyFilters(): void {
     this.sections = this.allSections.filter(section => {
-      // 1. Kiểm tra điều kiện tìm kiếm Text
+      // 1. Kiểm tra tìm kiếm text (Mã môn, Tên môn, Lớp bố trí)
       const matchSearch = !this.searchTerm || (
         section.courseID?.toLowerCase().includes(this.searchTerm) ||
-        section.course?.courseName?.toLowerCase().includes(this.searchTerm) ||
+        section.courseName?.toLowerCase().includes(this.searchTerm) ||
         section.classSection?.toLowerCase().includes(this.searchTerm)
       );
 
-      // 2. Kiểm tra điều kiện Dropdown Trạng thái
+      // 2. Kiểm tra bộ lọc trạng thái (Open / Closed)
       const matchStatus = this.selectedStatus === 'All' || section.status === this.selectedStatus;
 
-      return matchSearch && matchStatus;
+      // 3. THÊM MỚI: Kiểm tra bộ lọc học kỳ tuyến tính
+      const matchSemester = this.selectedSemesterId === 'All' || section.semesterID === +this.selectedSemesterId;
+
+      return matchSearch && matchStatus && matchSemester;
     });
 
     this.cdr.markForCheck();
   }
 
-  // 1. Khai báo thêm các State điều khiển Modal hủy đăng ký
-  isUnregModalOpen: boolean = false;
-  studentIdUnregInput: string = '';
-
-  // 2. Hàm mở Modal Hủy Đăng ký
-  onUnregister(section: any) {
-    this.selectedSection = section;
-    this.studentIdUnregInput = ''; // Reset input cũ
-    this.isUnregModalOpen = true;
-    this.cdr.markForCheck();
-  }
-
-  // 3. Hàm đóng Modal Hủy Đăng ký
-  closeUnregModal() {
-    this.isUnregModalOpen = false;
-    this.selectedSection = null;
-    this.studentIdUnregInput = '';
-    this.cdr.markForCheck();
-  }
-
-  // Mở modal đăng ký hộ
-  onRegister(section: CourseSection): void {
+  onRegister(section: AvailableCourseSection): void {
     this.selectedSection = section;
     this.studentIdInput = '';
     this.isRegModalOpen = true;
     this.cdr.markForCheck();
   }
 
-  // Đóng modal đăng ký
   closeRegModal(): void {
     this.isRegModalOpen = false;
     this.selectedSection = null;
@@ -129,35 +147,22 @@ export class CourseSectionListComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  submitAdminUnregistration() {
-    const mssv = this.studentIdUnregInput.trim();
-    if (!this.studentIdUnregInput.trim() || !this.selectedSection) return;
-
-    const payload = {
-      sectionID: this.selectedSection.sectionID,
-      studentID: mssv
-    };
-
-    // Gọi Service API xử lý xóa (ví dụ mẫu)
-    this.enrollmentService.adminCancelEnrollment(payload).subscribe({
-      next: (res) => {
-        alert(`🎉 Đã huỷ đăng ký thành công sinh viên [${mssv}] ra khỏi lớp!`);
-        this.closeUnregModal();
-        this.loadOpenSections();
-      },
-      error: (err) => {
-        console.error('Lỗi huỷ đăng ký:', err);
-        alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc không có trong lớp học!'}`);
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      }
-    });
+  onUnregister(section: AvailableCourseSection): void {
+    this.selectedSection = section;
+    this.studentIdUnregInput = '';
+    this.isUnregModalOpen = true;
+    this.cdr.markForCheck();
   }
 
-  // Xác nhận xếp lớp gửi lên Server
+  closeUnregModal(): void {
+    this.isUnregModalOpen = false;
+    this.selectedSection = null;
+    this.studentIdUnregInput = '';
+    this.cdr.markForCheck();
+  }
+
   submitAdminRegistration(): void {
     const mssv = this.studentIdInput.trim();
-
     if (!this.selectedSection || !mssv) {
       alert('Vui lòng nhập đầy đủ mã sinh viên!');
       return;
@@ -182,6 +187,32 @@ export class CourseSectionListComponent implements OnInit {
         error: (err) => {
           console.error('Lỗi xếp lớp:', err);
           alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc trùng lịch học!'}`);
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  submitAdminUnregistration(): void {
+    const mssv = this.studentIdUnregInput.trim();
+    if (!mssv || !this.selectedSection) return;
+
+    const payload = {
+      sectionID: this.selectedSection.sectionID,
+      studentID: mssv
+    };
+
+    this.enrollmentService.adminCancelEnrollment(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          alert(`🎉 Đã huỷ đăng ký thành công sinh viên [${mssv}] ra khỏi lớp!`);
+          this.closeUnregModal();
+          this.loadOpenSections();
+        },
+        error: (err) => {
+          console.error('Lỗi huỷ đăng ký:', err);
+          alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc không có trong lớp học!'}`);
           this.isLoading = false;
           this.cdr.markForCheck();
         }

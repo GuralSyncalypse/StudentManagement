@@ -4,12 +4,20 @@ import { Observable } from 'rxjs';
 
 export interface CourseSectionDto {
   sectionID: number;
-  courseID: number;
-  semester: string;
+  courseID: string;
+  courseName: string;
+  credits?: number;
+
+  // Thuộc tính học kỳ phẳng hóa
+  semesterID: number;
+  semesterNo: number;
+  startYear: number;
+  academicYear: string;
+  semesterDisplayName: string;
+
   classSection: string;
   maxCapacity: number;
   status: string;
-  courseName: string;
   currentEnrollment: number;
   isEnrolled: boolean;
 }
@@ -18,21 +26,18 @@ export interface CourseSectionDto {
   providedIn: 'root'
 })
 export class CourseRegistrationService {
-  private apiUrl = 'api/StudentRegistrations'; // Base URL kết nối tới Student API ở Backend
+  private apiUrl = 'api/StudentRegistrations';
 
   constructor(private http: HttpClient) { }
 
-  // Lấy danh sách các lớp học phần mở đăng ký
   getAvailableSections(): Observable<CourseSectionDto[]> {
     return this.http.get<CourseSectionDto[]>(`${this.apiUrl}`);
   }
 
-  // Gửi yêu cầu đăng ký học phần (Chỉ truyền lên SectionID)
   registerCourse(sectionID: number): Observable<any> {
     return this.http.post(`${this.apiUrl}`, { sectionID });
   }
 
-  // Gửi yêu cầu huy đăng ký học phần (Chỉ truyền lên SectionID)
   dropCourse(sectionID: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${sectionID}`);
   }

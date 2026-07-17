@@ -36,8 +36,18 @@ export class JwtInterceptor implements HttpInterceptor {
     return next.handle(authReq).pipe(
       catchError((error) => {
         if (error instanceof HttpErrorResponse && error.status === 401) {
-          return this.handle401Error(authReq, next);
+
+          // 🔥 ĐIỀU KIỆN QUAN TRỌNG: 
+          // Chỉ gọi Refresh Token nếu API bị lỗi KHÔNG PHẢI là API Login hoặc API Refresh-token
+          const isLoginRequest = request.url.includes('/api/auth/login');
+          const isRefreshRequest = request.url.includes('/api/auth/refresh-token');
+
+          if (!isLoginRequest && !isRefreshRequest) {
+            return this.handle401Error(authReq, next);
+          }
         }
+
+        // Trả lỗi về cho ErrorInterceptor hoặc Component tự xử lý
         return throwError(() => error);
       })
     );

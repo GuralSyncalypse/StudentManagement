@@ -7,22 +7,15 @@ namespace LuongChiHai_QLSV.Server.DTOs.Reports
     {
         public string StudentID { get; set; } = string.Empty;
 
-        public int Semester { get; set; }
+        // --- ĐIỀU CHỈNH CẤU TRÚC HỌC KỲ MỚI ---
+        public int SemesterID { get; set; }
+        public byte SemesterNo { get; set; }
+        public int StartYear { get; set; }
+        // --------------------------------------
 
         public decimal? SemesterGPA { get; set; }
-
         public int TotalCreditsRegistered { get; set; }
-
-        // --- BỔ SUNG CÁC TRƯỜNG MỚI DƯỚI ĐÂY ---
-
-        /// <summary>
-        /// Điểm trung bình tích lũy (CPA) tính đến hết học kỳ này (Thang điểm 10)
-        /// </summary>
         public decimal? CumulativeGPA { get; set; }
-
-        /// <summary>
-        /// Tổng số tín chỉ tích lũy đạt được (đã có điểm) tính đến hết kỳ này
-        /// </summary>
         public int? TotalAccumulatedCredits { get; set; }
     }
 }

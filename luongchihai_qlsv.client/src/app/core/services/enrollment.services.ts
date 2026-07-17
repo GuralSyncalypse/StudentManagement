@@ -44,7 +44,7 @@ export class EnrollmentService {
 
   adminCancelEnrollment(payload: { sectionID: number; studentID: string }): Observable<any> {
     // Truyền qua Query Parameters
-    return this.http.delete<any>(`${this.apiUrl}/admin-cancel`, {
+    return this.http.delete<any>(`${this.apiUrl}`, {
       params: {
         sectionID: payload.sectionID.toString(),
         studentID: payload.studentID

@@ -19,7 +19,7 @@ namespace LuongChiHai_QLSV.Server.Services
         }
 
         // CREATE + AUTO CREATE USER
-        public async Task CreateStudentAccountAsync(StudentRequestDto dto)
+        public async Task CreateStudentAccountAsync(StudentCreateDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
 
@@ -89,14 +89,14 @@ namespace LuongChiHai_QLSV.Server.Services
         }
 
         // GET ALL
-        public async Task<List<StudentResponseDto>> GetAllAsync()
+        public async Task<List<StudentListDto>> GetAllAsync()
         {
             // Sử dụng hàm đặc thù có Include dữ liệu AcademicProfile từ StudentRepository
             var students = await _unitOfWork.Students.GetAllWithProfileAsync();
 
             if (students == null) return [];
 
-            var response = students.Select(s => new StudentResponseDto
+            var response = students.Select(s => new StudentListDto
             {
                 StudentID = s.StudentID,
                 StudentName = s.StudentName,
@@ -104,46 +104,56 @@ namespace LuongChiHai_QLSV.Server.Services
                 Ethnicity = s.Ethnicity,
                 PermanentAddress = s.PermanentAddress,
 
-                AcademicProfile = s.AcademicProfile == null ? null : new AcademicProfileDto
+                AcademicProfile = s.AcademicProfile != null ? new AcademicProfileResponseDto
                 {
                     ClassName = s.AcademicProfile.ClassName,
                     FacultyName = s.AcademicProfile.FacultyName,
                     MajorName = s.AcademicProfile.MajorName
-                }
+                } : null
             }).ToList();
 
             return response;
         }
 
         // GET BY ID
-        public async Task<StudentResponseDto?> GetByIdAsync(string id)
+        public async Task<StudentDetailDto?> GetByIdAsync(string id)
         {
             // Sử dụng hàm đặc thù lấy Student kèm Profile
             var student = await _unitOfWork.Students.GetByIdWithProfileAsync(id);
 
             if (student == null) return null;
 
-            var response = new StudentResponseDto
+            var response = new StudentDetailDto
             {
                 StudentID = student.StudentID,
+                UserID = student.UserID,
                 StudentName = student.StudentName,
                 Gender = student.Gender,
+                BirthDate = student.BirthDate,
                 Ethnicity = student.Ethnicity,
+                Religion = student.Religion,
+                Nationality = student.Nationality,
+                BirthPlace = student.BirthPlace,
+                CitizenID = student.CitizenID,
+                CitizenIDIssueDate = student.CitizenIDIssueDate,
+                CitizenIDIssuePlace = student.CitizenIDIssuePlace,
                 PermanentAddress = student.PermanentAddress,
+                TemporaryAddress = student.TemporaryAddress,
 
-                AcademicProfile = student.AcademicProfile == null ? null : new AcademicProfileDto
+                // 🔥 MAP QUAN HỆ 1-1 LỒNG NHAU:
+                AcademicProfile = student.AcademicProfile != null ? new AcademicProfileResponseDto
                 {
                     ClassName = student.AcademicProfile.ClassName,
                     FacultyName = student.AcademicProfile.FacultyName,
                     MajorName = student.AcademicProfile.MajorName
-                }
+                } : null
             };
 
             return response;
         }
 
         // UPDATE
-        public async Task<bool> UpdateAsync(string id, StudentRequestDto dto)
+        public async Task<bool> UpdateAsync(string id, StudentUpdateDto dto)
         {
             var student = await _unitOfWork.Students.GetByIdAsync(id);
 

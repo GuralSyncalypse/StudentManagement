@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace LuongChiHai_QLSV.Server.Controllers
 {
@@ -36,7 +38,6 @@ namespace LuongChiHai_QLSV.Server.Controllers
             });
         }
 
-
         public class KpiDataDto
         {
             public decimal CumulativeGpa { get; set; }
@@ -47,7 +48,6 @@ namespace LuongChiHai_QLSV.Server.Controllers
         [HttpGet("student")]
         public async Task<IActionResult> GetStudentDashboard()
         {
-            // 1. Lấy StudentID từ Token JWT
             var studentId = User.FindFirst(ClaimTypes.Name)?.Value
                          ?? User.FindFirst("sub")?.Value;
 
@@ -56,18 +56,19 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 return Unauthorized(new { message = "Không tìm thấy thông tin sinh viên hợp lệ!" });
             }
 
-            // 2. Lấy học kỳ hiện tại đang mở (Lấy kỳ lớn nhất trong hệ thống)
-            var currentSemester = await _context.CourseSections
-                .OrderByDescending(cs => cs.Semester)
-                .Select(cs => cs.Semester)
+            // 1. SỬA ĐỔI: Tìm ID học kỳ mới nhất theo Năm học giảm dần -> Số kỳ giảm dần
+            var currentSemesterId = await _context.CourseSections
+                .OrderByDescending(cs => cs.Semester.StartYear)
+                .ThenByDescending(cs => cs.Semester.SemesterNo)
+                .Select(cs => cs.SemesterID)
                 .FirstOrDefaultAsync();
 
-            if (currentSemester == 0)
+            if (currentSemesterId == 0)
             {
                 return NotFound(new { message = "Hệ thống chưa thiết lập học kỳ hiện tại!" });
             }
 
-            // Thẻ thông tin cá nhân
+            // Lấy profile sinh viên
             var profileData = await _context.StudentCompleteProfiles
                 .Where(p => p.StudentID == studentId)
                 .Select(p => new
@@ -109,11 +110,10 @@ namespace LuongChiHai_QLSV.Server.Controllers
                     TotalAccumulatedCredits = 0,
                     AcademicStanding = "Chưa có dữ liệu"
                 };
-                
 
-            // Danh sách môn học kỳ này (Lọc theo StudentID và Kỳ hiện tại)
+            // 2. SỬA ĐỔI: Lọc danh sách môn kỳ này theo currentSemesterId
             var currentCourses = await _context.BangDiemChiTiet
-                .Where(v => v.StudentID == studentId && v.Semester == currentSemester)
+                .Where(v => v.StudentID == studentId && v.SemesterID == currentSemesterId)
                 .Select(v => new
                 {
                     CourseId = v.CourseID,
@@ -128,19 +128,24 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 })
                 .ToListAsync();
 
-            // Lịch sử GPA từng kỳ phục vụ vẽ biểu đồ đường (Sort theo kỳ tăng dần từ cũ đến mới)
+            // 3. SỬA ĐỔI: Sắp xếp lịch sử GPA chuẩn theo trình tự thời gian (Năm học -> Số hiệu kỳ)
             var gpaHistory = await _context.StudentSemesterGpas
                 .Where(g => g.StudentID == studentId)
-                .OrderBy(g => g.Semester)
+                .OrderBy(g => g.StartYear)
+                .ThenBy(g => g.SemesterNo)
                 .Select(g => new
                 {
-                    Semester = g.Semester,
+                    SemesterID = g.SemesterID,
+                    SemesterNo = g.SemesterNo,
+                    StartYear = g.StartYear,
+                    AcademicYear = $"{g.StartYear}-{g.StartYear + 1}",
+                    SemesterDisplayName = g.SemesterNo == 1 ? "HKI" :
+                                          g.SemesterNo == 2 ? "HKII" : "HKIII",
                     SemesterGpa = g.SemesterGPA,
                     CumulativeGpa = g.CumulativeGPA
                 })
                 .ToListAsync();
 
-            // 4. Trả về cấu trúc object "phẳng" bọc gọn gàng, khớp hoàn toàn Model Angular frontend
             return Ok(new
             {
                 Profile = profileData,

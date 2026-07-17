@@ -1,6 +1,23 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core'; // 1. Import thêm ChangeDetectionStrategy và ChangeDetectorRef
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CourseRegistrationService, CourseSectionDto } from './course-registration.service';
+
+interface SemesterFilter {
+  semesterID: number;
+  semesterDisplayName: string;
+  academicYear: string;
+}
+
+export interface CourseGroup {
+  courseID: string;
+  courseName: string;
+  credits: number;
+  semesterDisplayName: string;
+  isExpanded: boolean;
+  hasEnrolled: boolean;
+  enrolledSectionCode?: string;
+  sections: CourseSectionDto[];
+}
 
 @Component({
   selector: 'app-course-registration',
@@ -8,16 +25,27 @@ import { CourseRegistrationService, CourseSectionDto } from './course-registrati
   imports: [CommonModule],
   templateUrl: './course-registration.html',
   styleUrls: ['./course-registration.css'],
-  // 2. Kích hoạt chiến lược OnPush: Angular sẽ KHÔNG tự động bắt thay đổi trừ khi có @Input thay đổi hoặc sự kiện từ UI
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CourseRegistrationComponent implements OnInit {
-  sections: CourseSectionDto[] = [];
+  allSections: CourseSectionDto[] = [];
+  courseGroups: CourseGroup[] = [];
+  uniqueSemesters: SemesterFilter[] = [];
+
+  selectedSemesterId: string = 'All';
   isLoading = false;
   errorMessage = '';
   successMessage = '';
 
-  // 3. Inject ChangeDetectorRef vào constructor dưới tên biến 'cdr'
+  totalRegisteredCourses = 0;
+  totalRegisteredCredits = 0;
+
+  // --- TRẠNG THÁI CHO POPUP & SNACKBAR MỚI ---
+  isConfirmOpen = false;
+  confirmActionType: 'register' | 'drop' | null = null;
+  selectedSectionForAction: CourseSectionDto | null = null;
+  private toastTimeout: any;
+
   constructor(
     private registrationService: CourseRegistrationService,
     private cdr: ChangeDetectorRef
@@ -30,74 +58,192 @@ export class CourseRegistrationComponent implements OnInit {
   loadSections(): void {
     this.isLoading = true;
     this.errorMessage = '';
-    // Vì dùng OnPush, ta cần báo cho Angular biết trạng thái isLoading đã đổi sang true
     this.cdr.markForCheck();
+
+    const expandedCourseIds = new Set<string>(
+      this.courseGroups.filter(g => g.isExpanded).map(g => g.courseID)
+    );
 
     this.registrationService.getAvailableSections().subscribe({
       next: (data) => {
-        this.sections = data;
-        this.isLoading = false;
+        this.allSections = data;
+        this.extractUniqueSemesters(data);
+        this.applyGroupingAndCalculations(expandedCourseIds);
 
-        // 4. QUAN TRỌNG: Dữ liệu trả về từ API là bất đồng bộ (Async), 
-        // Angular OnPush sẽ không biết để vẽ lại UI. Ta phải ép nó quét bằng gọi cdr.
+        this.isLoading = false;
         this.cdr.markForCheck();
       },
-      error: (err) => {
-        this.errorMessage = 'Không thể tải danh sách học phần. Vui lòng thử lại sau!';
+      error: () => {
+        this.showToast('Không thể tải danh sách học phần. Vui lòng thử lại sau!', true);
         this.isLoading = false;
-
-        // Báo cập nhật UI khi có lỗi xảy ra
         this.cdr.markForCheck();
       }
     });
   }
 
+  // --- KIỂM TRA HỌC KỲ ĐÃ ĐƯỢC ĐĂNG KÝ LỚP NÀO CHƯA ---
+  isCourseInSemesterLocked(courseID: string, semesterID: number): boolean {
+    // Trả về true nếu trong học kỳ này, học phần (courseID) đã có ít nhất một lớp được đăng ký (isEnrolled = true)
+    return this.allSections.some(section =>
+      section.courseID === courseID &&
+      section.semesterID === semesterID &&
+      section.isEnrolled
+    );
+  }
+
+  private extractUniqueSemesters(data: CourseSectionDto[]): void {
+    const seen = new Set<number>();
+    this.uniqueSemesters = [];
+
+    data.forEach(item => {
+      if (item.semesterID && !seen.has(item.semesterID)) {
+        seen.add(item.semesterID);
+        this.uniqueSemesters.push({
+          semesterID: item.semesterID,
+          semesterDisplayName: item.semesterDisplayName,
+          academicYear: item.academicYear
+        });
+      }
+    });
+    this.uniqueSemesters.sort((a, b) => b.semesterID - a.semesterID);
+  }
+
+  onFilterSemester(event: Event): void {
+    this.selectedSemesterId = (event.target as HTMLSelectElement).value;
+    this.applyGroupingAndCalculations();
+  }
+
+  private applyGroupingAndCalculations(previouslyExpandedIds?: Set<string>): void {
+    const filteredRaw = this.selectedSemesterId === 'All'
+      ? this.allSections
+      : this.allSections.filter(s => s.semesterID === +this.selectedSemesterId);
+
+    const groupsMap = new Map<string, CourseGroup>();
+
+    filteredRaw.forEach(section => {
+      if (!groupsMap.has(section.courseID)) {
+        groupsMap.set(section.courseID, {
+          courseID: section.courseID,
+          courseName: section.courseName,
+          credits: section.credits || 3,
+          semesterDisplayName: section.semesterDisplayName,
+          isExpanded: previouslyExpandedIds ? previouslyExpandedIds.has(section.courseID) : false,
+          hasEnrolled: false,
+          sections: []
+        });
+      }
+
+      const group = groupsMap.get(section.courseID)!;
+      group.sections.push(section);
+
+      if (section.isEnrolled) {
+        group.hasEnrolled = true;
+        group.enrolledSectionCode = section.classSection;
+      }
+    });
+
+    this.courseGroups = Array.from(groupsMap.values());
+
+    const enrolledSections = this.allSections.filter(s => s.isEnrolled);
+    this.totalRegisteredCourses = enrolledSections.length;
+    this.totalRegisteredCredits = enrolledSections.reduce(
+      (sum, s) => sum + (s.credits || 3), 0
+    );
+  }
+
+  toggleExpand(group: CourseGroup): void {
+    group.isExpanded = !group.isExpanded;
+    this.cdr.markForCheck();
+  }
+
+  // --- CÁC HÀM ĐƯỢC THAY THẾ CHO TRẢI NGHIỆM POPUP MỚI ---
+
+  // Khi click nút Đăng Ký
   onRegister(section: CourseSectionDto): void {
-    // 1. Hiển thị hộp thoại xác nhận của trình duyệt
-    const isConfirmed = confirm(`Xác nhận đăng ký học phần: "${section.courseName}" (Lớp: ${section.classSection}) không?`);
+    this.selectedSectionForAction = section;
+    this.confirmActionType = 'register';
+    this.isConfirmOpen = true;
+    this.cdr.markForCheck();
+  }
 
-    // Nếu chọn "Cancel" thì dừng toàn bộ xử lý
-    if (!isConfirmed) return;
+  // Khi click nút Hủy Đăng Ký
+  onDrop(section: CourseSectionDto): void {
+    this.selectedSectionForAction = section;
+    this.confirmActionType = 'drop';
+    this.isConfirmOpen = true;
+    this.cdr.markForCheck();
+  }
 
-    // 2. Nếu chọn "OK" thì tiếp tục chạy logic đăng ký như cũ
-    this.errorMessage = '';
-    this.successMessage = '';
+  // Đóng Popup xác nhận
+  closeConfirm(): void {
+    this.isConfirmOpen = false;
+    this.selectedSectionForAction = null;
+    this.confirmActionType = null;
+    this.cdr.markForCheck();
+  }
+
+  // Thực thi tác vụ sau khi người dùng ấn xác nhận trên Popup
+  confirmAction(): void {
+    if (!this.selectedSectionForAction || !this.confirmActionType) return;
+
+    const section = this.selectedSectionForAction;
+    const type = this.confirmActionType;
+
+    this.closeConfirm(); // Đóng nhanh popup trước khi thực thi
     this.isLoading = true;
     this.cdr.markForCheck();
 
-    this.registrationService.registerCourse(section.sectionID).subscribe({
-      next: (response) => {
-        this.successMessage = 'Đăng ký học phần thành công!';
-        this.loadSections();
-      },
-      error: (err) => {
-        this.errorMessage = err.error || 'Đăng ký học phần thất bại. Vui lòng kiểm tra lại!';
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      }
-    });
+    if (type === 'register') {
+      this.registrationService.registerCourse(section.sectionID).subscribe({
+        next: () => {
+          this.showToast(`Đăng ký thành công lớp ${section.classSection} môn ${section.courseName}!`);
+          this.loadSections();
+        },
+        error: (err) => {
+          this.showToast(err.error?.message || 'Đăng ký học phần thất bại. Vui lòng kiểm tra lại!', true);
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }
+      });
+    } else if (type === 'drop') {
+      this.registrationService.dropCourse(section.sectionID).subscribe({
+        next: () => {
+          this.showToast(`Đã hủy đăng ký thành công lớp ${section.classSection} môn ${section.courseName}.`);
+          this.loadSections();
+        },
+        error: (err) => {
+          this.showToast(err.error?.message || 'Hủy đăng ký thất bại. Vui lòng thử lại!', true);
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }
+      });
+    }
   }
 
-  // Thêm hàm xử lý khi sinh viên bấm nút Hủy đăng ký
-  onDrop(section: CourseSectionDto): void {
-    const isConfirmed = confirm(`Bạn có chắc muốn HỦY ĐĂNG KÝ môn: "${section.courseName}" không? Hành động này sẽ nhường suất cho sinh viên khác.`);
-    if (!isConfirmed) return;
+  // Quản lý hiển thị Snackbar thông minh
+  showToast(message: string, isError = false): void {
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+    }
 
-    this.isLoading = true;
-    this.errorMessage = '';
+    if (isError) {
+      this.errorMessage = message;
+      this.successMessage = '';
+    } else {
+      this.successMessage = message;
+      this.errorMessage = '';
+    }
+    this.cdr.markForCheck();
+
+    // Tự động đóng thông báo sau 4 giây
+    this.toastTimeout = setTimeout(() => {
+      this.clearAlerts();
+    }, 4000);
+  }
+
+  clearAlerts(): void {
     this.successMessage = '';
-    this.cdr.markForCheck(); // Hiển thị trạng thái loading
-
-    this.registrationService.dropCourse(section.sectionID).subscribe({
-      next: (response) => {
-        this.successMessage = 'Đã hủy đăng ký học phần thành công!';
-        this.loadSections(); // Tải lại danh sách để cập nhật lại nút bấm và sĩ số mới
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.message || 'Hủy đăng ký thất bại. Vui lòng thử lại!';
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      }
-    });
+    this.errorMessage = '';
+    this.cdr.markForCheck();
   }
 }

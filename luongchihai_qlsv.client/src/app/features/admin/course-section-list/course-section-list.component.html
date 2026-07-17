@@ -1,90 +1,129 @@
-<div class="sections-container">
+<div class="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen rounded-xl shadow-sm">
 
-    <div class="sections-header">
-        <h2>Danh Sách Lớp Học Phần Đang Mở</h2>
+    <!-- KHU VỰC TIÊU ĐỀ & BỘ LỌC -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between pb-6 mb-6 border-b border-gray-200 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Danh Sách Lớp Học Phần Đang Mở</h2>
+            <p class="text-sm text-gray-500 mt-1">Hệ thống quản lý, phân lớp và đăng ký học tập dành cho Quản trị viên</p>
+        </div>
 
-        <div class="filter-group">
-            <input type="text" placeholder="Tìm tên môn, mã học phần..." (input)="onSearch($event)">
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Ô tìm kiếm -->
+            <input type="text"
+                   placeholder="Tìm tên môn, mã học phần..."
+                   class="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64 shadow-sm transition"
+                   (input)="onSearch($event)">
 
-            <select (change)="onFilterStatus($event)">
+            <!-- THÊM MỚI: Bộ lọc chọn Học kỳ động -->
+            <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition"
+                    (change)="onFilterSemester($event)">
+                <option value="All">Tất cả học kỳ</option>
+                @for (sem of uniqueSemesters; track sem.semesterID) {
+                <option [value]="sem.semesterID">{{ sem.semesterDisplayName }} - Năm học {{ sem.academicYear }}</option>
+                }
+            </select>
+
+            <!-- Bộ lọc chọn Trạng thái lớp -->
+            <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition"
+                    (change)="onFilterStatus($event)">
                 <option value="All">Tất cả trạng thái</option>
                 <option value="Open">Đang mở (Open)</option>
                 <option value="Closed">Đã khóa (Closed)</option>
             </select>
 
-            <button class="btn-refresh" (click)="loadOpenSections()" [disabled]="isLoading">
+            <!-- Nút làm mới dữ liệu -->
+            <button class="px-4 py-2 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 disabled:opacity-50 font-medium rounded-lg text-sm transition flex items-center gap-2 shadow-sm"
+                    (click)="loadOpenSections()"
+                    [disabled]="isLoading">
                 🔄 Làm mới
             </button>
         </div>
     </div>
 
+    <!-- TRẠNG THÁI LOADING -->
     @if (isLoading) {
-    <div class="dashboard-loading">
-        <div class="spinner"></div>
-        <p>Đang tải danh sách lớp học phần...</p>
+    <div class="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent mb-3"></div>
+        <p class="text-gray-500 font-medium">Đang tải danh sách lớp học phần...</p>
     </div>
     }
 
+    <!-- TRẠNG THÁI XẢY RA LỖI -->
     @else if (errorMessage) {
-    <div class="alert-error-card">
-        <div class="alert-icon">⚠️</div>
-        <div class="alert-content">
-            <h4>Lỗi tải dữ liệu</h4>
-            <p>{{ errorMessage }}</p>
+    <div class="flex items-start p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl shadow-sm mb-6">
+        <div class="text-xl text-red-500 mr-3">⚠️</div>
+        <div>
+            <h4 class="font-bold text-red-800">Lỗi tải dữ liệu</h4>
+            <p class="text-sm text-red-700 mt-0.5">{{ errorMessage }}</p>
         </div>
     </div>
     }
 
+    <!-- KHU VỰC BẢNG DỮ LIỆU CHÍNH -->
     @else {
-    <div class="table-responsive">
-        <table class="course-table">
+    <div class="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+        <table class="w-full text-left border-collapse">
             <thead>
-                <tr>
-                    <th>Mã Học Phần</th>
-                    <th>Tên Môn Học</th>
-                    <th>Lớp Bố Trí</th>
-                    <th class="text-center">Sĩ Số</th>
-                    <th class="text-center">Trạng Thái</th>
-                    <th class="text-center">Thao tác</th>
+                <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-5 py-3.5">Mã Học Phần</th>
+                    <th class="px-5 py-3.5">Tên Môn Học</th>
+                    <th class="px-5 py-3.5">Lớp Bố Trí</th>
+                    <!-- THÊM MỚI: Cột Học kỳ tuyến tính hiển thị phẳng -->
+                    <th class="px-5 py-3.5">Học Kỳ</th>
+                    <th class="px-5 py-3.5 text-center">Sĩ Số</th>
+                    <th class="px-5 py-3.5 text-center">Trạng Trái</th>
+                    <th class="px-5 py-3.5 text-center w-48">Thao tác</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
                 @for (section of sections; track section.sectionID) {
-                <tr class="clickable-row">
-                    <td class="font-code">{{ section.courseID }}</td>
-                    <td class="font-semibold">{{ section.course?.courseName || 'Chưa cập nhật tên môn' }}</td>
-                    <td><span class="badge-class">{{ section.classSection }}</span></td>
-                    <td class="text-center">
-                        <span [ngClass]="{'text-danger font-bold': section.maxCapacity ? (section.currentEnrollment ?? 0) >= section.maxCapacity : false}">
+                <tr class="hover:bg-gray-50/80 transition-colors">
+                    <td class="px-5 py-4 font-mono font-medium text-gray-900">{{ section.courseID }}</td>
+                    <td class="px-5 py-4 font-semibold text-gray-800">{{ section.courseName || 'Chưa cập nhật tên môn' }}</td>
+                    <td class="px-5 py-4">
+                        <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md border border-indigo-100">
+                            {{ section.classSection }}
+                        </span>
+                    </td>
+                    <!-- THÊM MỚI: Hiển thị thông tin học kỳ phẳng -->
+                    <td class="px-5 py-4">
+                        <div class="text-xs font-medium text-gray-800">{{ section.semesterDisplayName }}</div>
+                        <div class="text-[11px] text-gray-400 mt-0.5">NH {{ section.academicYear }}</div>
+                    </td>
+                    <td class="px-5 py-4 text-center">
+                        <span [ngClass]="{'text-red-600 font-bold': section.maxCapacity ? (section.currentEnrollment ?? 0) >= section.maxCapacity : false}">
                             {{ section.currentEnrollment ?? 0 }} / {{ section.maxCapacity ?? '∞' }}
                         </span>
                     </td>
-                    <td class="text-center">
-                        <span class="badge-status" [ngClass]="{'status-open': section.status === 'Open', 'status-closed': section.status !== 'Open'}">
+                    <td class="px-5 py-4 text-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                              [ngClass]="{
+                                  'bg-green-50 text-green-700 border-green-200': section.status === 'Open',
+                                  'bg-red-50 text-red-700 border-red-200': section.status !== 'Open'
+                              }">
                             {{ section.status }}
                         </span>
                     </td>
-                    <td class="text-center">
-                        <div class="action-btn-group" style="display: flex; gap: 6px; justify-content: center;">
-
-                            <button class="btn-action-primary"
+                    <td class="px-5 py-4">
+                        <div class="flex items-center justify-center gap-2">
+                            <button class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 font-medium text-white text-xs rounded-md transition shadow-sm disabled:shadow-none disabled:cursor-not-allowed"
                                     [disabled]="section.status !== 'Open' || (section.maxCapacity && (section.currentEnrollment ?? 0) >= section.maxCapacity)"
                                     (click)="onRegister(section)">
-                                Đăng ký
+                                Đăng ký hộ
                             </button>
-
-                            <button class="btn-action-danger"
+                            <button class="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 disabled:opacity-40 font-medium text-xs rounded-md transition shadow-sm disabled:shadow-none disabled:cursor-not-allowed"
                                     [disabled]="(section.currentEnrollment ?? 0) <= 0"
                                     (click)="onUnregister(section)">
                                 Hủy đăng ký
                             </button>
-
                         </div>
                     </td>
                 </tr>
                 } @empty {
                 <tr>
-                    <td colspan="6" class="no-data">Hiện tại không có lớp học phần nào phù hợp.</td>
+                    <td colspan="7" class="px-5 py-10 text-center text-gray-400 italic bg-gray-50/50">
+                        Hiện tại không có lớp học phần nào phù hợp với bộ lọc.
+                    </td>
                 </tr>
                 }
             </tbody>
@@ -93,35 +132,44 @@
     }
 </div>
 
+<!-- ================= MODAL XẾP LỚP (ĐĂNG KÝ HỘ) ================= -->
 @if (isRegModalOpen && selectedSection) {
-<div class="modal-overlay">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3>Xếp Lớp Cho Sinh Viên (Admin)</h3>
-            <button class="btn-close-x" (click)="closeRegModal()">✕</button>
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 transform transition-all scale-100">
+        <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+            <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
+                <span>👤</span> Xếp Lớp Cho Sinh Viên (Admin)
+            </h3>
+            <button class="text-gray-400 hover:text-gray-600 font-bold transition text-lg" (click)="closeRegModal()">✕</button>
         </div>
 
-        <div class="modal-body">
-            <div class="course-info-summary">
-                <p>📖 <strong>Môn học:</strong> {{ selectedSection.course?.courseName }}</p>
+        <div class="p-5 space-y-4">
+            <div class="bg-blue-50/60 p-3.5 rounded-lg border border-blue-100 text-sm text-blue-900 space-y-1.5">
+                <p>📖 <strong>Môn học:</strong> {{ selectedSection.courseName }}</p>
                 <p>🏫 <strong>Lớp bố trí:</strong> {{ selectedSection.classSection }}</p>
-                <p>👥 <strong>Sĩ số:</strong> {{ selectedSection.currentEnrollment ?? 0 }} / {{ selectedSection.maxCapacity ?? '∞' }}</p>
+                <p>📅 <strong>Học kỳ:</strong> {{ selectedSection.semesterDisplayName }} (NH {{ selectedSection.academicYear }})</p>
+                <p>👥 <strong>Sĩ số hiện tại:</strong> {{ selectedSection.currentEnrollment ?? 0 }} / {{ selectedSection.maxCapacity ?? '∞' }}</p>
             </div>
 
-            <div class="form-group">
-                <label for="studentId">Nhập Mã Số Sinh Viên (MSSV):</label>
+            <div class="space-y-1.5">
+                <label for="studentId" class="block text-xs font-semibold text-gray-600 uppercase">Nhập Mã Số Sinh Viên (MSSV):</label>
                 <input type="text"
                        id="studentId"
-                       class="form-control-input"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                        placeholder="Ví dụ: SV123456"
                        [(ngModel)]="studentIdInput"
                        (keyup.enter)="submitAdminRegistration()" />
             </div>
         </div>
 
-        <div class="modal-footer">
-            <button class="btn-secondary" (click)="closeRegModal()">Hủy bỏ</button>
-            <button class="btn-primary-submit" [disabled]="!studentIdInput.trim()" (click)="submitAdminRegistration()">
+        <div class="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2.5">
+            <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+                    (click)="closeRegModal()">
+                Hủy bỏ
+            </button>
+            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-medium rounded-lg shadow transition disabled:cursor-not-allowed"
+                    [disabled]="!studentIdInput.trim()"
+                    (click)="submitAdminRegistration()">
                 ⚡ Xác nhận xếp lớp
             </button>
         </div>
@@ -129,34 +177,43 @@
 </div>
 }
 
+<!-- ================= MODAL HỦY XẾP LỚP (HỦY ĐĂNG KÝ HỘ) ================= -->
 @if (isUnregModalOpen && selectedSection) {
-<div class="modal-overlay">
-    <div class="modal-card border-danger">
-        <div class="modal-header bg-danger">
-            <h3>Hủy Xếp Lớp Cho Sinh Viên (Admin)</h3>
-            <button class="btn-close-x" (click)="closeUnregModal()">✕</button>
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-red-100 transform transition-all scale-100">
+        <div class="px-5 py-4 border-b border-red-100 flex justify-between items-center bg-red-50 text-red-900">
+            <h3 class="font-bold text-base flex items-center gap-2">
+                <span>🗑️</span> Hủy Xếp Lớp Cho Sinh Viên (Admin)
+            </h3>
+            <button class="text-red-400 hover:text-red-700 font-bold transition text-lg" (click)="closeUnregModal()">✕</button>
         </div>
 
-        <div class="modal-body">
-            <div class="course-info-summary alert-warning-summary">
-                <p>📖 <strong>Môn học:</strong> {{ selectedSection.course?.courseName }}</p>
+        <div class="p-5 space-y-4">
+            <div class="bg-amber-50 p-3.5 rounded-lg border border-amber-200 text-sm text-amber-900 space-y-1.5">
+                <p>📖 <strong>Môn học:</strong> {{ selectedSection.courseName }}</p>
                 <p>🏫 <strong>Lớp bố trí:</strong> {{ selectedSection.classSection }}</p>
+                <p>📅 <strong>Học kỳ:</strong> {{ selectedSection.semesterDisplayName }} (NH {{ selectedSection.academicYear }})</p>
             </div>
 
-            <div class="form-group">
-                <label for="studentUnregId" class="text-danger"><strong>Nhập MSSV cần xóa khỏi lớp:</strong></label>
+            <div class="space-y-1.5">
+                <label for="studentUnregId" class="block text-xs font-bold text-red-700 uppercase">Nhập MSSV cần xóa khỏi lớp:</label>
                 <input type="text"
                        id="studentUnregId"
-                       class="form-control-input input-danger"
+                       class="w-full px-3 py-2 border border-red-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 font-medium text-red-900 placeholder-red-300"
                        placeholder="Ví dụ: SV123456"
                        [(ngModel)]="studentIdUnregInput"
                        (keyup.enter)="submitAdminUnregistration()" />
             </div>
         </div>
 
-        <div class="modal-footer">
-            <button class="btn-secondary" (click)="closeUnregModal()">Hủy bỏ</button>
-            <button class="btn-danger-submit" [disabled]="!studentIdUnregInput.trim()" (click)="submitAdminUnregistration()">
+        <div class="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2.5">
+            <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+                    (click)="closeUnregModal()">
+                Hủy bỏ
+            </button>
+            <button class="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white text-sm font-medium rounded-lg shadow transition disabled:cursor-not-allowed"
+                    [disabled]="!studentIdUnregInput.trim()"
+                    (click)="submitAdminUnregistration()">
                 🗑️ Xác nhận xóa sinh viên
             </button>
         </div>

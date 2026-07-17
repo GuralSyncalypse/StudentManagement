@@ -40,12 +40,12 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         this.isLoading = false;
-        this.redirectByRole(); // Đăng nhập thành công -> Phân luồng User
+        this.redirectByRole();
       },
       error: (err) => {
         this.isLoading = false;
-        // Hiển thị thông báo lỗi trả về từ Backend (nếu có)
-        this.errorMessage = err.error?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản!';
+        // 🔥 Đổi thành '.detail' để khớp với chuẩn Problem Details của .NET 8
+        this.errorMessage = err.error?.detail || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản!';
       }
     });
   }

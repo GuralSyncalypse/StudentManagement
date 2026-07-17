@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { StudentResponse } from '../../../core/models/student.model'
+import { StudentDetailDto } from '../../../core/models/student.model'
 import { StudentService } from '../student-profile.service'
 
 @Component({
@@ -16,7 +16,7 @@ export class StudentProfileComponent {
   private cdr = inject(ChangeDetectorRef);
 
   // Biến thường, không phải Signal
-  student?: StudentResponse;
+  student?: StudentDetailDto;
 
   ngOnInit(): void {
     this.studentService.getMyProfile().subscribe({
