@@ -42,16 +42,29 @@ namespace LuongChiHai_QLSV.Server.Services
             return await RegisterInternalAsync(dto.StudentID, dto.SectionID);
         }
 
+        // CHỈNH SỬA HÀM UPDATE: Nếu đổi lớp (SectionID), phải cập nhật lại cả CourseID và SemesterID mới
         public async Task<EnrollmentDto> UpdateEnrollmentAsync(int enrollmentId, Enrollment enrollment)
         {
             var existingEnrollment = await _unitOfWork.Enrollments.GetByIdAsync(enrollmentId);
             if (existingEnrollment == null)
             {
-                throw new NotFoundException("Đăng ký học phần không tồn tại.");
+                throw new KeyNotFoundException("Đăng ký học phần không tồn tại.");
+            }
+
+            if (existingEnrollment.SectionID != enrollment.SectionID)
+            {
+                var newSection = await _unitOfWork.CourseSections.FirstOrDefaultAsync(s => s.SectionID == enrollment.SectionID);
+                if (newSection == null)
+                {
+                    throw new KeyNotFoundException("Lớp học phần mới chọn không tồn tại.");
+                }
+
+                existingEnrollment.SectionID = enrollment.SectionID;
+                existingEnrollment.CourseID = newSection.CourseID;       // Cập nhật lại CourseID đồng bộ
+                existingEnrollment.SemesterID = newSection.SemesterID;   // Cập nhật lại SemesterID đồng bộ
             }
 
             existingEnrollment.StudentID = enrollment.StudentID;
-            existingEnrollment.SectionID = enrollment.SectionID;
             existingEnrollment.EnrollDate = enrollment.EnrollDate;
 
             _unitOfWork.Enrollments.Update(existingEnrollment);
@@ -65,7 +78,7 @@ namespace LuongChiHai_QLSV.Server.Services
             var enrollment = await _unitOfWork.Enrollments.GetByIdAsync(id);
             if (enrollment == null)
             {
-                throw new NotFoundException("Đăng ký học phần không tồn tại.");
+                throw new KeyNotFoundException("Đăng ký học phần không tồn tại.");
             }
 
             _unitOfWork.Enrollments.Delete(enrollment);
@@ -88,6 +101,7 @@ namespace LuongChiHai_QLSV.Server.Services
             return enrollments.Count;
         }
 
+        // CHỈNH SỬA HÀM ĐĂNG KÝ INTERNAL: Gán tự động CourseID và SemesterID từ Section tìm được
         private async Task<EnrollmentDto> RegisterInternalAsync(string studentId, int sectionId)
         {
             if (sectionId <= 0 || string.IsNullOrWhiteSpace(studentId))
@@ -98,7 +112,7 @@ namespace LuongChiHai_QLSV.Server.Services
             var section = await _unitOfWork.CourseSections.FirstOrDefaultAsync(s => s.SectionID == sectionId);
             if (section == null)
             {
-                throw new NotFoundException("Lớp học phần không tồn tại.");
+                throw new KeyNotFoundException("Lớp học phần không tồn tại.");
             }
 
             if (!string.Equals(section.Status, "Open", StringComparison.OrdinalIgnoreCase))
@@ -115,7 +129,7 @@ namespace LuongChiHai_QLSV.Server.Services
             var studentExists = await _unitOfWork.Students.GetByIdAsync(studentId);
             if (studentExists == null)
             {
-                throw new NotFoundException("Mã số sinh viên không tồn tại.");
+                throw new KeyNotFoundException("Mã số sinh viên không tồn tại.");
             }
 
             var alreadyRegistered = await _unitOfWork.Enrollments.ExistsAsync(sectionId, studentId);
@@ -124,15 +138,27 @@ namespace LuongChiHai_QLSV.Server.Services
                 throw new BusinessException("Sinh viên đã đăng ký lớp học phần này.");
             }
 
+            // ĐIỀU CHỈNH TẠI ĐÂY: Tạo thực thể Enrollment với đầy đủ dữ liệu tổ hợp khóa ngoại
             var enrollment = new Enrollment
             {
                 SectionID = sectionId,
                 StudentID = studentId,
+                CourseID = section.CourseID,       // Lấy tự động từ dữ liệu lớp học phần
+                SemesterID = section.SemesterID,   // Lấy tự động từ dữ liệu lớp học phần
                 EnrollDate = DateTime.UtcNow
             };
 
             _unitOfWork.Enrollments.Add(enrollment);
-            await _unitOfWork.CompleteAsync();
+
+            try
+            {
+                await _unitOfWork.CompleteAsync();
+            }
+            catch (Exception)
+            {
+                // Bắt exception từ Db Unique Constraint nếu DB chặn trùng lặp môn trong kỳ
+                throw new BusinessException("Sinh viên đã đăng ký một lớp học khác của môn này trong cùng học kỳ.");
+            }
 
             return MapEnrollmentDto(enrollment);
         }
@@ -147,13 +173,13 @@ namespace LuongChiHai_QLSV.Server.Services
             var enrollment = await _unitOfWork.Enrollments.GetBySectionAndStudentAsync(sectionId, studentId);
             if (enrollment == null)
             {
-                throw new NotFoundException("Không tìm thấy đăng ký học phần của sinh viên.");
+                throw new KeyNotFoundException("Không tìm thấy đăng ký học phần của sinh viên.");
             }
 
             var section = await _unitOfWork.CourseSections.FirstOrDefaultAsync(s => s.SectionID == sectionId);
             if (section == null)
             {
-                throw new NotFoundException("Lớp học phần không tồn tại.");
+                throw new KeyNotFoundException("Lớp học phần không tồn tại.");
             }
 
             if (!string.Equals(section.Status, "Open", StringComparison.OrdinalIgnoreCase))
@@ -196,22 +222,6 @@ namespace LuongChiHai_QLSV.Server.Services
         }
 
         public BusinessException(string? message, Exception? innerException) : base(message, innerException)
-        {
-        }
-    }
-
-    [Serializable]
-    internal class NotFoundException : Exception
-    {
-        public NotFoundException()
-        {
-        }
-
-        public NotFoundException(string? message) : base(message)
-        {
-        }
-
-        public NotFoundException(string? message, Exception? innerException) : base(message, innerException)
         {
         }
     }

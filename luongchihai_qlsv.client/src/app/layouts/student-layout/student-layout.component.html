@@ -1,47 +1,65 @@
-<div class="app-layout">
-  <!-- Sidebar Navigation -->
-  <aside class="sidebar">
-    <div class="brand">
-      <span class="logo-icon">🎓</span>
-      <h2>EduPortal</h2>
+<div class="flex h-screen w-screen bg-slate-50 overflow-hidden font-sans">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-64 flex-shrink-0 bg-[#1a0f2e] text-slate-300 flex flex-col justify-between border-r border-purple-950/20">
+        <div>
+            <!-- Brand Logo -->
+            <div class="h-16 flex items-center px-6 gap-3 border-b border-purple-950/30">
+                <span class="material-symbols-outlined text-2xl text-white">school</span>
+                <span class="text-lg font-bold text-white tracking-wide">EduPortal</span>
+            </div>
+
+            <nav class="flex flex-col p-4 mt-2 gap-6">
+                <!-- Nhóm: Tổng quan -->
+                <div>
+                    <p class="px-4 text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-2">Tổng quan</p>
+                    <a routerLink="/student/dashboard" routerLinkActive="bg-[#342253] text-white !border-purple-500" [routerLinkActiveOptions]="{exact: true}" class="flex items-center gap-3 border-l-4 border-transparent px-4 py-2.5 rounded-r-lg text-sm font-medium hover:bg-[#25173f] hover:text-white transition-all">
+                        <span class="material-symbols-outlined text-[20px]">grid_view</span> Dashboard
+                    </a>
+                </div>
+
+                <!-- Nhóm: Học tập -->
+                <div>
+                    <p class="px-4 text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-2">Học tập</p>
+                    <div class="flex flex-col gap-1">
+                        <a routerLink="/student/my-courses" routerLinkActive="bg-[#342253] text-white !border-purple-500" class="flex items-center gap-3 border-l-4 border-transparent px-4 py-2.5 rounded-r-lg text-sm font-medium hover:bg-[#25173f] hover:text-white transition-all">
+                            <span class="material-symbols-outlined text-[20px]">library_books</span> Học phần của tôi
+                        </a>
+                        <a routerLink="/student/schedule" routerLinkActive="bg-[#342253] text-white !border-purple-500" class="flex items-center gap-3 border-l-4 border-transparent px-4 py-2.5 rounded-r-lg text-sm font-medium hover:bg-[#25173f] hover:text-white transition-all">
+                            <span class="material-symbols-outlined text-[20px]">calendar_month</span> Lịch học
+                        </a>
+                        <a routerLink="/student/course-registration" routerLinkActive="bg-[#342253] text-white !border-purple-500" class="flex items-center gap-3 border-l-4 border-transparent px-4 py-2.5 rounded-r-lg text-sm font-medium hover:bg-[#25173f] hover:text-white transition-all">
+                            <span class="material-symbols-outlined text-[20px]">app_registration</span> Đăng ký học phần
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Nhóm: Cá nhân & Hành chính -->
+                <div>
+                    <p class="px-4 text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-2">Tài khoản</p>
+                    <a routerLink="/student/me" routerLinkActive="bg-[#342253] text-white !border-purple-500" class="flex items-center gap-3 border-l-4 border-transparent px-4 py-2.5 rounded-r-lg text-sm font-medium hover:bg-[#25173f] hover:text-white transition-all">
+                        <span class="material-symbols-outlined text-[20px]">person</span> Hồ sơ sinh viên
+                    </a>
+                    <a routerLink="/student/tuition" routerLinkActive="bg-[#342253] text-white !border-purple-500" class="flex items-center gap-3 border-l-4 border-transparent px-4 py-2.5 rounded-r-lg text-sm font-medium hover:bg-[#25173f] hover:text-white transition-all">
+                        <span class="material-symbols-outlined text-[20px]">payments</span> Học phí
+                    </a>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-purple-950/30">
+            <button (click)="onLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-rose-300 hover:bg-rose-950/30 hover:text-rose-400 border border-rose-500/20 transition-all">
+                <span class="material-symbols-outlined text-[20px]">logout</span> Đăng xuất
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Workspace (Giữ nguyên phần còn lại) -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <!-- Topbar... -->
+        <main class="flex-1 overflow-y-auto bg-[#fafafb] p-6">
+            <router-outlet></router-outlet>
+        </main>
     </div>
-
-    <nav class="nav-menu">
-        <a routerLink="/student/dashboard" routerLinkActive="active" class="nav-item">
-            <span class="icon">📊</span> Dashboard
-        </a>
-        <a routerLink="/student/my-courses" routerLinkActive="active" class="nav-item">
-            <span class="icon">📚</span> Học phần của tôi
-        </a>
-        <a routerLink="/student/course-registration" routerLinkActive="active" class="nav-item">
-            <span class="icon">📚</span> Đăng ký học phần
-        </a>
-        <a routerLink="/student/me" routerLinkActive="active" class="nav-item">
-            <span class="icon">👤</span> Thông tin cá nhân
-        </a>
-    </nav>
-
-    <div class="sidebar-footer">
-        <button (click)="onLogout()" class="btn-logout">Logout</button>
-    </div>
-  </aside>
-
-  <!-- Main App Content Space -->
-  <div class="main-wrapper">
-    <!-- Top Global Navbar -->
-    <header class="top-navbar">
-      <div class="search-bar">
-        <input type="text" placeholder="Search courses, assignments..." />
-      </div>
-      <div class="user-actions">
-        <span class="notification-bell">🔔</span>
-        <div class="user-badge">AM</div>
-      </div>
-    </header>
-
-    <!-- Dynamic Content Injection Point -->
-    <main class="content-body">
-      <router-outlet></router-outlet>
-    </main>
-  </div>
 </div>

@@ -3,6 +3,10 @@ using LuongChiHai_QLSV.Server.DTOs.Reports;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace LuongChiHai_QLSV.Server.Controllers
 {
@@ -20,24 +24,21 @@ namespace LuongChiHai_QLSV.Server.Controllers
         [HttpGet("semester-summary")]
         public async Task<ActionResult<StudentSemesterSummaryDto>> GetSemesterSummary(
             [FromQuery] string studentId,
-            [FromQuery] int semester)
+            [FromQuery] int semesterId) // Thay đổi: Nhận vào mã ID học kỳ
         {
-            var chiTietMonHoc = await LoadStudentGradesAsync(studentId, semester);
+            var chiTietMonHoc = await LoadStudentGradesAsync(studentId, semesterId);
 
             if (chiTietMonHoc == null || chiTietMonHoc.Count == 0)
             {
-                return NotFound($"Không tìm thấy dữ liệu cho sinh viên {studentId} tại học kỳ {semester}");
+                return NotFound($"Không tìm thấy dữ liệu cho sinh viên {studentId} tại học kỳ có mã ID {semesterId}");
             }
 
-            // 1. Loại bỏ hoàn toàn chuỗi cứng "Đỗ"/"Trượt", dùng trực tiếp logic từ Smart Enum
             var tongSoMonDaHoc = chiTietMonHoc.Count;
             var soMonDaQua = chiTietMonHoc.Count(x => x.GradeDetails.IsPassed());
             var soMonTruot = chiTietMonHoc.Count(x => x.GradeDetails.IsFailed());
 
-            // 2. Sửa lỗi Logic tính GPA: Chỉ tính các môn ĐÃ CÓ ĐIỂM
-            // Môn nào "Chưa có điểm" (Pending) thì không được lôi vào để tính Điểm trung bình học kỳ
+            // Tính toán GPA học kỳ cho các môn đã có điểm
             var cacMonDaCoDiem = chiTietMonHoc.Where(x => x.TotalScore.HasValue).ToList();
-
             var tongTinChiHocKy = cacMonDaCoDiem.Sum(x => x.Credits);
             var tongDiemNhanTinChi = cacMonDaCoDiem.Sum(x => (x.TotalScore ?? 0) * x.Credits);
 
@@ -45,22 +46,29 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 ? Math.Round(tongDiemNhanTinChi / tongTinChiHocKy, 2)
                 : 0;
 
+            // Lấy thông tin học kỳ từ phần tử đầu tiên trong danh sách kết quả
+            var firstItem = chiTietMonHoc.First();
+
             var response = new StudentSemesterSummaryDto
             {
                 StudentID = studentId,
-                Semester = semester,
+                // Thay đổi: Gán bộ nhận diện học kỳ mới vào DTO
+                SemesterID = firstItem.SemesterID,
+                SemesterNo = firstItem.SemesterNo,
+                StartYear = firstItem.StartYear,
+
                 TongSoMonDaHoc = tongSoMonDaHoc,
                 SoMonDaQua = soMonDaQua,
                 SoMonTruot = soMonTruot,
-                DiemTrungBinhHocKy = diemTrungBinhHocKy,
-                ChiTietMonHoc = chiTietMonHoc // Danh sách trả về vẫn đầy đủ các môn (kể cả môn pending)
+                DiemTrungBinhHocKy = (decimal)diemTrungBinhHocKy,
+                ChiTietMonHoc = chiTietMonHoc
             };
 
             return Ok(response);
         }
 
         [HttpGet("summary")]
-        public async Task<ActionResult<StudentSummaryDto>> GetMySummary([FromQuery] int semester)
+        public async Task<ActionResult<StudentSummaryDto>> GetMySummary([FromQuery] int semesterId) // Thay đổi: Nhận vào mã ID học kỳ
         {
             var studentId = User.FindFirst("StudentID")?.Value
                      ?? User.FindFirst(ClaimTypes.Name)?.Value
@@ -71,17 +79,23 @@ namespace LuongChiHai_QLSV.Server.Controllers
                 return Unauthorized();
             }
 
-            var chiTietMonHoc = await LoadStudentGradesAsync(studentId, semester);
+            var chiTietMonHoc = await LoadStudentGradesAsync(studentId, semesterId);
 
             if (chiTietMonHoc.Count == 0)
             {
-                return NotFound($"Không tìm thấy dữ liệu cho sinh viên {studentId}");
+                return NotFound($"Không tìm thấy dữ liệu học tập cho sinh viên {studentId} tại học kỳ này");
             }
+
+            var firstItem = chiTietMonHoc.First();
 
             var response = new StudentSummaryDto
             {
                 StudentID = studentId,
-                Semester = semester,
+                // Thay đổi: Gán bộ nhận diện học kỳ mới vào DTO
+                SemesterID = firstItem.SemesterID,
+                SemesterNo = firstItem.SemesterNo,
+                StartYear = firstItem.StartYear,
+
                 TotalEnrollment = chiTietMonHoc.Count,
                 CoursesDetail = chiTietMonHoc
             };
@@ -89,11 +103,26 @@ namespace LuongChiHai_QLSV.Server.Controllers
             return Ok(response);
         }
 
-        private Task<List<StudentCourseGradeDto>> LoadStudentGradesAsync(string studentId, int semester)
+        private async Task<List<StudentCourseGradeDto>> LoadStudentGradesAsync(string studentId, int semesterId)
         {
-            return _context.BangDiemChiTiet
+            // Thay đổi: Điều kiện lọc theo SemesterID và Explicit Select để ánh xạ chuẩn xác dữ liệu từ View
+            return await _context.BangDiemChiTiet
                 .AsNoTracking()
-                .Where(x => x.StudentID == studentId && x.Semester == semester)
+                .Where(x => x.StudentID == studentId && x.SemesterID == semesterId)
+                .Select(x => new StudentCourseGradeDto
+                {
+                    StudentID = x.StudentID,
+                    EnrollmentID = x.EnrollmentID,
+                    SectionID = x.SectionID,
+                    SemesterID = x.SemesterID,
+                    SemesterNo = x.SemesterNo,
+                    StartYear = x.StartYear,
+                    CourseID = x.CourseID,
+                    CourseName = x.CourseName,
+                    Credits = x.Credits,
+                    TotalScore = x.TotalScore,
+                    GradeCode = x.GradeCode
+                })
                 .ToListAsync();
         }
     }

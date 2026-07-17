@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using LuongChiHai_QLSV.Server.Services; // IMPORT: Đảm bảo import namespace chứa BusinessException và NotFoundException
 
 namespace LuongChiHai_QLSV.Server.Middlewares
 {
@@ -18,10 +19,7 @@ namespace LuongChiHai_QLSV.Server.Middlewares
             Exception exception,
             CancellationToken cancellationToken)
         {
-            // 1. Log lại lỗi chi tiết ở server
-            _logger.LogError(exception, "Một lỗi hệ thống đã xảy ra: {Message}", exception.Message);
-
-            // 2. Định nghĩa cấu trúc lỗi theo chuẩn ProblemDetails
+            // 1. Định nghĩa cấu trúc lỗi theo chuẩn ProblemDetails mặc định (Lỗi hệ thống 500)
             var problemDetails = new ProblemDetails
             {
                 Status = (int)HttpStatusCode.InternalServerError,
@@ -31,20 +29,31 @@ namespace LuongChiHai_QLSV.Server.Middlewares
                 Instance = httpContext.Request.Path
             };
 
-            // Tùy biến Status Code dựa trên loại Exception (Ví dụ: KeyNotFoundException -> 404)
+            // Biến cờ kiểm tra xem đây là lỗi nghiệp vụ được kiểm soát (Client Error) hay lỗi hệ thống đột xuất
+            bool isClientError = false;
+
+            // 2. Tùy biến Status Code dựa trên loại Exception[cite: 10]
             if (exception is KeyNotFoundException)
             {
                 problemDetails.Status = (int)HttpStatusCode.NotFound;
                 problemDetails.Title = "Not Found";
                 problemDetails.Detail = exception.Message;
+                isClientError = true;
+            }
+            else if (exception is BusinessException) // BỔ SUNG: Bắt lỗi nghiệp vụ cụ thể[cite: 3]
+            {
+                problemDetails.Status = (int)HttpStatusCode.BadRequest;
+                problemDetails.Title = "Business Rule Violation"; // Hoặc "Bad Request"
+                problemDetails.Detail = exception.Message;
+                isClientError = true;
             }
             else if (exception is UnauthorizedAccessException)
             {
                 problemDetails.Status = (int)HttpStatusCode.Unauthorized;
                 problemDetails.Title = "Unauthorized";
+                isClientError = true;
 
-                // 💡 GIẢI PHÁP: Kiểm tra câu thông báo của Exception
-                // Nếu exception không có message tự thiết lập, .NET sẽ tự sinh ra câu mặc định bắt đầu bằng "Attempted to..."
+                // Kiểm tra câu thông báo của Exception[cite: 10]
                 if (string.IsNullOrEmpty(exception.Message) || exception.Message.Contains("Attempted to perform"))
                 {
                     problemDetails.Detail = "Bạn không có quyền truy cập vào tài nguyên này.";
@@ -55,15 +64,24 @@ namespace LuongChiHai_QLSV.Server.Middlewares
                 }
             }
 
-            // 3. Thiết lập HttpContext
+            // 3. Phân chia cấp độ Ghi Log (Logging) thông minh
+            if (isClientError)
+            {
+                // Lỗi nghiệp vụ do thao tác người dùng: Chỉ ghi Log cảnh báo (LogWarning) để tránh spam log lỗi nặng
+                _logger.LogWarning("Cảnh báo nghiệp vụ/yêu cầu không hợp lệ: {Message}", exception.Message);
+            }
+            else
+            {
+                // Lỗi sập hệ thống (mất kết nối DB, NullReferenceException,...): Log lỗi chi tiết kèm StackTrace[cite: 10]
+                _logger.LogError(exception, "Một lỗi hệ thống nghiêm trọng đã xảy ra: {Message}", exception.Message);
+            }
+
+            // 4. Thiết lập HttpContext và trả về định dạng chuẩn RFC7807[cite: 10]
             httpContext.Response.StatusCode = problemDetails.Status.Value;
             httpContext.Response.ContentType = "application/problem+json";
-
-            // 4. Ghi đè dữ liệu trả về cho client dạng JSON
+            // Ghi đè dữ liệu trả về cho client dạng JSON[cite: 10]
             await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
-            // Trả về true để báo hiệu rằng lỗi đã được xử lý xong, 
-            // không cần chuyển tiếp sang handler khác.
             return true;
         }
     }

@@ -2,34 +2,35 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { EnrollmentService } from '../../../core/services/enrollment.services'
-import { CourseSection } from '../../../core/models/course.model';
+import { EnrollmentService } from '../../../core/services/enrollment.services';
+// THAY ĐỔI: Cập nhật gọi interface AvailableCourseSection mở rộng
+import { AvailableCourseSection } from '../../../core/models/course.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CourseSectionService {
-  private http = inject(HttpClient)
+  private http = inject(HttpClient);
   private enrollmentService = inject(EnrollmentService);
   private apiUrl = '/api/CourseSections';
 
-  // GET ALL
-  getCourseSections(): Observable<CourseSection[]> {
-    return this.http.get<CourseSection[]>(this.apiUrl);
+  // THAY ĐỔI: Trả về AvailableCourseSection[] tương ứng Flat JSON của Backend
+  getCourseSections(): Observable<AvailableCourseSection[]> {
+    return this.http.get<AvailableCourseSection[]>(this.apiUrl);
   }
 
-  // GET BY ID
-  getCourseSection(id: number): Observable<CourseSection> {
-    return this.http.get<CourseSection>(`${this.apiUrl}/${id}`);
+  // THAY ĐỔI: Get đơn lẻ cấu trúc mới
+  getCourseSection(id: number): Observable<AvailableCourseSection> {
+    return this.http.get<AvailableCourseSection>(`${this.apiUrl}/${id}`);
   }
 
   // CREATE
-  createCourseSection(courseSection: CourseSection): Observable<CourseSection> {
-    return this.http.post<CourseSection>(this.apiUrl, courseSection);
+  createCourseSection(courseSection: AvailableCourseSection): Observable<AvailableCourseSection> {
+    return this.http.post<AvailableCourseSection>(this.apiUrl, courseSection);
   }
 
   // UPDATE
-  updateCourseSection(id: number, courseSection: CourseSection): Observable<void> {
+  updateCourseSection(id: number, courseSection: AvailableCourseSection): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${id}`, courseSection);
   }
 

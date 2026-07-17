@@ -23,6 +23,7 @@ namespace LuongChiHai_QLSV.Server.Data
         public DbSet<Course> Courses { get; set; }
         public DbSet<CourseSection> CourseSections { get; set; }
         public DbSet<Enrollment> Enrollments { get; set; }
+        public DbSet<Semester> Semesters { get; set; }
         public DbSet<Score> Scores { get; set; }
         public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
@@ -94,6 +95,29 @@ namespace LuongChiHai_QLSV.Server.Data
                 .HasOne(up => up.Permission)
                 .WithMany(p => p.UserPermissions)
                 .HasForeignKey(up => up.PermissionID);
+
+
+
+            // 1. Cấu hình Siêu khóa (Alternate Key) trên bảng CourseSection phục vụ liên kết ngoại
+            modelBuilder.Entity<CourseSection>()
+                .HasAlternateKey(cs => new { cs.SectionID, cs.CourseID, cs.SemesterID });
+
+            // 2. Cấu hình Khóa ngoại tổ hợp trong bảng Enrollment
+            modelBuilder.Entity<Enrollment>()
+                .HasOne(e => e.CourseSection)
+                .WithMany(cs => cs.Enrollments)
+                .HasForeignKey(e => new { e.SectionID, e.CourseID, e.SemesterID }) // Cột khóa ngoại ở Enrollment
+
+                // ======= THÊM DÒNG NÀY ĐỂ SỬA LỖI =======
+                .HasPrincipalKey(cs => new { cs.SectionID, cs.CourseID, cs.SemesterID }) // Chỉ định rõ siêu khóa đích ở CourseSection
+                                                                                         // ========================================
+
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // 3. Tạo ràng buộc UNIQUE trên bảng Enrollment chống đăng ký trùng môn trong kỳ
+            modelBuilder.Entity<Enrollment>()
+                .HasIndex(e => new { e.StudentID, e.CourseID, e.SemesterID })
+                .IsUnique();
 
             // Tự động tìm tất cả các file có kế thừa IEntityTypeConfiguration trong toàn bộ Project và nạp vào.
             // modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());

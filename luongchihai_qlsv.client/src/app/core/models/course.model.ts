@@ -1,5 +1,5 @@
 export interface Course {
-  courseID: string
+  courseID: string;
   courseName: string;
   credits: number;
 }
@@ -7,26 +7,25 @@ export interface Course {
 export interface CourseSection {
   sectionID: number;
   courseID: string;
-  semester: number;
-  classSection: string; // Mặc định thường là "L01", "L02"...
-  maxCapacity: number | null; // Kiểu int? ở C# chuyển thành number | null
-  status: string | null;      // "Open", "Closed", v.v.
+  courseName: string | null; // Đã phẳng hóa trực tiếp ở lớp gốc, không nằm trong object course nữa
 
-  // --- Navigation Properties (Dữ liệu liên kết) ---
+  // --- Cấu trúc Học kỳ mới (Thay thế hoàn toàn trường semester cũ) ---
+  semesterID: number;
+  semesterNo: number;         // Số học kỳ: 1, 2, 3
+  startYear: number;          // Năm học bắt đầu: 2026
+  academicYear: string;       // Niên khóa dạng chuỗi: "2026-2027"
+  semesterDisplayName: string | null; // Tên hiển thị: "Học kỳ I"
 
-  // Dữ liệu môn học đi kèm (khi Backend dùng .Include(s => s.Course))
-  course?: Course;
-
-  // Thay vì bê nguyên mảng Enrollments nặng nề xuống Client, 
-  // Backend thường sẽ đếm và trả về số lượng đã đăng ký hiện tại:
-  currentEnrollment?: number;
+  classSection: string;
+  maxCapacity: number | null;
+  status: string | null;
+  currentEnrollment: number;  // Số sinh viên hiện tại đã đăng ký
 }
 
 /**
- * Thêm một DTO mở rộng nếu bạn cần dùng cho giao diện 
- * Quản lý/Đăng ký học phần của Sinh viên
+ * Interface mở rộng cho giao diện Đăng ký học phần của Sinh viên
  */
 export interface AvailableCourseSection extends CourseSection {
-  isEnrolled?: boolean;  // Đánh dấu sinh viên hiện tại đã bấm đăng ký lớp này chưa
-  isFull?: boolean;      // Kiểm tra nhanh xem lớp đã bị đầy sĩ số chưa
+  isEnrolled: boolean;        // Sinh viên đang đăng nhập đã đăng ký môn này chưa
+  isFull?: boolean;           // Thuộc tính tính toán thêm ở Frontend (nếu cần)
 }

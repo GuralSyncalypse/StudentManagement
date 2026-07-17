@@ -68,7 +68,7 @@ public class EnrollmentsController : ControllerBase
             var result = await _enrollmentService.UpdateEnrollmentAsync(id.Value, enrollment);
             return Ok(result);
         }
-        catch (NotFoundException ex)
+        catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
@@ -87,7 +87,7 @@ public class EnrollmentsController : ControllerBase
             var result = await _enrollmentService.RegisterForStudentAsync(dto);
             return CreatedAtAction(nameof(GetEnrollment), new { id = result.EnrollmentID }, result);
         }
-        catch (NotFoundException ex)
+        catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
@@ -106,7 +106,7 @@ public class EnrollmentsController : ControllerBase
             await _enrollmentService.DeleteEnrollmentAsync(id);
             return NoContent();
         }
-        catch (NotFoundException ex)
+        catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
@@ -122,7 +122,7 @@ public class EnrollmentsController : ControllerBase
             await _enrollmentService.AdminCancelEnrollmentAsync(sectionID, studentID);
             return Ok(new { message = "Enrollment was cancelled successfully." });
         }
-        catch (NotFoundException ex)
+        catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
