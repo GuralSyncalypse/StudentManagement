@@ -18,7 +18,6 @@ public class CourseSectionsController : ControllerBase
     }
 
     // GET: api/CourseSection
-    // GET: api/CourseSection
     [HttpGet("available")]
     [HasPermission("0702")]
     public async Task<ActionResult<IEnumerable<CourseSectionDto>>> GetAvailableCourseSection()
@@ -223,6 +222,43 @@ public class CourseSectionsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// PATCH: api/sections/{sectionId}/toggle-status
+    /// Cập nhật trạng thái Đóng/Mở đăng ký cho 1 lớp học phần
+    /// </summary>
+    [HttpPatch("{sectionId}/toggle-status")]
+    [HasPermission("0703")]
+    public async Task<IActionResult> ToggleSectionStatus(int sectionId, [FromBody] ToggleSectionStatusDto dto)
+    {
+        // 1. Tìm lớp học phần theo ID
+        var section = await _context.CourseSections.FindAsync(sectionId);
+
+        if (section == null)
+        {
+            return NotFound(new { message = "Không tìm thấy lớp học phần tương ứng!" });
+        }
+
+        // 2. Cập nhật trạng thái IsOpen
+        if (dto.IsOpen)
+        {
+            section.Status = "Open";
+        }
+        else
+            section.Status = "Closed";
+
+
+        // 3. Lưu thay đổi vào Database
+        await _context.SaveChangesAsync();
+
+        // 4. Trả về kết quả sau khi cập nhật
+        return Ok(new
+        {
+            sectionID = section.SectionID,
+            isOpen = dto.IsOpen,
+            message = dto.IsOpen ? "Đã mở đăng ký lớp học phần thành công." : "Đã đóng đăng ký lớp học phần thành công."
+        });
     }
 
     private bool CourseSectionExists(int? sectionid)

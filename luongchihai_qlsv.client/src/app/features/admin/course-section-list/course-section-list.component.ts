@@ -2,7 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef, ChangeDetecti
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CourseSectionService } from './course-section-list.services';
+import { CourseSectionService } from '../../../core/services/course-section.services';
 import { EnrollmentService } from '../../../core/services/enrollment.services';
 import { AvailableCourseSection } from '../../../core/models/course.model';
 
