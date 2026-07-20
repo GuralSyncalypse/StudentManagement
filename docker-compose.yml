@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+    container_name: sqlserver
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Mysqlserver!"
+
+    ports:
+      - "1433:1433"
+
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  api:
+    build:
+      context: ./LuongChiHai_QLSV.Server
+
+    depends_on:
+      - sqlserver
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=StudentManagement;User Id=sa;Password=Mysqlserver!;TrustServerCertificate=True"
+
+    ports:
+      - "5000:8080"
+
+  web:
+    build:
+      context: ./luongchihai_qlsv.client
+
+    depends_on:
+      - api
+
+    ports:
+      - "80:80"
+
+volumes:
+  sql_data:
