@@ -135,13 +135,43 @@ public class SemestersController : ControllerBase
 
     // POST: api/Semester
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    // POST: api/Semesters
     [HttpPost]
-    public async Task<ActionResult<Semester>> PostSemester(Semester semester)
+    public async Task<ActionResult<SemesterDto>> PostSemester([FromBody] CreateSemesterDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var semester = new Semester
+        {
+            SemesterNo = dto.SemesterNo,
+            StartYear = dto.StartYear,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate,
+            RegistrationStartDate = dto.RegistrationStartDate,
+            RegistrationEndDate = dto.RegistrationEndDate,
+            IsRegistrationEnabled = dto.IsRegistrationEnabled
+        };
+
         _context.Semesters.Add(semester);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction("GetSemester", new { semesterid = semester.SemesterID }, semester);
+        var resultDto = new SemesterDto
+        {
+            SemesterID = semester.SemesterID,
+            SemesterNo = semester.SemesterNo,
+            StartYear = semester.StartYear,
+            StartDate = semester.StartDate,
+            EndDate = semester.EndDate,
+            RegistrationStartDate = semester.RegistrationStartDate,
+            RegistrationEndDate = semester.RegistrationEndDate,
+            IsRegistrationEnabled = semester.IsRegistrationEnabled,
+            CourseSections = new List<CourseSectionBaseDto>()
+        };
+
+        return CreatedAtAction(nameof(GetSemester), new { semesterid = semester.SemesterID }, resultDto);
     }
 
     // DELETE: api/Semester/5

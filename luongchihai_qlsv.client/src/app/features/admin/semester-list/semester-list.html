@@ -7,21 +7,36 @@
         <h1 class="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Kế Hoạch Học Kỳ & Đăng Ký Môn</h1>
         <p class="text-slate-500 text-sm mt-1">Quản lý lộ trình đào tạo, thời gian đăng ký và danh sách môn học</p>
       </div>
-      <button (click)="loadSemesters()"
-              class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition shadow-sm hover:shadow focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        Tải lại
-      </button>
+
+      <div class="flex items-center gap-3">
+        <button type="button"
+                (click)="loadSemesters()"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-medium text-sm rounded-xl border border-slate-200 transition shadow-xs focus:ring-2 focus:ring-indigo-500/20">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Tải lại
+        </button>
+
+        <button type="button"
+                (click)="onAddSemester()"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition shadow-sm hover:shadow focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Thêm học kỳ mới
+        </button>
+      </div>
     </div>
 
     <!-- Filter Bar -->
     <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
       <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
+
+        <!-- Search Input -->
         <div class="relative w-full sm:w-72">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -29,43 +44,142 @@
                  [ngModel]="searchTerm()"
                  (ngModelChange)="searchTerm.set($event)"
                  placeholder="Tìm tên môn, mã môn hoặc học kỳ..."
+                 aria-label="Tìm kiếm môn học hoặc học kỳ"
                  class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" />
         </div>
 
-        <div class="w-full sm:w-48">
-          <select [ngModel]="selectedYear()"
-                  (ngModelChange)="selectedYear.set($event === 'all' ? 'all' : +$event)"
-                  class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-            <option value="all">Tất cả năm học</option>
-            @for (year of availableYears(); track year) {
-            <option [value]="year">Năm học {{ year }} - {{ year + 1 }}</option>
-            }
-          </select>
+        <!-- Combobox Năm học -->
+        <div class="relative w-full sm:w-60">
+          <button type="button"
+                  (click)="toggleYearDropdown()"
+                  [attr.aria-expanded]="isYearDropdownOpen()"
+                  aria-haspopup="listbox"
+                  aria-label="Chọn năm học"
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition flex items-center justify-between gap-2">
+            <span class="truncate">{{ selectedYearLabel() }}</span>
+            <svg class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200"
+                 [class.rotate-180]="isYearDropdownOpen()" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          @if (isYearDropdownOpen()) {
+          <div class="fixed inset-0 z-10" (click)="isYearDropdownOpen.set(false)" tabindex="-1"></div>
+
+          <div class="absolute left-0 right-0 mt-1.5 z-20 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 space-y-2">
+            <div class="relative">
+              <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input type="text"
+                     [ngModel]="yearSearchTerm()"
+                     (ngModelChange)="yearSearchTerm.set($event)"
+                     placeholder="Tìm năm (ví dụ: 2025)..."
+                     aria-label="Tìm kiếm năm học"
+                     class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+            </div>
+
+            <div class="max-h-56 overflow-y-auto space-y-1 text-xs text-slate-700 pr-1" role="listbox">
+              <button type="button"
+                      (click)="selectYearOption('all')"
+                      [class.bg-indigo-50]="selectedYear() === 'all'"
+                      [class.text-indigo-600]="selectedYear() === 'all'"
+                      class="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-100 font-medium transition flex items-center justify-between">
+                <span>Tất cả năm học</span>
+                @if (selectedYear() === 'all') {
+                <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                }
+              </button>
+
+              @if (groupedYears().recent.length > 0) {
+              <div class="pt-1">
+                <div class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50/80 rounded mb-1">
+                  5 năm gần đây
+                </div>
+                @for (year of groupedYears().recent; track year) {
+                <button type="button"
+                        (click)="selectYearOption(year)"
+                        [class.bg-indigo-50]="selectedYear() === year"
+                        [class.text-indigo-600]="selectedYear() === year"
+                        class="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-100 font-medium transition flex items-center justify-between">
+                  <span>Năm học {{ year }} - {{ year + 1 }}</span>
+                  @if (selectedYear() === year) {
+                  <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  }
+                </button>
+                }
+              </div>
+              }
+
+              @if (groupedYears().older.length > 0) {
+              <div class="pt-1">
+                <div class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50/80 rounded mb-1">
+                  Các năm trước đó
+                </div>
+                @for (year of groupedYears().older; track year) {
+                <button type="button"
+                        (click)="selectYearOption(year)"
+                        [class.bg-indigo-50]="selectedYear() === year"
+                        [class.text-indigo-600]="selectedYear() === year"
+                        class="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-100 font-medium transition flex items-center justify-between">
+                  <span>Năm học {{ year }} - {{ year + 1 }}</span>
+                  @if (selectedYear() === year) {
+                  <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  }
+                </button>
+                }
+              </div>
+              }
+
+              @if (groupedYears().totalCount === 0) {
+              <div class="py-4 text-center text-slate-400 text-xs">
+                Không tìm thấy năm học
+              </div>
+              }
+            </div>
+          </div>
+          }
         </div>
       </div>
 
-      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full md:w-auto shrink-0">
-        <button (click)="selectedStatus.set('all')"
-                [class]="selectedStatus() === 'all' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-medium transition">
-          Tất cả
-        </button>
-        <button (click)="selectedStatus.set('open')"
-                [class]="selectedStatus() === 'open' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-medium transition">
-          Đang mở ĐK
-        </button>
-        <button (click)="selectedStatus.set('closed')"
-                [class]="selectedStatus() === 'closed' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-medium transition">
-          Đã đóng ĐK
-        </button>
+      <!-- Filters & Counter -->
+      <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0 justify-between">
+        <span class="text-xs text-slate-500 font-medium hidden lg:inline">
+          Hiển thị <strong class="text-slate-800 font-bold">{{ filteredSemesters().length }}</strong>/{{ semesters().length }} học kỳ
+        </span>
+
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
+          <button type="button"
+                  (click)="selectedStatus.set('all')"
+                  [class]="selectedStatus() === 'all' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                  class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-medium transition">
+            Tất cả
+          </button>
+          <button type="button"
+                  (click)="selectedStatus.set('open')"
+                  [class]="selectedStatus() === 'open' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                  class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-medium transition">
+            Đang mở ĐK
+          </button>
+          <button type="button"
+                  (click)="selectedStatus.set('closed')"
+                  [class]="selectedStatus() === 'closed' ? 'bg-white text-slate-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                  class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-medium transition">
+            Đã đóng ĐK
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- State 1: Skeleton Loading -->
     @if (isLoading()) {
-    <div class="space-y-4">
+    <div class="space-y-4" aria-busy="true">
       @for (item of [1, 2]; track $index) {
       <div class="bg-white rounded-2xl p-6 border border-slate-200 animate-pulse space-y-4">
         <div class="h-6 bg-slate-200 rounded w-1/4"></div>
@@ -77,164 +191,438 @@
 
     <!-- State 2: Error Notification -->
     @if (error() && !isLoading()) {
-    <div class="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 flex items-center gap-3">
-      <svg class="w-5 h-5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 flex items-center gap-3" role="alert">
+      <svg class="w-5 h-5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       <span class="text-sm font-medium">{{ error() }}</span>
     </div>
     }
 
-    <!-- State 3: Danh sách Học kỳ -->
+    <!-- State 3: Semester List -->
     @if (!isLoading() && !error()) {
-    <div class="space-y-4">
-      @for (item of filteredSemesters(); track item.semesterID) {
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-200">
+    <div class="bg-slate-100/60 border border-slate-200 rounded-2xl p-2 md:p-3 shadow-inner">
+      <div class="max-h-[calc(100vh-260px)] md:max-h-[620px] overflow-y-auto pr-1 md:pr-2 space-y-3.5 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
 
-        <!-- Card Header -->
-        <div (click)="toggleExpand(item.semesterID)"
-             class="p-5 md:p-6 cursor-pointer select-none hover:bg-slate-50/80 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+        @for (item of filteredSemesters(); track item.semesterID) {
+        <div class="bg-white rounded-2xl border transition-all duration-200 overflow-hidden"
+             [class.border-slate-200]="expandedSemesterId() !== item.semesterID && !isCurrentSemester(item)"
+             [class.shadow-xs]="expandedSemesterId() !== item.semesterID"
+             [class.ring-2]="expandedSemesterId() === item.semesterID"
+             [class.ring-indigo-500\30]="expandedSemesterId() === item.semesterID"
+             [class.border-indigo-300]="expandedSemesterId() === item.semesterID"
+             [class.shadow-md]="expandedSemesterId() === item.semesterID"
+             [class.border-l-4]="isCurrentSemester(item)"
+             [class.border-l-indigo-600]="isCurrentSemester(item)">
 
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl shrink-0">
-              {{ item.semesterNo }}
+          <!-- Card Header -->
+          <div (click)="toggleExpand(item.semesterID)"
+               role="button"
+               [attr.aria-expanded]="expandedSemesterId() === item.semesterID"
+               class="p-4 md:p-5 cursor-pointer select-none hover:bg-slate-50/80 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg shrink-0">
+                {{ item.semesterNo }}
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h2 class="text-base md:text-lg font-bold text-slate-800">Học kỳ {{ item.semesterNo }}</h2>
+                  <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium">
+                    Năm {{ item.startYear }} - {{ item.startYear + 1 }}
+                  </span>
+
+                  @if (isCurrentSemester(item)) {
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200/80">
+                    Học kỳ hiện tại
+                  </span>
+                  }
+                </div>
+
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-500">
+                  <span>Học: <strong class="text-slate-700 font-medium">{{ item.startDate | date:'dd/MM/yyyy' }} &rarr; {{ item.endDate | date:'dd/MM/yyyy' }}</strong></span>
+
+                  <span class="hidden sm:inline text-slate-300">•</span>
+                  <span class="inline-flex items-center gap-1 font-medium text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md">
+                    <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    {{ getGroupedCourses(item.courseSections).length }} Môn học
+                  </span>
+
+                  <span class="inline-flex items-center gap-1 font-medium text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md">
+                    <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                    {{ getTotalCredits(item) }} Tín chỉ
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-lg font-bold text-slate-800">Học kỳ {{ item.semesterNo }}</h2>
-                <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium">Năm {{ item.startYear }} - {{ item.startYear + 1 }}</span>
+
+            <div class="flex items-center justify-between md:justify-end gap-3 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+              <!-- Switch Mở/Đóng ĐK -->
+              <div (click)="$event.stopPropagation()" class="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80">
+                <span class="text-xs font-semibold" [class.text-emerald-600]="item.isRegistrationEnabled" [class.text-slate-500]="!item.isRegistrationEnabled">
+                  {{ item.isRegistrationEnabled ? 'Đang mở ĐK' : 'Đã đóng ĐK' }}
+                </span>
+
+                <button type="button"
+                        (click)="onToggleRegistration(item, $event)"
+                        [disabled]="updatingSemesterId() === item.semesterID"
+                        [class.bg-emerald-500]="item.isRegistrationEnabled"
+                        [class.bg-slate-300]="!item.isRegistrationEnabled"
+                        aria-label="Chuyển đổi trạng thái đăng ký"
+                        class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span [class.translate-x-5]="item.isRegistrationEnabled"
+                        [class.translate-x-0]="!item.isRegistrationEnabled"
+                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out flex items-center justify-center">
+                    @if (updatingSemesterId() === item.semesterID) {
+                    <svg class="animate-spin h-3 w-3 text-indigo-600" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    }
+                  </span>
+                </button>
               </div>
 
-              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-slate-500">
-                <span>Học: <strong class="text-slate-700 font-medium">{{ item.startDate | date:'dd/MM/yyyy' }} &rarr; {{ item.endDate | date:'dd/MM/yyyy' }}</strong></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between md:justify-end gap-5 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
-            <!-- Toggle Switch Công tác Đăng ký -->
-            <div (click)="$event.stopPropagation()" class="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80">
-              <span class="text-xs font-semibold" [class.text-emerald-600]="item.isRegistrationEnabled" [class.text-slate-500]="!item.isRegistrationEnabled">
-                {{ item.isRegistrationEnabled ? 'Đang mở ĐK' : 'Đã đóng ĐK' }}
-              </span>
-
-              <button type="button"
-                      (click)="onToggleRegistration(item, $event)"
-                      [disabled]="updatingSemesterId() === item.semesterID"
-                      [class.bg-emerald-500]="item.isRegistrationEnabled"
-                      [class.bg-slate-300]="!item.isRegistrationEnabled"
-                      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                <span [class.translate-x-5]="item.isRegistrationEnabled"
-                      [class.translate-x-0]="!item.isRegistrationEnabled"
-                      class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out flex items-center justify-center">
-                  @if (updatingSemesterId() === item.semesterID) {
-                  <svg class="animate-spin h-3 w-3 text-indigo-600" fill="none" viewBox="0 0 24 24">
+              <!-- NÚT XÓA HỌC KỲ VỚI TOOLTIP HOVER -->
+              <div class="relative group">
+                <button type="button"
+                        (click)="onDeleteSemester(item, $event)"
+                        [disabled]="deletingSemesterId() === item.semesterID"
+                        aria-label="Xóa học kỳ"
+                        class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                  @if (deletingSemesterId() === item.semesterID) {
+                  <svg class="animate-spin h-4 w-4 text-rose-600" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                   </svg>
+                  } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
                   }
-                </span>
-              </button>
-            </div>
-
-            <!-- Arrow Accordion Icon -->
-            <button class="p-1.5 rounded-lg hover:bg-slate-200/60 text-slate-400 hover:text-slate-600 transition">
-              <svg class="w-5 h-5 transform transition-transform duration-200"
-                   [class.rotate-180]="expandedSemesterId() === item.semesterID"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-
-        </div>
-
-        <!-- Expandable Details Section -->
-        @if (expandedSemesterId() === item.semesterID) {
-        <div class="border-t border-slate-100 bg-slate-50/50 p-5 md:p-6 space-y-6">
-
-          <!-- Thời gian Đăng ký -->
-          <div class="bg-white p-4 rounded-xl border border-slate-200/60 flex items-center justify-between gap-4 text-xs md:text-sm">
-            <div class="flex items-center gap-2 text-slate-600">
-              <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>Thời gian ĐK học phần:</span>
-            </div>
-            <span class="font-semibold text-slate-800">
-              @if (item.registrationStartDate && item.registrationEndDate) {
-              {{ item.registrationStartDate | date:'dd/MM/yyyy' }} &mdash; {{ item.registrationEndDate | date:'dd/MM/yyyy' }}
-              } @else {
-              Chưa cập nhật
-              }
-            </span>
-          </div>
-
-          <!-- Danh sách Môn Học -->
-          <div>
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm font-bold text-slate-800">Danh sách Môn học</h3>
-                <span class="px-2.5 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">
-                  {{ getGroupedCourses(item.courseSections).length }} Môn học
-                </span>
+                </button>
+                <!-- Tooltip Popup -->
+                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block px-2.5 py-1 bg-slate-800 text-white text-[11px] font-medium rounded-lg shadow-lg whitespace-nowrap z-30 pointer-events-none">
+                  Xóa học kỳ
+                  <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                </div>
               </div>
 
-              <button (click)="onAddCourseSection(item.semesterID, $event)"
-                      class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-semibold transition">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Thêm lớp học phần
-              </button>
+              <!-- NÚT THU GỌN / MỞ RỘNG VỚI TOOLTIP -->
+              <div class="relative group">
+                <button type="button"
+                        aria-label="Mở rộng thông tin học kỳ"
+                        class="p-1.5 rounded-lg hover:bg-slate-200/60 text-slate-400 hover:text-slate-600 transition">
+                  <svg class="w-5 h-5 transform transition-transform duration-200"
+                       [class.rotate-180]="expandedSemesterId() === item.semesterID"
+                       fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block px-2.5 py-1 bg-slate-800 text-white text-[11px] font-medium rounded-lg shadow-lg whitespace-nowrap z-30 pointer-events-none">
+                  {{ expandedSemesterId() === item.semesterID ? 'Thu gọn' : 'Xem chi tiết' }}
+                  <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                </div>
+              </div>
             </div>
 
-            <!-- Course Cards Grid (ĐÃ ĐƯỢC ĐƠN GIẢN HÓA) -->
-            <!-- Course Cards Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              @for (course of getGroupedCourses(item.courseSections); track course.courseID) {
-              <div (click)="goToCourseSections(item.semesterID, course.courseID)"
-                   class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs hover:border-indigo-500 hover:shadow-md transition cursor-pointer group">
+          </div>
 
-                <!-- Hàng 1: Mã môn & Số Tín chỉ -->
-                <div class="flex items-center justify-between gap-2 mb-2.5">
-                  <span class="font-bold text-xs text-indigo-700 bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white border border-indigo-100 px-2.5 py-1 rounded-md transition-colors">
-                    {{ course.courseID }}
-                  </span>
-                  <span class="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-md">
-                    {{ course.credits }} TC
+          <!-- Details Section -->
+          @if (expandedSemesterId() === item.semesterID) {
+          <div class="border-t border-slate-100 bg-slate-50/50 p-4 md:p-5 space-y-5">
+
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200/60 flex items-center justify-between gap-4 text-xs md:text-sm">
+              <div class="flex items-center gap-2 text-slate-600">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Thời gian ĐK học phần:</span>
+              </div>
+              <span class="font-semibold text-slate-800">
+                @if (item.registrationStartDate && item.registrationEndDate) {
+                {{ item.registrationStartDate | date:'dd/MM/yyyy' }} &mdash; {{ item.registrationEndDate | date:'dd/MM/yyyy' }}
+                } @else {
+                Chưa cập nhật
+                }
+              </span>
+            </div>
+
+            <div>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-800">Danh sách Môn học</h3>
+                  <span class="px-2.5 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full font-semibold">
+                    {{ getGroupedCourses(item.courseSections).length }} Môn học
                   </span>
                 </div>
 
-                <!-- Hàng 2: Tên Môn Học -->
-                <h4 class="font-bold text-slate-800 group-hover:text-indigo-600 text-sm leading-snug line-clamp-2 transition-colors" [title]="course.courseName">
-                  {{ course.courseName }}
-                </h4>
+                <button type="button"
+                        (click)="onAddCourseSection(item.semesterID, $event)"
+                        class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-semibold transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Thêm lớp học phần
+                </button>
+              </div>
 
+              <!-- Course Cards Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                @for (course of getGroupedCourses(item.courseSections); track course.courseID) {
+                <div (click)="goToCourseSections(item.semesterID, course.courseID)"
+                     role="button"
+                     tabindex="0"
+                     class="bg-white p-3.5 rounded-xl border border-slate-200/90 hover:border-indigo-500 hover:shadow-md transition cursor-pointer group">
+
+                  <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="font-bold text-xs text-indigo-700 bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white border border-indigo-100 px-2 py-0.5 rounded-md transition-colors">
+                      {{ course.courseID }}
+                    </span>
+                    <span class="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-md">
+                      {{ course.credits }} TC
+                    </span>
+                  </div>
+
+                  <h4 class="font-bold text-slate-800 group-hover:text-indigo-600 text-sm leading-snug line-clamp-2 transition-colors" [title]="course.courseName">
+                    {{ course.courseName }}
+                  </h4>
+
+                </div>
+                } @empty {
+                <div class="col-span-full py-6 text-center text-slate-400 text-xs bg-white rounded-xl border border-dashed border-slate-200">
+                  Chưa có môn học nào trong học kỳ này.
+                </div>
+                }
               </div>
-              } @empty {
-              <div class="col-span-full py-8 text-center text-slate-400 text-xs bg-white rounded-xl border border-dashed border-slate-200">
-                Chưa có môn học nào trong học kỳ này.
-              </div>
-              }
             </div>
-          </div>
 
+          </div>
+          }
+
+        </div>
+        } @empty {
+        <div class="bg-white rounded-2xl p-12 text-center border border-slate-200">
+          <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <h3 class="text-slate-700 font-semibold text-base">Không tìm thấy dữ liệu</h3>
+          <p class="text-slate-400 text-sm mt-1">Thử thay đổi từ khóa tìm kiếm, năm học hoặc bộ lọc trạng thái</p>
         </div>
         }
 
       </div>
-      } @empty {
-      <div class="bg-white rounded-2xl p-12 text-center border border-slate-200">
-        <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <h3 class="text-slate-700 font-semibold text-base">Không tìm thấy dữ liệu</h3>
-        <p class="text-slate-400 text-sm mt-1">Thử thay đổi từ khóa tìm kiếm, năm học hoặc bộ lọc trạng thái</p>
-      </div>
-      }
     </div>
     }
 
   </div>
 </div>
+
+<!-- ========================================== -->
+<!-- 1. DIALOG MODAL "THÊM HỌC KỲ MỚI"          -->
+<!-- ========================================== -->
+@if (isAddModalOpen()) {
+<div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" (click)="closeAddModal()"></div>
+
+  <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+    <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-100">
+
+      <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-800" id="modal-title">Tạo Học Kỳ Mới</h3>
+        </div>
+        <button type="button" (click)="closeAddModal()" [disabled]="isSubmitting()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <form [formGroup]="semesterForm" (ngSubmit)="onSubmitSemester()" class="p-6 space-y-4">
+        @if (semesterForm.touched && semesterForm.invalid) {
+        <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 space-y-1">
+          @if (semesterForm.errors?.['yearMismatch']) {
+          <p class="flex items-center gap-1.5 font-medium">
+            <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>Năm của <strong>Ngày bắt đầu học</strong> phải trùng với <strong>Năm học bắt đầu</strong>.</span>
+          </p>
+          }
+          @if (semesterForm.errors?.['invalidStudyDates']) {
+          <p class="flex items-center gap-1.5 font-medium">
+            <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span><strong>Ngày kết thúc học</strong> phải lớn hơn Ngày bắt đầu học.</span>
+          </p>
+          }
+          @if (semesterForm.errors?.['invalidRegDates']) {
+          <p class="flex items-center gap-1.5 font-medium">
+            <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span><strong>Ngày đóng ĐK</strong> phải lớn hơn Ngày mở ĐK học phần.</span>
+          </p>
+          }
+        </div>
+        }
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Học kỳ <span class="text-rose-500">*</span></label>
+            <select formControlName="semesterNo" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+              <option [value]="1">Học kỳ 1</option>
+              <option [value]="2">Học kỳ 2</option>
+              <option [value]="3">Học kỳ 3 (Hè)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Năm học bắt đầu <span class="text-rose-500">*</span></label>
+            <input type="number" formControlName="startYear" placeholder="2026" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+            @if (semesterForm.get('startYear')?.invalid && semesterForm.get('startYear')?.touched) {
+            <span class="text-[11px] text-rose-500 mt-1 block">Năm học từ 2000 - 2100</span>
+            }
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Ngày bắt đầu học <span class="text-rose-500">*</span></label>
+            <input type="date" formControlName="startDate" (change)="onStartDateChange()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Ngày kết thúc học <span class="text-rose-500">*</span></label>
+            <input type="date" formControlName="endDate" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+          </div>
+        </div>
+
+        <div class="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/80 space-y-3">
+          <span class="text-xs font-bold text-indigo-900 block">Thời gian mở Đăng ký Học phần (Tùy chọn)</span>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Ngày mở ĐK</label>
+              <input type="date" formControlName="registrationStartDate" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Ngày đóng ĐK</label>
+              <input type="date" formControlName="registrationEndDate" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <div>
+            <span class="text-xs font-semibold text-slate-700 block">Cho phép đăng ký ngay</span>
+            <span class="text-[11px] text-slate-400">Sinh viên có thể đăng ký tín chỉ khi học kỳ mở</span>
+          </div>
+
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" formControlName="isRegistrationEnabled" class="sr-only peer" />
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+          </label>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button type="button" (click)="closeAddModal()" [disabled]="isSubmitting()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+            Hủy
+          </button>
+          <button type="submit" [disabled]="semesterForm.invalid || isSubmitting()" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed">
+            @if (isSubmitting()) {
+            <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            Đang lưu...
+            } @else {
+            Tạo Học Kỳ
+            }
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ========================================== -->
+<!-- 2. CONFIRM DIALOG MODAL (XÁC NHẬN XÓA)    -->
+<!-- ========================================== -->
+@if (confirmModalData(); as modal) {
+<div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="confirm-modal-title" role="dialog" aria-modal="true">
+  <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" (click)="closeConfirmDialog()"></div>
+
+  <div class="flex min-h-full items-center justify-center p-4 text-center">
+    <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-100 p-6 space-y-4">
+
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 class="text-base font-bold text-slate-800" id="confirm-modal-title">{{ modal.title }}</h3>
+      </div>
+
+      <p class="text-xs md:text-sm text-slate-600 leading-relaxed">{{ modal.message }}</p>
+
+      <div class="pt-2 flex items-center justify-end gap-3">
+        <button type="button"
+                (click)="closeConfirmDialog()"
+                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+          {{ modal.cancelText || 'Hủy bỏ' }}
+        </button>
+        <button type="button"
+                (click)="executeConfirmAction()"
+                class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition shadow-xs">
+          {{ modal.confirmText || 'Xác nhận' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+}
+
+<!-- SNACKBAR / TOAST NOTIFICATION (TONE SÁNG) -->
+@if (toast(); as t) {
+<div class="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg border text-xs font-semibold transition-all duration-300"
+     [class.bg-emerald-50]="t.type === 'success'"
+     [class.text-emerald-800]="t.type === 'success'"
+     [class.border-emerald-200]="t.type === 'success'"
+     [class.bg-rose-50]="t.type === 'error'"
+     [class.text-rose-800]="t.type === 'error'"
+     [class.border-rose-200]="t.type === 'error'"
+     [class.bg-sky-50]="t.type === 'info'"
+     [class.text-sky-800]="t.type === 'info'"
+     [class.border-sky-200]="t.type === 'info'"
+     role="status">
+
+  @if (t.type === 'success') {
+  <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+  </svg>
+  }
+  @if (t.type === 'error') {
+  <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+  }
+  @if (t.type === 'info') {
+  <svg class="w-4 h-4 text-sky-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+  }
+
+  <span>{{ t.message }}</span>
+
+  <button type="button" (click)="closeToast()" class="ml-2 text-slate-400 hover:text-slate-600 transition">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+</div>
+}

@@ -10,6 +10,16 @@ export interface GroupedCourse {
   credits: number;
 }
 
+export interface CreateSemesterRequest {
+  semesterNo: number;
+  startYear: number;
+  startDate: string;
+  endDate: string;
+  registrationStartDate?: string | null;
+  registrationEndDate?: string | null;
+  isRegistrationEnabled: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -26,6 +36,14 @@ export class SemesterService {
     return this.http.patch<Semester>(`${this.apiUrl}/${semesterID}/toggle-registration`, {
       isRegistrationEnabled: isEnabled
     });
+  }
+
+  createSemester(data: CreateSemesterRequest): Observable<Semester> {
+    return this.http.post<Semester>(this.apiUrl, data);
+  }
+
+  deleteSemester(semesterID: number): Observable<Semester> {
+    return this.http.delete<Semester>(`${this.apiUrl}/${semesterID}`);
   }
 
   // --- CÁC HÀM XỬ LÝ LỚP HỌC PHẦN --- //
