@@ -39,4 +39,4 @@ import { NgApexchartsModule } from 'ng-apexcharts';
   ],
   bootstrap: [App],
 })
-export class AppModule { }
+export class AppModule {}

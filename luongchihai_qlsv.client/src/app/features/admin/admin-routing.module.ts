@@ -13,6 +13,8 @@ import { CourseSectionListComponent } from './course-section-list/course-section
 import { UserList } from './user-list/user-list'
 import { PermissionMatrixComponent } from './permission-matrix/permission-matrix'
 import { UserPermissions } from './user-permissions/user-permissions'
+import { SemesterListComponent } from './semester-list/semester-list'
+import { SectionListComponent } from './semester-list/section-list/section-list';
 
 const routes: Routes = [
   {
@@ -27,6 +29,8 @@ const routes: Routes = [
       { path: 'courses/create', component: CourseFormComponent },
       { path: 'courses/edit/:id', component: CourseFormComponent },
       { path: 'courseSections', component: CourseSectionListComponent },
+      { path: 'semesters', component: SemesterListComponent },
+      { path: 'semesters/:semesterId/courses/:courseId', component: SectionListComponent },
       { path: 'users', component: UserList },
       { path: 'permissions', component: PermissionMatrixComponent },
       { path: 'userPermissions', component: UserPermissions },

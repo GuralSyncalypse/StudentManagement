@@ -1,0 +1,150 @@
+<div class="min-h-screen bg-slate-50/50 p-4 md:p-8 font-sans">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Top Header Navigation -->
+    <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="flex items-center gap-3">
+        <button (click)="goBack()" class="p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+        <div>
+          <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md">
+            Mã môn: {{ courseId() }}
+          </span>
+          <h1 class="text-xl font-bold text-slate-800 mt-0.5">Danh Sách Lớp Học Phần đang mở</h1>
+        </div>
+      </div>
+
+      <!-- Action: Mở thêm lớp -->
+      <button (click)="openAddModal()"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition shadow-xs">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Mở thêm lớp
+      </button>
+    </div>
+
+    <!-- State Loading -->
+    @if (isLoading()) {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (item of [1, 2, 3]; track $index) {
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 animate-pulse space-y-3">
+        <div class="h-5 bg-slate-200 rounded w-1/3"></div>
+        <div class="h-4 bg-slate-100 rounded w-2/3"></div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Grid Danh sách Lớp Học Phần -->
+    @if (!isLoading()) {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (section of sections(); track section.sectionID) {
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between gap-4">
+
+        <div>
+          <!-- Header Lớp & Trạng Thái -->
+          <div class="flex items-center justify-between mb-3">
+            <!-- SỬA: sectionName -> classSection -->
+            <h3 class="font-bold text-slate-800 text-base">Lớp {{ section.classSection }}</h3>
+
+            <!-- SỬA: isOpen -> status === 'Open' -->
+            <span [class]="section.status === 'Open' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'"
+                  class="text-xs px-2.5 py-1 rounded-full border font-semibold">
+              {{ section.status === 'Open' ? 'Đang mở ĐK' : 'Đã đóng ĐK' }}
+            </span>
+          </div>
+
+          <!-- Thông tin Sĩ số -->
+          <div class="space-y-1.5 text-xs text-slate-600">
+            <div class="flex justify-between">
+              <span>Sĩ số hiện tại:</span>
+              <!-- SỬA: enrolledCount -> currentEnrollment -->
+              <strong class="text-slate-800">{{ section.currentEnrollment }}/{{ section.maxCapacity ?? 'N/A' }}</strong>
+            </div>
+            <div class="flex justify-between" *if="section.semesterDisplayName">
+              <span>Học kỳ:</span>
+              <span class="font-medium text-slate-700">{{ section.semesterDisplayName }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons: Đóng/Mở đăng ký & Xóa lớp -->
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <!-- SỬA: check section.status === 'Open' -->
+          <button (click)="onToggleStatus(section)"
+                  [class]="section.status === 'Open' ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'"
+                  class="px-3 py-1.5 text-xs font-semibold rounded-lg transition">
+            {{ section.status === 'Open' ? 'Đóng đăng ký' : 'Mở đăng ký' }}
+          </button>
+
+          <button (click)="onDeleteSection(section)"
+                  class="px-3 py-1.5 text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition">
+            Xoá lớp
+          </button>
+        </div>
+
+      </div>
+      } @empty {
+      <div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+        Chưa có lớp học phần nào được mở cho môn học này.
+      </div>
+      }
+    </div>
+    }
+
+  </div>
+</div>
+
+<!-- Modal Form Mở thêm lớp học phần theo CreateCourseSectionDto -->
+@if (isAddModalOpen()) {
+<div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 space-y-4">
+    <h3 class="text-lg font-bold text-slate-800">Mở thêm Lớp Học Phần mới</h3>
+
+    <div class="space-y-3 text-sm">
+      <!-- CourseID & SemesterID (Readonly) -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Mã môn học (CourseID)</label>
+          <input type="text" [value]="courseId()" disabled class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-semibold cursor-not-allowed" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">ID Học kỳ (SemesterID)</label>
+          <input type="text" [value]="semesterId()" disabled class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-semibold cursor-not-allowed" />
+        </div>
+      </div>
+
+      <!-- ClassSection -->
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Tên lớp / Nhóm (ClassSection)</label>
+        <input type="text" [(ngModel)]="newClassSection" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-indigo-500" placeholder="vd: L01, L02..." />
+      </div>
+
+      <!-- MaxCapacity -->
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Sĩ số tối đa (MaxCapacity)</label>
+        <input type="number" [(ngModel)]="newMaxCapacity" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-indigo-500" placeholder="40" />
+      </div>
+
+      <!-- Status -->
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Trạng thái (Status)</label>
+        <select [(ngModel)]="newStatus" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-indigo-500">
+          <option value="Open">Open (Đang mở)</option>
+          <option value="Closed">Closed (Đã đóng)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+      <button (click)="closeAddModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">Đóng</button>
+      <button (click)="confirmAddSection()" class="px-4 py-2 text-xs font-semibold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition">Xác nhận tạo lớp</button>
+    </div>
+  </div>
+</div>
+}

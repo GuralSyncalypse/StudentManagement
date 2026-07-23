@@ -1,5 +1,10 @@
 ﻿namespace LuongChiHai_QLSV.Server.DTOs
 {
+    public class ToggleSectionStatusDto
+    {
+        public bool IsOpen { get; set; }
+    }
+
     public class CourseSectionDto
     {
         public required int SectionID { get; set; }
