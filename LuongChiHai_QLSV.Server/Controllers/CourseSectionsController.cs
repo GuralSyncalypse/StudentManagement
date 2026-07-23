@@ -207,6 +207,37 @@ public class CourseSectionsController : ControllerBase
         return CreatedAtAction(nameof(GetCourseSection), new { sectionid = coursesection.SectionID }, response);
     }
 
+    // GET: api/CourseSections/5/students
+    /// <summary>
+    /// Lấy danh sách sinh viên đã đăng ký vào một lớp học phần cụ thể
+    /// </summary>
+    [HttpGet("{sectionId}/students")]
+    [HasPermission("0702")]
+    public async Task<IActionResult> GetStudentsBySection(int sectionId)
+    {
+        // 1. Kiểm tra xem lớp học phần có tồn tại hay không
+        var sectionExists = await _context.CourseSections.AnyAsync(s => s.SectionID == sectionId);
+        if (!sectionExists)
+        {
+            return NotFound(new { message = "Không tìm thấy lớp học phần!" });
+        }
+
+        // 2. Truy vấn danh sách sinh viên thuộc lớp học phần qua bảng Enrollment
+        var students = await _context.Enrollments
+            .AsNoTracking()
+            .Where(e => e.SectionID == sectionId)
+            .Select(e => new
+            {
+                StudentID = e.StudentID,
+                FullName = e.Student != null ? e.Student.StudentName : null,
+                Email = e.Student != null ? e.Student.User.Email : null,
+                EnrollmentDate = e.EnrollDate
+            })
+            .ToListAsync();
+
+        return Ok(students);
+    }
+
     // DELETE: api/CourseSection/5
     [HttpDelete("{sectionid}")]
     [HasPermission("0704")]

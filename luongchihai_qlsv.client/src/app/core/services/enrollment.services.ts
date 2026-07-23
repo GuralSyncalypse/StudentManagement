@@ -1,14 +1,21 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
 import { Enrollment } from '../models/enrollment.model';
+
+// Interface hứng dữ liệu sinh viên trả về từ endpoint
+export interface EnrolledStudent {
+  studentID: string;
+  fullName: string;
+  email?: string;
+  enrollmentDate?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class EnrollmentService {
-  private http = inject(HttpClient)
+  private http = inject(HttpClient);
   private apiUrl = '/api/enrollments';
 
   // GET ALL
@@ -38,7 +45,6 @@ export class EnrollmentService {
 
   adminRegisterEnrollment(payload: { sectionID: number; studentID: string }): Observable<any> {
     // Gửi yêu cầu POST lên API endpoint xử lý đăng ký của Admin
-    // Đường dẫn ví dụ: api/coursesections/admin-register
     return this.http.post<any>(`${this.apiUrl}`, payload);
   }
 
@@ -50,5 +56,14 @@ export class EnrollmentService {
         studentID: payload.studentID
       }
     });
+  }
+
+  // ================= BỔ SUNG MỚI =================
+  /**
+   * Lấy danh sách sinh viên đã đăng ký trong một lớp học phần
+   * Endpoint C#: GET /api/CourseSections/{sectionId}/students
+   */
+  getStudentsBySection(sectionId: number): Observable<EnrolledStudent[]> {
+    return this.http.get<EnrolledStudent[]>(`/api/CourseSections/${sectionId}/students`);
   }
 }

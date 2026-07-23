@@ -167,7 +167,7 @@ export class StudentDashboardComponent implements OnInit {
         enabledOnSeries: [1],
       },
       
-      labels: historyData.map((item: any) => `Học kỳ ${item.semester}`),
+      labels: historyData.map((item: any) => `${item.semesterDisplayName}`),
       yaxis: [
         {
           min: 0,

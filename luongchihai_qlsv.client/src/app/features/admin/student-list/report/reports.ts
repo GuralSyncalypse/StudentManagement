@@ -1,78 +1,99 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
-import { Location } from '@angular/common';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { StudentReport } from '../../../../core/models/report.model';
-import { StudentReportService } from '../../../../core/services/report.services';
+import { HttpClient } from '@angular/common/http';
+
+export interface StudentCourseGrade {
+  studentID: string;
+  enrollmentID: number;
+  sectionID: number;
+  semesterID: number;
+  semesterNo: number;
+  startYear: number;
+  academicYear: string;
+  courseID: string;
+  courseName: string;
+  credits: number;
+  totalScore: number;
+  grade: string;
+  result: string;
+}
+
+export interface StudentSummary {
+  studentID: string;
+  semesterID: number;
+  semesterNo: number;
+  startYear: number;
+  totalEnrollment: number;
+  coursesDetail: StudentCourseGrade[];
+}
 
 @Component({
-  selector: 'app-reports',
+  selector: 'app-student-report',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, FormsModule],
-  templateUrl: './reports.html',
-  styleUrl: './reports.css',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './reports.html'
 })
-export class Reports implements OnInit {
-  public studentID: string = '';
-  public selectedSemester: number | null = null;
-  public reportData: StudentReport | null = null;
-  public isLoading: boolean = false;
-  public errorMessage: string | null = null; // Thêm biến hiển thị lỗi nếu không có dữ liệu
+export class StudentReportComponent {
+  // Form controls
+  studentId: string = '';
+  semesterId: number = 1;
+  year: number = new Date().getFullYear();
 
-  public semesters = [
-    { value: 1, label: 'Học kỳ 1' },
-    { value: 2, label: 'Học kỳ 2' },
-    { value: 3, label: 'Học kỳ 3' }
+  // State Management
+  summaryData: StudentSummary | null = null;
+  isLoading: boolean = false;
+  errorMessage: string = '';
+
+  // Danh sách gợi ý chọn
+  semesters = [
+    { id: 1, label: 'Học kỳ 1' },
+    { id: 2, label: 'Học kỳ 2' },
+    { id: 3, label: 'Học kỳ Hè' }
   ];
 
-  // 2. INJECT THÊM SERVICE VÀO CONSTRUCTOR
-  constructor(
-    private route: ActivatedRoute,
-    private reportService: StudentReportService,
-    private location: Location
-  ) { }
+  years: number[] = [2023, 2024, 2025, 2026];
 
-  ngOnInit(): void {
-    const idFromParam = this.route.snapshot.paramMap.get('studentID');
-    if (idFromParam) {
-      this.studentID = idFromParam;
-    }
-  }
+  constructor(private http: HttpClient) { }
 
-  // 3. THAY THẾ LOGIC GỌI API THẬT
-  onSemesterChange(): void {
-    if (!this.selectedSemester || !this.studentID) {
-      this.reportData = null;
-      this.errorMessage = null;
+  fetchReport(): void {
+    if (!this.studentId.trim()) {
+      this.errorMessage = 'Vui lòng nhập Mã Sinh Viên!';
       return;
     }
 
     this.isLoading = true;
-    this.errorMessage = null;
+    this.errorMessage = '';
+    this.summaryData = null;
 
-    // Gọi đến hàm trong service đã cấu hình HttpParams
-    this.reportService.getSemesterSummary(this.studentID, this.selectedSemester).subscribe({
+    // Thay đổi URL API base phù hợp với môi trường dự án của bạn
+    const url = `/api/Reports/semester-summary?studentId=${encodeURIComponent(this.studentId)}&semesterId=${this.semesterId}&year=${this.year}`;
+
+    this.http.get<StudentSummary>(url).subscribe({
       next: (data) => {
-        this.reportData = data;
+        this.summaryData = data;
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Lỗi lấy báo cáo:', err);
-        this.reportData = null;
         this.isLoading = false;
-
-        // Bắt lỗi NotFound thực tế từ Backend để báo lên giao diện
         if (err.status === 404) {
-          this.errorMessage = err.error || 'Không tìm thấy dữ liệu điểm cho học kỳ này.';
+          this.errorMessage = err.error?.message || 'Không tìm thấy dữ liệu học tập của sinh viên này.';
         } else {
-          this.errorMessage = 'Có lỗi xảy ra kết nối đến hệ thống máy chủ.';
+          this.errorMessage = 'Có lỗi xảy ra khi kết nối tới máy chủ!';
         }
       }
     });
   }
 
-  goBack(): void {
-    this.location.back();
+  // Hàm hỗ trợ format CSS class cho kết quả (Đạt/Trượt)
+  getResultBadgeClass(result: string): string {
+    const res = result?.toLowerCase() || '';
+    if (res.includes('đạt') || res.includes('pass')) {
+      return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+    }
+    if (res.includes('trượt') || res.includes('fail')) {
+      return 'bg-rose-100 text-rose-800 border border-rose-200';
+    }
+    return 'bg-slate-100 text-slate-800 border border-slate-200';
   }
 }

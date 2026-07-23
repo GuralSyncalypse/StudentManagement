@@ -1,7 +1,9 @@
-<div class="flex h-screen w-screen bg-slate-50 overflow-hidden font-sans">
+<!-- 🌟 Thêm print:h-auto print:w-auto print:overflow-visible để không bị bó hẹp chiều cao khi in -->
+<div class="flex h-screen w-screen bg-slate-50 overflow-hidden font-sans print:h-auto print:w-auto print:overflow-visible print:bg-white">
 
     <!-- SIDEBAR NAVIGATION -->
-    <aside class="w-64 flex-shrink-0 bg-[#1a0f2e] text-slate-300 flex flex-col justify-between border-r border-purple-950/20">
+    <!-- 🌟 THÊM: print:hidden để ẩn toàn bộ Sidebar khi in -->
+    <aside class="w-64 flex-shrink-0 bg-[#1a0f2e] text-slate-300 flex flex-col justify-between border-r border-purple-950/20 print:hidden">
         <div>
             <!-- Brand Logo -->
             <div class="h-16 flex items-center px-6 gap-3 border-b border-purple-950/30">
@@ -55,11 +57,14 @@
         </div>
     </aside>
 
-    <!-- Main Workspace (Giữ nguyên phần còn lại) -->
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <!-- Topbar... -->
-        <main class="flex-1 overflow-y-auto bg-[#fafafb] p-6">
+    <!-- Main Workspace -->
+    <!-- 🌟 THÊM: print:w-full print:h-auto print:overflow-visible -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden print:w-full print:h-auto print:overflow-visible">
+        <!-- Topbar (Nếu có topbar bạn hãy thêm print:hidden vào thẻ header topbar đó) -->
+        <!-- 🌟 THÊM: print:p-0 print:bg-white print:overflow-visible vào thẻ main -->
+        <main class="flex-1 overflow-y-auto bg-[#fafafb] p-6 print:p-0 print:bg-white print:overflow-visible">
             <router-outlet></router-outlet>
         </main>
     </div>
+
 </div>

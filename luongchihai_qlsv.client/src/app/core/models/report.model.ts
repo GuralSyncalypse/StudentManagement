@@ -1,29 +1,24 @@
-export interface CourseDetail {
+export interface StudentCourseGrade {
   studentID: string;
   enrollmentID: number;
   sectionID: number;
-  semester: number;
+  semesterID: number;
+  semesterNo: number;
+  startYear: number;
+  academicYear: string;
   courseID: string;
   courseName: string;
   credits: number;
   totalScore: number;
   grade: string;
-  result: 'Đạt' | 'Trượt';
-}
-
-export interface StudentReport {
-  studentID: string;
-  semester: number;
-  tongSoMonDaHoc: number;
-  soMonDaQua: number;
-  soMonTruot: number;
-  diemTrungBinhHocKy: number;
-  chiTietMonHoc: CourseDetail[];
+  result: string;
 }
 
 export interface StudentSummary {
   studentID: string;
-  semester: number;
+  semesterID: number;
+  semesterNo: number;
+  startYear: number;
   totalEnrollment: number;
-  coursesDetail: CourseDetail[];
+  coursesDetail: StudentCourseGrade[];
 }

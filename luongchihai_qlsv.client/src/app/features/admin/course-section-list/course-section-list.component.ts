@@ -21,6 +21,13 @@ interface GroupedCourse {
   sections: AvailableCourseSection[];
 }
 
+export interface EnrolledStudent {
+  studentID: string;
+  fullName: string;
+  email?: string;
+  enrollmentDate?: string;
+}
+
 @Component({
   selector: 'app-course-section-list',
   standalone: true,
@@ -41,18 +48,22 @@ export class CourseSectionListComponent implements OnInit {
   isLoading: boolean = true;
   errorMessage?: string;
 
-  // --- TRẠNG THÁI MODAL (ADMIN) ---
+  // --- TRẠNG THÁI MODAL ĐĂNG KÝ HỘ (ADMIN) ---
   isRegModalOpen: boolean = false;
-  isUnregModalOpen: boolean = false;
   selectedSection: AvailableCourseSection | null = null;
   studentIdInput: string = '';
-  studentIdUnregInput: string = '';
 
   // --- BỘ LỌC TÌM KIẾM ---
   searchTerm: string = '';
   selectedStatus: string = 'All';
   selectedSemesterId: string = 'All';
   uniqueSemesters: SemesterFilterOption[] = [];
+
+  // --- TRẠNG THÁI MODAL XEM SINH VIÊN ---
+  isStudentModalOpen: boolean = false;
+  isLoadingStudents: boolean = false;
+  viewingSection: AvailableCourseSection | null = null;
+  enrolledStudents: EnrolledStudent[] = [];
 
   ngOnInit(): void {
     this.loadOpenSections();
@@ -152,7 +163,6 @@ export class CourseSectionListComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // --- LOGIC ĐỔI MÀU SĨ SỐ (CHUYỂN TỪ HTML SANG) ---
   getSectionCapacityClass(section: AvailableCourseSection | null | undefined): string {
     if (!section || !section.maxCapacity) {
       return 'text-gray-700';
@@ -186,20 +196,6 @@ export class CourseSectionListComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onUnregister(section: AvailableCourseSection): void {
-    this.selectedSection = section;
-    this.studentIdUnregInput = '';
-    this.isUnregModalOpen = true;
-    this.cdr.markForCheck();
-  }
-
-  closeUnregModal(): void {
-    this.isUnregModalOpen = false;
-    this.selectedSection = null;
-    this.studentIdUnregInput = '';
-    this.cdr.markForCheck();
-  }
-
   toggleAllCourses(expand: boolean): void {
     this.groupedCourses.forEach(c => c.isExpanded = expand);
     this.cdr.markForCheck();
@@ -216,10 +212,6 @@ export class CourseSectionListComponent implements OnInit {
   onToggleQuickStatus(section: any): void {
     section.status = section.status === 'Open' ? 'Closed' : 'Open';
     this.cdr.markForCheck();
-  }
-
-  onViewStudentsInSection(section: any): void {
-    alert(`Đang mở danh sách sinh viên thực tế lớp ${section.classSection}`);
   }
 
   submitAdminRegistration(): void {
@@ -251,26 +243,81 @@ export class CourseSectionListComponent implements OnInit {
       });
   }
 
-  submitAdminUnregistration(): void {
-    const mssv = this.studentIdUnregInput.trim();
-    if (!mssv || !this.selectedSection) return;
+  /**
+   * Mở modal và tải danh sách sinh viên của lớp học phần
+   */
+  onViewStudentsInSection(section: AvailableCourseSection): void {
+    this.viewingSection = section;
+    this.isStudentModalOpen = true;
+    this.loadStudentsBySection(section.sectionID);
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Đóng modal danh sách sinh viên
+   */
+  closeStudentModal(): void {
+    this.isStudentModalOpen = false;
+    this.viewingSection = null;
+    this.enrolledStudents = [];
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Gọi API tải danh sách sinh viên thuộc lớp
+   */
+  private loadStudentsBySection(sectionID: number): void {
+    this.isLoadingStudents = true;
+    this.cdr.markForCheck();
+
+    this.enrollmentService.getStudentsBySection(sectionID)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (students: EnrolledStudent[]) => {
+          this.enrolledStudents = students;
+          this.isLoadingStudents = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('Lỗi lấy danh sách sinh viên:', err);
+          this.enrolledStudents = [];
+          this.isLoadingStudents = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  /**
+   * Xóa trực tiếp sinh viên khỏi lớp từ Modal
+   */
+  onRemoveStudentFromModal(student: EnrolledStudent): void {
+    if (!this.viewingSection) return;
+
+    const confirmDelete = confirm(`Bạn có chắc chắn muốn xóa sinh viên [${student.fullName} - ${student.studentID}] khỏi lớp ${this.viewingSection.classSection}?`);
+    if (!confirmDelete) return;
 
     this.isLoading = true;
     this.cdr.markForCheck();
 
-    const payload = { sectionID: this.selectedSection.sectionID, studentID: mssv };
+    const payload = {
+      sectionID: this.viewingSection.sectionID,
+      studentID: student.studentID
+    };
 
     this.enrollmentService.adminCancelEnrollment(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          alert(`🎉 Đã huỷ đăng ký thành công sinh viên [${mssv}] ra khỏi lớp!`);
-          this.closeUnregModal();
+          alert(`🎉 Đã xóa sinh viên ${student.fullName} (${student.studentID}) khỏi lớp!`);
+          this.enrolledStudents = this.enrolledStudents.filter(s => s.studentID !== student.studentID);
+          this.isLoading = false;
+
+          // Tải lại bảng chính để cập nhật sĩ số mới nhất
           this.loadOpenSections();
         },
         error: (err) => {
-          console.error('Lỗi huỷ đăng ký:', err);
-          alert(`⚠️ Thất bại: ${err.error?.message || 'Mã SV không tồn tại hoặc không có trong lớp học!'}`);
+          console.error('Lỗi xóa sinh viên:', err);
+          alert(`⚠️ Thất bại: ${err.error?.message || 'Không thể xóa sinh viên lúc này!'}`);
           this.isLoading = false;
           this.cdr.markForCheck();
         }

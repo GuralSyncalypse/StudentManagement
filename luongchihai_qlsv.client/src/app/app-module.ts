@@ -4,11 +4,13 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
-import { ErrorInterceptor } from './core/interceptors/error.interceptor'; // 🔥 Import ErrorInterceptor ở đây
+import { ErrorInterceptor } from './core/interceptors/error.interceptor';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { NgApexchartsModule } from 'ng-apexcharts';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideToastr } from 'ngx-toastr';
 
 @NgModule({
   declarations: [App, LoginComponent, RegisterComponent],
@@ -23,20 +25,28 @@ import { NgApexchartsModule } from 'ng-apexcharts';
   providers: [
     provideBrowserGlobalErrorListeners(),
 
-    // 1. Đăng ký JwtInterceptor của bạn
+    // ✨ 1. Khai báo Animation & Ngx-Toastr tại đây
+    provideAnimations(),
+    provideToastr({
+      timeOut: 3500,
+      positionClass: 'toast-top-right',
+      preventDuplicates: true,
+    }),
+
+    // 2. Đăng ký JwtInterceptor (Thêm Token vào Header)
     {
       provide: HTTP_INTERCEPTORS,
       useClass: JwtInterceptor,
       multi: true,
     },
 
-    // 🔥 2. ĐĂNG KÝ ERROR_INTERCEPTOR BẰNG ALERT TẠI ĐÂY 👇
+    // 3. Đăng ký ErrorInterceptor (Xử lý lỗi HTTP & Hiển thị Toastr)
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ErrorInterceptor,
-      multi: true, // Chạy song song cả 2 bộ chặn
+      multi: true,
     },
   ],
   bootstrap: [App],
 })
-export class AppModule {}
+export class AppModule { }

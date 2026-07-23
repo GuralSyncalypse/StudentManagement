@@ -1,71 +1,162 @@
-<div class="dashboard-container">
+<div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 text-gray-800 print:p-0 print:space-y-3">
 
-  <div class="dashboard-top-bar">
-    <div class="filter-group">
-      <label for="semester-select">Học kỳ:</label>
-      <select id="semester-select"
-              [value]="selectedSemester"
-              (change)="onSemesterChange($event)">
-        <option value="1">Học kỳ 1</option>
-        <option value="2">Học kỳ 2</option>
-        <option value="3">Học kỳ 3</option>
-      </select>
+  <!-- Thanh bộ lọc (Filter Bar) - Ẩn khi in ấn -->
+  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap items-center justify-between gap-4 print:hidden">
+
+    <div class="flex flex-wrap items-center gap-4 sm:gap-6">
+      <!-- Chọn Năm -->
+      <div class="flex items-center gap-2">
+        <label for="year-select" class="text-sm font-semibold text-gray-700 whitespace-nowrap">Năm học:</label>
+        <select id="year-select"
+                [(ngModel)]="selectedYear"
+                (change)="onFilterChange()"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 block p-2.5 transition cursor-pointer">
+          @for (y of years; track y) {
+          <option [value]="y">Năm {{ y }} - {{ y + 1 }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Chọn Học Kỳ -->
+      <div class="flex items-center gap-2">
+        <label for="semester-select" class="text-sm font-semibold text-gray-700 whitespace-nowrap">Học kỳ:</label>
+        <select id="semester-select"
+                [(ngModel)]="selectedSemester"
+                (change)="onFilterChange()"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 block p-2.5 transition cursor-pointer">
+          <option [value]="1">Học kỳ 1</option>
+          <option [value]="2">Học kỳ 2</option>
+          <option [value]="3">Học kỳ 3</option>
+        </select>
+      </div>
     </div>
+
+    <!-- Nút In bảng điểm -->
+    <button (click)="printReport()"
+            class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition border border-gray-300">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+      </svg>
+      In bảng điểm
+    </button>
+
   </div>
 
+  <!-- Thông báo lỗi (Error Alert) -->
   @if (errorMessage) {
-  <div class="alert-error-card">
-    <div class="alert-icon">⚠️</div>
-    <div class="alert-content">
-      <h4>Thông báo</h4>
-      <p>{{ errorMessage }}</p>
+  <div class="p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3 text-red-800 shadow-sm" role="alert">
+    <div class="text-xl">⚠️</div>
+    <div>
+      <h4 class="font-bold text-base">Thông báo</h4>
+      <p class="text-sm mt-0.5 text-red-700">{{ errorMessage }}</p>
     </div>
   </div>
   }
+
+  <!-- Hiển thị dữ liệu chính -->
   @else if (summaryData) {
-  <div class="summary-widgets">
-    <div class="widget-card">
-      <label>Mã Số Sinh Viên</label>
-      <h2>{{ summaryData.studentID }}</h2>
+  <!-- Widgets thống kê tổng quan -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 print:gap-2">
+
+    <!-- Mã sinh viên -->
+    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm print:p-2.5 print:border-gray-300">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Mã Sinh Viên</span>
+      <h2 class="text-xl font-bold text-gray-900 mt-1 truncate print:text-base">{{ summaryData.studentID }}</h2>
     </div>
-    <div class="widget-card">
-      <label>Tổng Số Môn Đã Học</label>
-      <h2>{{ summaryData.totalEnrollment }} môn</h2>
+
+    <!-- ĐTB Học Kỳ -->
+    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm relative overflow-hidden print:p-2.5 print:border-gray-300">
+      <span class="text-xs font-semibold text-purple-600 uppercase tracking-wider block">ĐTB Học Kỳ</span>
+      <div class="flex items-baseline gap-1.5 mt-1">
+        <h2 class="text-2xl font-extrabold text-purple-600 print:text-lg">
+          {{ semesterGPA | number:'1.2-2' }}
+        </h2>
+        <span class="text-xs font-semibold text-gray-400">
+          ({{ semesterGPA4 | number:'1.2-2' }} / 4)
+        </span>
+      </div>
     </div>
+
+    <!-- Tổng Số Môn -->
+    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm print:p-2.5 print:border-gray-300">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Tổng Đăng Ký</span>
+      <h2 class="text-xl font-bold text-blue-600 mt-1 print:text-base">{{ summaryData.totalEnrollment }} môn</h2>
+    </div>
+
+    <!-- Tổng Tín Chỉ -->
+    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm print:p-2.5 print:border-gray-300">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Tổng Tín Chỉ</span>
+      <h2 class="text-xl font-bold text-indigo-600 mt-1 print:text-base">{{ totalCredits }} tín chỉ</h2>
+    </div>
+
+    <!-- Số Môn Đạt -->
+    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm print:p-2.5 print:border-gray-300">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Số Môn Đạt</span>
+      <h2 class="text-xl font-bold text-emerald-600 mt-1 print:text-base">{{ passedCount }} môn</h2>
+    </div>
+
+    <!-- Số Môn Trượt -->
+    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm print:p-2.5 print:border-gray-300">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Chưa Đạt</span>
+      <h2 class="text-xl font-bold text-rose-600 mt-1 print:text-base">{{ failedCount }} môn</h2>
+    </div>
+
   </div>
 
-  <div class="course-section">
-    <div class="course-section-header">
-      <h3>Chi Tiết Kết Quả Môn Học</h3>
+  <!-- Bảng chi tiết môn học -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:border-gray-300">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center print:py-2 print:px-4">
+      <h3 class="text-base font-semibold text-gray-800 print:text-sm">Chi Tiết Kết Quả Môn Học</h3>
+      <span class="text-xs text-gray-500 font-medium">Học kỳ {{ selectedSemester }} ({{ selectedYear }} - {{ selectedYear + 1 }})</span>
     </div>
 
-    <div class="table-responsive">
-      <table class="course-table">
-        <thead>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left text-gray-600">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
           <tr>
-            <th>Mã Môn</th>
-            <th>Tên Môn Học</th>
-            <th class="text-center">Điểm Số</th>
-            <th class="text-center">Xếp loại</th>
-            <th>Kết quả</th>
+            <th scope="col" class="px-6 py-3.5 font-semibold print:py-2 print:px-3">Mã Môn</th>
+            <th scope="col" class="px-6 py-3.5 font-semibold print:py-2 print:px-3">Tên Môn Học</th>
+            <th scope="col" class="px-6 py-3.5 font-semibold text-center print:py-2 print:px-3">Tín Chỉ</th>
+            <th scope="col" class="px-6 py-3.5 font-semibold text-center print:py-2 print:px-3">Điểm Số</th>
+            <th scope="col" class="px-6 py-3.5 font-semibold text-center print:py-2 print:px-3">Thang Điểm</th>
+            <th scope="col" class="px-6 py-3.5 font-semibold text-center print:py-2 print:px-3">Kết Quả</th>
           </tr>
         </thead>
-        <tbody>
-          @for (course of summaryData.coursesDetail; track course.courseID) {
-          <tr>
-            <td>{{ course.courseID }}</td>
-            <td>{{ course.courseName }}</td>
-            <td class="text-center">
-              <span class="badge-grade">{{ course.totalScore }}</span>
+        <tbody class="divide-y divide-gray-200">
+          @for (course of summaryData.coursesDetail; track course.enrollmentID) {
+          <tr class="hover:bg-gray-50/80 transition-colors">
+            <td class="px-6 py-4 font-mono font-semibold text-gray-900 whitespace-nowrap print:py-2 print:px-3">
+              {{ course.courseID }}
             </td>
-            <td class="text-center">
-              <span class="badge-grade">{{ course.grade }}</span>
+            <td class="px-6 py-4 font-medium text-gray-800 print:py-2 print:px-3">
+              {{ course.courseName }}
             </td>
-            <td>{{ course.result }}</td>
+            <td class="px-6 py-4 text-center print:py-2 print:px-3">
+              {{ course.credits }}
+            </td>
+            <td class="px-6 py-4 text-center print:py-2 print:px-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                {{ course.totalScore | number:'1.2-2' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-center print:py-2 print:px-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold"
+                    [ngClass]="getGradeBadgeClass(course.grade)">
+                {{ course.grade }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-center print:py-2 print:px-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                    [ngClass]="course.result === 'Đạt' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
+                {{ course.result }}
+              </span>
+            </td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="3" class="no-data">Không có dữ liệu môn học nào trong học kỳ này.</td>
+            <td colspan="6" class="px-6 py-8 text-center text-gray-400 italic">
+              Không có dữ liệu môn học nào trong học kỳ này.
+            </td>
           </tr>
           }
         </tbody>
@@ -73,10 +164,13 @@
     </div>
   </div>
   }
+
+  <!-- Trạng thái Loading -->
   @else {
-  <div class="dashboard-loading">
-    <div class="spinner"></div>
-    <p>Đang tải dữ liệu bảng điều khiển...</p>
+  <div class="flex flex-col items-center justify-center py-16 space-y-3">
+    <div class="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+    <p class="text-sm font-medium text-gray-500">Đang tải dữ liệu kết quả học tập...</p>
   </div>
   }
+
 </div>

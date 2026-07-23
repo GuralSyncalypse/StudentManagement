@@ -8,7 +8,7 @@ import { StudentFormComponent } from './student-list/form/form.component'
 import { CourseList } from './course-list/course-list'
 import { CourseFormComponent } from './course-list/form/form-component';
 import { EnrollmentList } from './enrollment-list/enrollment-list'
-import { Reports } from './student-list/report/reports'
+import { StudentReportComponent } from './student-list/report/reports'
 import { CourseSectionListComponent } from './course-section-list/course-section-list.component'
 import { UserList } from './user-list/user-list'
 import { PermissionMatrixComponent } from './permission-matrix/permission-matrix'
@@ -37,7 +37,7 @@ const routes: Routes = [
       { path: 'enrollments', component: EnrollmentList },
       {
         path: 'students/:studentID/report',
-        component: Reports },
+        component: StudentReportComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   }
