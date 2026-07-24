@@ -1,6 +1,8 @@
 <div class="flex min-h-screen bg-slate-50">
+    <!-- Sidebar Container -->
     <aside class="w-64 bg-slate-900 text-slate-100 flex flex-col justify-between border-r border-slate-800 shrink-0">
         <div class="flex flex-col gap-6 p-5">
+            <!-- Brand Header -->
             <div class="flex items-center gap-3">
                 <span class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-md shadow-indigo-600/20">
                     EP
@@ -8,83 +10,112 @@
                 <h1 class="text-base font-semibold tracking-wide text-white">EduPortal Admin</h1>
             </div>
 
+            <!-- Navigation Links -->
             <nav class="flex flex-col gap-1.5">
+                <!-- 1. Dashboard -->
                 <a routerLink="/admin/dashboard"
                    routerLinkActive="bg-slate-800 text-white font-semibold"
                    [routerLinkActiveOptions]="{ exact: true }"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 text-sm font-medium">
-                    <i class="fa-solid fa-chart-line w-4 text-center"></i>
-                    Dashboard
+                    <span class="material-symbols-outlined text-xl shrink-0">dashboard</span>
+                    <span>Dashboard</span>
                 </a>
 
+                <!-- 2. Sinh viên -->
+                <a routerLink="/admin/students"
+                   routerLinkActive="bg-slate-800 text-white font-semibold"
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 text-sm font-medium">
+                    <span class="material-symbols-outlined text-xl shrink-0">school</span>
+                    <span>Sinh viên</span>
+                </a>
+
+                <!-- 3. Đào tạo (Dropdown) -->
                 <details class="group [&_summary::-webkit-details-marker]:hidden">
                     <summary class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer transition-all duration-200 text-sm font-medium list-none">
                         <span class="flex items-center gap-3">
-                            <i class="fa-solid fa-book w-4 text-center"></i>
+                            <span class="material-symbols-outlined text-xl shrink-0">menu_book</span>
                             <span>Đào tạo</span>
                         </span>
-                        <span class="shrink-0 transition duration-300 group-open:-rotate-180">
-                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        <span class="shrink-0 transition duration-300 group-open:-rotate-180 flex items-center">
+                            <span class="material-symbols-outlined text-lg">expand_more</span>
                         </span>
                     </summary>
 
-                    <div class="mt-1 pl-9 flex flex-col gap-1 border-l border-slate-800 ml-5">
+                    <div class="mt-1 pl-6 flex flex-col gap-1 border-l border-slate-800 ml-5">
                         <a routerLink="/admin/semesters"
                            routerLinkActive="text-indigo-400 font-semibold"
-                           class="block py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
-                            Học kỳ
+                           class="flex items-center gap-2.5 py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
+                            <span class="material-symbols-outlined text-lg shrink-0">calendar_month</span>
+                            <span>Học kỳ</span>
                         </a>
                         <a routerLink="/admin/courses"
                            routerLinkActive="text-indigo-400 font-semibold"
-                           class="block py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
-                            Học phần
+                           class="flex items-center gap-2.5 py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
+                            <span class="material-symbols-outlined text-lg shrink-0">book</span>
+                            <span>Học phần</span>
                         </a>
                         <a routerLink="/admin/courseSections"
                            routerLinkActive="text-indigo-400 font-semibold"
-                           class="block py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
-                            Lớp học phần
+                           class="flex items-center gap-2.5 py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
+                            <span class="material-symbols-outlined text-lg shrink-0">groups</span>
+                            <span>Lớp học phần</span>
                         </a>
                         <a routerLink="/admin/enrollments"
                            routerLinkActive="text-indigo-400 font-semibold"
-                           class="block py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
-                            Chấm điểm
+                           class="flex items-center gap-2.5 py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
+                            <span class="material-symbols-outlined text-lg shrink-0">edit_note</span>
+                            <span>Chấm điểm</span>
                         </a>
                     </div>
                 </details>
 
+                <!-- 4. Tài khoản -->
                 <a routerLink="/admin/users"
                    routerLinkActive="bg-slate-800 text-white font-semibold"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 text-sm font-medium">
-                    <i class="fa-solid fa-user-gear w-4 text-center"></i>
-                    Tài khoản
+                    <span class="material-symbols-outlined text-xl shrink-0">manage_accounts</span>
+                    <span>Tài khoản</span>
                 </a>
-                <a routerLink="/admin/permissions"
-                   routerLinkActive="bg-slate-800 text-white font-semibold"
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 text-sm font-medium">
-                    <i class="fa-solid fa-shield-halved w-4 text-center"></i>
-                    Phân quyền role
-                </a>
-                <a routerLink="/admin/userPermissions"
-                   routerLinkActive="bg-slate-800 text-white font-semibold"
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 text-sm font-medium">
-                    <i class="fa-solid fa-user-shield w-4 text-center"></i>
-                    Phân quyền user
-                </a>
-                <a routerLink="/admin/students"
-                   routerLinkActive="bg-slate-800 text-white font-semibold"
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 text-sm font-medium">
-                    <i class="fa-solid fa-graduation-cap w-4 text-center"></i>
-                    Sinh viên
-                </a>
+
+                <!-- 5. Phân quyền (Dropdown) -->
+                <details class="group [&_summary::-webkit-details-marker]:hidden">
+                    <summary class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer transition-all duration-200 text-sm font-medium list-none">
+                        <span class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-xl shrink-0">admin_panel_settings</span>
+                            <span>Phân quyền</span>
+                        </span>
+                        <span class="shrink-0 transition duration-300 group-open:-rotate-180 flex items-center">
+                            <span class="material-symbols-outlined text-lg">expand_more</span>
+                        </span>
+                    </summary>
+
+                    <div class="mt-1 pl-6 flex flex-col gap-1 border-l border-slate-800 ml-5">
+                        <a routerLink="/admin/permissions"
+                           routerLinkActive="text-indigo-400 font-semibold"
+                           class="flex items-center gap-2.5 py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
+                            <span class="material-symbols-outlined text-lg shrink-0">badge</span>
+                            <span>Theo vai trò</span>
+                        </a>
+                        <a routerLink="/admin/userPermissions"
+                           routerLinkActive="text-indigo-400 font-semibold"
+                           class="flex items-center gap-2.5 py-2 text-sm text-slate-400 hover:text-white transition-colors duration-150">
+                            <span class="material-symbols-outlined text-lg shrink-0">key</span>
+                            <span>Cấp quyền riêng</span>
+                        </a>
+                    </div>
+                </details>
+
+                <!-- 6. Báo cáo -->
                 <a routerLink="/admin/reports"
                    routerLinkActive="bg-slate-800 text-white font-semibold"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 text-sm font-medium">
-                    <i class="fa-solid fa-chart-pie w-4 text-center"></i>
-                    Báo cáo
+                    <span class="material-symbols-outlined text-xl shrink-0">bar_chart</span>
+                    <span>Báo cáo</span>
                 </a>
             </nav>
         </div>
 
+        <!-- User Profile Footer -->
         <div class="p-5 border-t border-slate-800 flex items-center gap-3">
             <div class="w-9 h-9 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-semibold text-sm shrink-0 border border-indigo-500/30">
                 A
@@ -98,6 +129,7 @@
         </div>
     </aside>
 
+    <!-- Main Content Area -->
     <main class="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         <header class="h-16 border-b border-slate-200 bg-white px-6 flex items-center justify-between shrink-0">
             <div class="flex items-center">
@@ -112,11 +144,11 @@
                     {{ todayLabel }}
                 </span>
                 <div class="relative">
-                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold ring-2 ring-white">
+                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold ring-2 ring-white z-10">
                         3
                     </span>
-                    <button class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-base transition-colors duration-150 text-slate-700" type="button" aria-label="Thông báo">
-                        🔔
+                    <button class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors duration-150 text-slate-700" type="button" aria-label="Thông báo">
+                        <span class="material-symbols-outlined text-xl">notifications</span>
                     </button>
                 </div>
             </div>

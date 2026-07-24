@@ -1,0 +1,208 @@
+<div class="p-6 max-w-6xl mx-auto space-y-6 font-sans">
+
+  <!-- Header -->
+  <div class="border-b border-gray-200 pb-4">
+    <h2 class="text-2xl font-bold text-gray-800 tracking-tight">BÁO CÁO KẾT QUẢ HỌC TẬP SINH VIÊN</h2>
+    <p class="text-sm text-gray-500 mt-1">Tra cứu điểm thi và tình trạng môn học theo từng học kỳ</p>
+  </div>
+
+  <!-- Form tra cứu -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-5 rounded-2xl border border-slate-200/80 shadow-sm items-end">
+
+    <!-- Ô nhập Mã Sinh Viên + Nút Xóa Nhanh -->
+    <div class="flex flex-col gap-1.5 relative">
+      <label class="text-xs font-bold text-gray-700 uppercase">Mã Sinh Viên *</label>
+      <div class="relative">
+        <input type="text"
+               [ngModel]="studentId()"
+               (ngModelChange)="studentId.set($event)"
+               (keyup.enter)="fetchReport()"
+               placeholder="Nhập mã SV..."
+               class="w-full pl-3.5 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600" />
+
+        @if (studentId()) {
+        <button (click)="studentId.set('')"
+                type="button"
+                title="Xóa mã SV"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        }
+      </div>
+    </div>
+
+    <!-- Dropdown Chọn Học Kỳ -->
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-bold text-gray-700 uppercase">Học Kỳ</label>
+      <select [ngModel]="semesterId()"
+              (ngModelChange)="semesterId.set(+$event)"
+              class="w-full px-3.5 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+        @for (sem of semesters; track sem.id) {
+        <option [value]="sem.id">{{ sem.label }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Dropdown Chọn Năm Học -->
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-bold text-gray-700 uppercase">Năm Học</label>
+      <select [ngModel]="year()"
+              (ngModelChange)="year.set(+$event)"
+              class="w-full px-3.5 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+        @for (y of years; track y) {
+        <option [value]="y">{{ y }} - {{ y + 1 }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Nút Xem Báo Cáo -->
+    <button (click)="fetchReport()"
+            [disabled]="isLoading()"
+            class="w-full h-[40px] px-5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-300 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center cursor-pointer disabled:cursor-not-allowed">
+      @if (isLoading()) {
+      <span class="flex items-center gap-2">
+        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Đang tải...
+      </span>
+      } @else {
+      <span>Xem báo cáo</span>
+      }
+    </button>
+  </div>
+
+  <!-- Thông báo lỗi -->
+  @if (errorMessage()) {
+  <div class="p-4 text-sm text-rose-800 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-3 shadow-sm">
+    <svg class="w-5 h-5 fill-current shrink-0 text-rose-600" viewBox="0 0 20 20">
+      <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
+    </svg>
+    <span class="font-medium">{{ errorMessage() }}</span>
+  </div>
+  }
+
+  <!-- Hiển thị báo cáo -->
+  @if (summaryData(); as summary) {
+  <div class="space-y-6">
+
+    <!-- Tổng quan & GPA -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-3 gap-3">
+        <div>
+          <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Thông tin sinh viên</span>
+          <h3 class="text-xl font-bold text-gray-900">Mã SV: {{ summary.studentID }}</h3>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+            Học kỳ {{ summary.semesterNo }} (Năm {{ summary.startYear }} - {{ summary.startYear + 1 }})
+          </span>
+
+          <!-- Nút In báo cáo -->
+          <button (click)="exportPrint()"
+                  title="In báo cáo"
+                  class="px-3 py-1.5 bg-white border border-gray-300 hover:bg-slate-50 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            In
+          </button>
+
+          <!-- Nút Xuất Excel -->
+          <button (click)="exportExcel()"
+                  title="Xuất file Excel"
+                  class="px-3 py-1.5 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Xuất Excel
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-1">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+          <span class="text-xs text-gray-500 font-medium">Tổng số môn</span>
+          <p class="text-lg font-bold text-gray-800 mt-0.5">{{ summary.totalEnrollment }} môn</p>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+          <span class="text-xs text-gray-500 font-medium">Tổng tín chỉ</span>
+          <p class="text-lg font-bold text-gray-800 mt-0.5">{{ totalCredits() }} tín chỉ</p>
+        </div>
+
+        <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 col-span-2">
+          <span class="text-xs text-blue-600 font-bold uppercase tracking-wider">Điểm TB Học kỳ (GPA)</span>
+          <p class="text-2xl font-black text-blue-700 mt-0.5">
+            {{ semesterGPA() | number:'1.2-2' }} <span class="text-xs font-normal text-gray-500">/ 10.0</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bảng môn học -->
+    <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm bg-white">
+      <table class="w-full text-sm text-left text-gray-600">
+        <thead class="text-xs text-gray-700 uppercase bg-slate-50 border-b border-gray-200">
+          <tr>
+            <th class="px-4 py-3.5 font-bold text-center w-12">#</th>
+            <th class="px-4 py-3.5 font-bold text-center w-28">Mã Môn</th>
+            <th class="px-4 py-3.5 font-bold">Tên Môn Học</th>
+            <th class="px-4 py-3.5 font-bold text-center w-24">Tín Chỉ</th>
+            <th class="px-4 py-3.5 font-bold text-center w-32">Điểm Tổng Kết</th>
+            <th class="px-4 py-3.5 font-bold text-center w-24">Điểm Chữ</th>
+            <th class="px-4 py-3.5 font-bold text-center w-28">Kết Quả</th>
+            <th class="px-4 py-3.5 font-bold text-center w-20">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (course of summary.coursesDetail; track course.enrollmentID || $index; let i = $index) {
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="px-4 py-3.5 text-center text-gray-400 font-medium">{{ i + 1 }}</td>
+            <td class="px-4 py-3.5 text-center font-semibold text-blue-900 whitespace-nowrap">{{ course.courseID }}</td>
+            <td class="px-4 py-3.5 text-gray-800 font-medium">{{ course.courseName }}</td>
+            <td class="px-4 py-3.5 text-center font-medium">{{ course.credits }}</td>
+            <td class="px-4 py-3.5 text-center font-bold text-gray-900">
+              {{ course.totalScore | number:'1.1-2' }}
+            </td>
+            <td class="px-4 py-3.5 text-center">
+              <span class="inline-block min-w-[30px] px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                {{ course.grade || '-' }}
+              </span>
+            </td>
+            <td class="px-4 py-3.5 text-center">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                    [class]="getResultBadgeClass(course.result)">
+                {{ course.result || 'Chưa có' }}
+              </span>
+            </td>
+            <!-- Nút Xem chi tiết môn học -->
+            <td class="px-4 py-3.5 text-center">
+              <button (click)="viewCourseDetail(course)"
+                      title="Xem chi tiết điểm môn học"
+                      class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="8" class="px-4 py-8 text-center text-gray-400">
+              Không có chi tiết môn học nào trong học kỳ này.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+  }
+</div>
